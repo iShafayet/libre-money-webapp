@@ -30,10 +30,6 @@ import { RouteLocationRaw, useRoute, useRouter } from "vue-router";
 export default defineComponent({
   name: "IndexPage",
   components: {},
-  mounted() {
-    // let db = new PouchDB("AAAA")
-    // console.log(db);
-  },
   setup() {
     const $q = useQuasar();
     const route = useRoute();

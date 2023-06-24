@@ -8,13 +8,19 @@ const routes: RouteRecordRaw[] = [
       {
         path: "",
         component: () => import("pages/IndexPage.vue"),
-        meta: { requiresAuthentication: true },
+        meta: { requiresAuthentication: true, title: null },
+      },
+      {
+        path: "income-transactions",
+        name: "income-transactions",
+        component: () => import("pages/IncomeTransactionsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Income" },
       },
       {
         path: "login",
         name: "login",
         component: () => import("pages/LoginPage.vue"),
-        meta: { requiresAuthentication: false },
+        meta: { requiresAuthentication: false, title: null },
       },
     ],
   },
