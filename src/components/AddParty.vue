@@ -22,7 +22,7 @@
 import { QForm, useDialogPluginComponent } from "quasar";
 import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
-import { partyTypeList } from "src/constants/constants";
+import { Collection, defaultPartyType, partyTypeList } from "src/constants/constants";
 import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 
@@ -48,7 +48,7 @@ export default {
 
     const partyName: Ref<string | null> = ref(null);
     const partyType: Ref<string | null> = ref(
-      partyTypeList.find(partyType => partyType.value === "party")!.value
+      partyTypeList.find(partyType => partyType.value === defaultPartyType)!.value
     );
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -69,7 +69,7 @@ export default {
       }
 
       let party: Party = {
-        $collection: "party",
+        $collection: Collection.PARTY,
         name: partyName.value!,
         type: partyType.value!,
       };

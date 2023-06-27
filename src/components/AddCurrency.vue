@@ -3,9 +3,11 @@
     <q-card class="q-dialog-plugin">
 
       <q-card-section>
-        <div class="std-dialog-title q-pa-md">{{ existingTagId ? "Editing a Tag" : "Adding a Tag" }}</div>
-        <q-form class="q-gutter-md q-pa-md" ref="tagForm">
-          <q-input filled v-model="tagName" label="Name of the Tag" lazy-rules :rules="validators.name" />
+        <div class="std-dialog-title q-pa-md">{{ existingCurrencyId ? "Editing a Currency" : "Adding a Currency" }}</div>
+        <q-form class="q-gutter-md q-pa-md" ref="currencyForm">
+          <q-input filled v-model="currencyName" label="Name of the Currency" lazy-rules :rules="validators.name" />
+          <q-input filled v-model="currencySign" label="Currency Sign (i.e. USD)" lazy-rules
+            :rules="validators.currencySign" />
         </q-form>
       </q-card-section>
 
@@ -21,13 +23,13 @@
 import { QForm, useDialogPluginComponent } from "quasar";
 import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
-import { Tag } from "src/models/tag";
-import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection } from "src/constants/constants";
+import { Currency } from "src/models/currency";
+import { pouchdbService } from "src/services/pouchdb-service";
 
 export default {
   props: {
-    existingTagId: {
+    existingCurrencyId: {
       type: String,
       required: false,
       default: null
@@ -39,40 +41,43 @@ export default {
   ],
 
   setup(props) {
-    let initialDoc: Tag | null = null;
+    let initialDoc: Currency | null = null;
 
     const isLoading = ref(false);
 
-    const tagForm: Ref<QForm | null> = ref(null);
+    const currencyForm: Ref<QForm | null> = ref(null);
 
-    const tagName: Ref<string | null> = ref(null);
+    const currencyName: Ref<string | null> = ref(null);
+    const currencySign: Ref<string | null> = ref(null);
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-    if (props.existingTagId) {
+    if (props.existingCurrencyId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingTagId) as Tag;
+        let res = await pouchdbService.getDocById(props.existingCurrencyId) as Currency;
         initialDoc = res;
-        tagName.value = res.name;
+        currencyName.value = res.name;
+        currencySign.value = res.sign;
         isLoading.value = false;
       })();
     }
     async function okClicked() {
-      if (!await tagForm.value?.validate()) {
+      if (!await currencyForm.value?.validate()) {
         return;
       }
 
-      let tag: Tag = {
-        $collection: Collection.TAG,
-        name: tagName.value!,
+      let currency: Currency = {
+        $collection: Collection.CURRENCY,
+        name: currencyName.value!,
+        sign: currencySign.value!,
       };
 
       if (initialDoc) {
-        tag = Object.assign({}, initialDoc, tag);
+        currency = Object.assign({}, initialDoc, currency);
       }
 
-      pouchdbService.upsertDoc(tag);
+      pouchdbService.upsertDoc(currency);
 
       onDialogOK();
     }
@@ -83,9 +88,10 @@ export default {
       okClicked,
       cancelClicked: onDialogCancel,
       isLoading,
-      tagName,
+      currencyName,
+      currencySign,
       validators,
-      tagForm
+      currencyForm
     };
   }
 };

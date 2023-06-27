@@ -4,13 +4,13 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
-        <q-btn color="primary" text-color="white" label="Add Party" @click="addPartyClicked" />
+        <q-btn color="primary" text-color="white" label="Add Expense Avenue" @click="addExpenseAvenueClicked" />
       </div>
 
       <div class="q-pa-md">
-        <q-table :loading="isLoading" title="Parties & Vendors" :rows="rows" :columns="columns" row-key="_id" flat
-          bordered :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing">
+        <q-table :loading="isLoading" title="Expense Avenues" :rows="rows" :columns="columns" row-key="_id" flat bordered
+          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
+          @request="dataForTableRequested">
 
           <template v-slot:top-right>
             <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
@@ -45,16 +45,16 @@
 
 <script lang="ts">
 import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, partyTypeList, rowsPerPageOptions } from "./../constants/constants";
+import { Collection, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddParty from "./../components/AddParty.vue";
+import AddExpenseAvenue from "./../components/AddExpenseAvenue.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
-import { Party } from "src/models/party";
+import { ExpenseAvenue } from "src/models/expense-avenue";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 
 export default defineComponent({
-  name: "PartiesPage",
+  name: "ExpenseAvenuesPage",
   components: {},
   setup() {
 
@@ -74,12 +74,6 @@ export default defineComponent({
         align: "left",
         field: "name",
         sortable: true
-      },
-      {
-        name: "type", align: "left", label: "Type", sortable: true,
-        field: ((party: Party) => {
-          return partyTypeList.find(partyType => partyType.value === party.type)?.label;
-        }),
       },
       {
         name: "actions",
@@ -110,8 +104,8 @@ export default defineComponent({
       const skip = (page - 1) * rowsPerPage;
       const limit = rowsPerPage;
 
-      let res = await pouchdbService.listByCollection(Collection.PARTY);
-      let docList = res.docs as Party[];
+      let res = await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE);
+      let docList = res.docs as ExpenseAvenue[];
       if (searchFilter.value) {
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter(doc => regex.test(doc.name));
@@ -119,8 +113,6 @@ export default defineComponent({
       docList.sort((a, b) => {
         if (sortBy === "name") {
           return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else if (sortBy === "type") {
-          return b.type.localeCompare(a.type) * (descending ? -1 : 1);
         } else {
           return 0;
         }
@@ -140,8 +132,8 @@ export default defineComponent({
     }
 
 
-    async function addPartyClicked() {
-      $q.dialog({ component: AddParty }).onOk((res) => {
+    async function addExpenseAvenueClicked() {
+      $q.dialog({ component: AddExpenseAvenue }).onOk((res) => {
         loadData();
       });
     }
@@ -150,19 +142,19 @@ export default defineComponent({
       dataForTableRequested(null);
     }
 
-    async function editClicked(party: Party) {
-      $q.dialog({ component: AddParty, componentProps: { existingPartyId: party._id } }).onOk((res) => {
+    async function editClicked(expenseAvenue: ExpenseAvenue) {
+      $q.dialog({ component: AddExpenseAvenue, componentProps: { existingExpenseAvenueId: expenseAvenue._id } }).onOk((res) => {
         loadData();
       });
     }
 
-    async function deleteClicked(party: Party) {
-      let answer = await dialogService.confirm("Remove party", `Are you sure you want to remove the party "${party.name}"?`);
+    async function deleteClicked(expenseAvenue: ExpenseAvenue) {
+      let answer = await dialogService.confirm("Remove Expense Avenue", `Are you sure you want to remove the Expense Avenue "${expenseAvenue.name}"?`);
       if (!answer) return;
 
-      let res = await pouchdbService.removeDoc(party);
+      let res = await pouchdbService.removeDoc(expenseAvenue);
       if (!res.ok) {
-        await dialogService.alert("Error", "There was an error trying to remove the party.");
+        await dialogService.alert("Error", "There was an error trying to remove the expenseAvenue.");
       }
 
       loadData();
@@ -179,7 +171,7 @@ export default defineComponent({
     });
 
     return {
-      addPartyClicked,
+      addExpenseAvenueClicked,
       searchFilter,
       rowsPerPageOptions, columns, rows,
       isLoading,

@@ -103,19 +103,19 @@ const entityList = [
     title: "Income Sources",
     caption: "",
     icon: "school",
-    link: ""
+    link: "#/income-sources"
   },
   {
     title: "Expense Avenues",
     caption: "",
     icon: "school",
-    link: ""
+    link: "#/expense-avenues"
   },
   {
     title: "Currencies",
     caption: "",
     icon: "school",
-    link: ""
+    link: "#/currencies"
   },
 ];
 

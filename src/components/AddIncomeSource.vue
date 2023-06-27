@@ -3,9 +3,11 @@
     <q-card class="q-dialog-plugin">
 
       <q-card-section>
-        <div class="std-dialog-title q-pa-md">{{ existingTagId ? "Editing a Tag" : "Adding a Tag" }}</div>
-        <q-form class="q-gutter-md q-pa-md" ref="tagForm">
-          <q-input filled v-model="tagName" label="Name of the Tag" lazy-rules :rules="validators.name" />
+        <div class="std-dialog-title q-pa-md">
+          {{ existingIncomeSourceId ? "Editing an Income Source" : "Adding an Income Source" }}
+        </div>
+        <q-form class="q-gutter-md q-pa-md" ref="incomeSourceForm">
+          <q-input filled v-model="incomeSourceName" label="Name" lazy-rules :rules="validators.name" />
         </q-form>
       </q-card-section>
 
@@ -21,13 +23,13 @@
 import { QForm, useDialogPluginComponent } from "quasar";
 import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
-import { Tag } from "src/models/tag";
+import { IncomeSource } from "src/models/income-source";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection } from "src/constants/constants";
 
 export default {
   props: {
-    existingTagId: {
+    existingIncomeSourceId: {
       type: String,
       required: false,
       default: null
@@ -39,40 +41,40 @@ export default {
   ],
 
   setup(props) {
-    let initialDoc: Tag | null = null;
+    let initialDoc: IncomeSource | null = null;
 
     const isLoading = ref(false);
 
-    const tagForm: Ref<QForm | null> = ref(null);
+    const incomeSourceForm: Ref<QForm | null> = ref(null);
 
-    const tagName: Ref<string | null> = ref(null);
+    const incomeSourceName: Ref<string | null> = ref(null);
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-    if (props.existingTagId) {
+    if (props.existingIncomeSourceId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingTagId) as Tag;
+        let res = await pouchdbService.getDocById(props.existingIncomeSourceId) as IncomeSource;
         initialDoc = res;
-        tagName.value = res.name;
+        incomeSourceName.value = res.name;
         isLoading.value = false;
       })();
     }
     async function okClicked() {
-      if (!await tagForm.value?.validate()) {
+      if (!await incomeSourceForm.value?.validate()) {
         return;
       }
 
-      let tag: Tag = {
-        $collection: Collection.TAG,
-        name: tagName.value!,
+      let incomeSource: IncomeSource = {
+        $collection: Collection.INCOME_SOURCE,
+        name: incomeSourceName.value!,
       };
 
       if (initialDoc) {
-        tag = Object.assign({}, initialDoc, tag);
+        incomeSource = Object.assign({}, initialDoc, incomeSource);
       }
 
-      pouchdbService.upsertDoc(tag);
+      pouchdbService.upsertDoc(incomeSource);
 
       onDialogOK();
     }
@@ -83,9 +85,9 @@ export default {
       okClicked,
       cancelClicked: onDialogCancel,
       isLoading,
-      tagName,
+      incomeSourceName,
       validators,
-      tagForm
+      incomeSourceForm
     };
   }
 };

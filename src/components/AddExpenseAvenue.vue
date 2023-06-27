@@ -3,9 +3,11 @@
     <q-card class="q-dialog-plugin">
 
       <q-card-section>
-        <div class="std-dialog-title q-pa-md">{{ existingTagId ? "Editing a Tag" : "Adding a Tag" }}</div>
-        <q-form class="q-gutter-md q-pa-md" ref="tagForm">
-          <q-input filled v-model="tagName" label="Name of the Tag" lazy-rules :rules="validators.name" />
+        <div class="std-dialog-title q-pa-md">
+          {{ existingExpenseAvenueId ? "Editing an Expense Avenue" : "Adding an Expense Avenue" }}
+        </div>
+        <q-form class="q-gutter-md q-pa-md" ref="expenseAvenueForm">
+          <q-input filled v-model="expenseAvenueName" label="Name" lazy-rules :rules="validators.name" />
         </q-form>
       </q-card-section>
 
@@ -21,13 +23,13 @@
 import { QForm, useDialogPluginComponent } from "quasar";
 import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
-import { Tag } from "src/models/tag";
+import { ExpenseAvenue } from "src/models/expense-avenue";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection } from "src/constants/constants";
 
 export default {
   props: {
-    existingTagId: {
+    existingExpenseAvenueId: {
       type: String,
       required: false,
       default: null
@@ -39,40 +41,40 @@ export default {
   ],
 
   setup(props) {
-    let initialDoc: Tag | null = null;
+    let initialDoc: ExpenseAvenue | null = null;
 
     const isLoading = ref(false);
 
-    const tagForm: Ref<QForm | null> = ref(null);
+    const expenseAvenueForm: Ref<QForm | null> = ref(null);
 
-    const tagName: Ref<string | null> = ref(null);
+    const expenseAvenueName: Ref<string | null> = ref(null);
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-    if (props.existingTagId) {
+    if (props.existingExpenseAvenueId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingTagId) as Tag;
+        let res = await pouchdbService.getDocById(props.existingExpenseAvenueId) as ExpenseAvenue;
         initialDoc = res;
-        tagName.value = res.name;
+        expenseAvenueName.value = res.name;
         isLoading.value = false;
       })();
     }
     async function okClicked() {
-      if (!await tagForm.value?.validate()) {
+      if (!await expenseAvenueForm.value?.validate()) {
         return;
       }
 
-      let tag: Tag = {
-        $collection: Collection.TAG,
-        name: tagName.value!,
+      let expenseAvenue: ExpenseAvenue = {
+        $collection: Collection.EXPENSE_AVENUE,
+        name: expenseAvenueName.value!,
       };
 
       if (initialDoc) {
-        tag = Object.assign({}, initialDoc, tag);
+        expenseAvenue = Object.assign({}, initialDoc, expenseAvenue);
       }
 
-      pouchdbService.upsertDoc(tag);
+      pouchdbService.upsertDoc(expenseAvenue);
 
       onDialogOK();
     }
@@ -83,9 +85,9 @@ export default {
       okClicked,
       cancelClicked: onDialogCancel,
       isLoading,
-      tagName,
+      expenseAvenueName,
       validators,
-      tagForm
+      expenseAvenueForm
     };
   }
 };

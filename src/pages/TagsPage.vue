@@ -8,12 +8,12 @@
       </div>
 
       <div class="q-pa-md">
-        <q-table :loading="isLoading" title="Tags" :rows="rows" :columns="columns" row-key="_id" flat
-          :grid="$q.screen.lt.sm" bordered :rows-per-page-options="rowsPerPageOptions" binary-state-sort
-          v-model:pagination="pagination" @request="dataForTableRequested">
+        <q-table :loading="isLoading" title="Tags" :rows="rows" :columns="columns" row-key="_id" flat bordered
+          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
+          @request="dataForTableRequested">
 
           <template v-slot:top-right>
-            <q-input borderless dense clearable debounce="1" v-model="searchFilter" label="Search by name"
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
               placeholder="Search">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
@@ -45,7 +45,7 @@
 
 <script lang="ts">
 import { Ref, defineComponent, ref, watch } from "vue";
-import { rowsPerPageOptions } from "./../constants/constants";
+import { Collection, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
 import AddTag from "./../components/AddTag.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
@@ -104,7 +104,7 @@ export default defineComponent({
       const skip = (page - 1) * rowsPerPage;
       const limit = rowsPerPage;
 
-      let res = await pouchdbService.listByCollection("tag");
+      let res = await pouchdbService.listByCollection(Collection.TAG);
       let docList = res.docs as Tag[];
       if (searchFilter.value) {
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");

@@ -34,3 +34,15 @@ body {
     }
   }
 }
+
+.std-table-non-morphing {
+  td:not(:last-child) {
+    text-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .search-field {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+}
