@@ -27,7 +27,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: "parties",
         name: "party-entities",
-        component: () => import("pages/PartyEntitiesPage.vue"),
+        component: () => import("pages/PartiesPage.vue"),
         meta: { requiresAuthentication: true, title: "Parties & Vendors" },
       },
     ],

@@ -16,3 +16,21 @@ body {
 .main-left-sidebar-drawer {
   background-color: lightgrey;
 }
+
+.std-card {
+  min-width: 300px;
+  max-width: 900px;
+  width: 100%;
+  margin: 12px;
+
+  .title-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .title {
+      flex: 1;
+      font-size: 20px;
+    }
+  }
+}

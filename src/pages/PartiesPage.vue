@@ -54,7 +54,7 @@ import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 
 export default defineComponent({
-  name: "PartyEntitiesPage",
+  name: "PartiesPage",
   components: {},
   setup() {
 
@@ -192,24 +192,4 @@ export default defineComponent({
 });
 </script>
 
-
-<style scoped lang="scss">
-.std-card {
-  min-width: 300px;
-  max-width: 900px;
-  width: 100%;
-  margin: 12px;
-
-  .title-row {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-
-
-    .title {
-      flex: 1;
-      font-size: 20px;
-    }
-  }
-}
-</style>
+<style scoped lang="scss"></style>
