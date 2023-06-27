@@ -11,16 +11,24 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuthentication: true, title: null },
       },
       {
+        path: "login",
+        name: "login",
+        component: () => import("pages/LoginPage.vue"),
+        meta: { requiresAuthentication: false, title: null },
+      },
+      // --- Core:
+      {
         path: "income-transactions",
         name: "income-transactions",
         component: () => import("pages/IncomeTransactionsPage.vue"),
         meta: { requiresAuthentication: true, title: "Income" },
       },
+      // --- Entities:
       {
-        path: "login",
-        name: "login",
-        component: () => import("pages/LoginPage.vue"),
-        meta: { requiresAuthentication: false, title: null },
+        path: "parties",
+        name: "party-entities",
+        component: () => import("pages/PartyEntitiesPage.vue"),
+        meta: { requiresAuthentication: true, title: "Parties & Vendors" },
       },
     ],
   },

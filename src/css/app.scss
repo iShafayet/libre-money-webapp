@@ -1,1 +1,18 @@
 // app global css in SCSS form
+
+body {
+  background-color: antiquewhite;
+}
+
+.std-column {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.std-dialog-title {
+  font-size: 20px;
+}
+
+.main-left-sidebar-drawer {
+  background-color: lightgrey;
+}

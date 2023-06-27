@@ -12,26 +12,20 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered v-if="userStore.isUserLoggedIn">
+    <q-drawer class="std-column main-left-sidebar-drawer" v-model="leftDrawerOpen" show-if-above bordered
+      v-if="userStore.isUserLoggedIn">
       <q-list>
         <q-item-label header>
-          OPERATIONS
+          CORE
         </q-item-label>
         <EssentialLink v-for="link in operationList" :key="link.title" v-bind="link" />
       </q-list>
 
       <q-list>
         <q-item-label header>
-          ACCOUNTS
+          ENTITIES
         </q-item-label>
-        <EssentialLink v-for="link in accountList" :key="link.title" v-bind="link" />
-      </q-list>
-
-      <q-list>
-        <q-item-label header>
-          PARTIES &amp; TAGS
-        </q-item-label>
-        <EssentialLink v-for="link in partyList" :key="link.title" v-bind="link" />
+        <EssentialLink v-for="link in entityList" :key="link.title" v-bind="link" />
       </q-list>
 
       <q-list>
@@ -41,9 +35,10 @@
         <EssentialLink v-for="link in reportList" :key="link.title" v-bind="link" />
       </q-list>
 
+      <div style="flex: 1;"></div>
+
       <div class="drawer-bottom">
         <div class="app-version">{{ appVersion }}</div>
-
       </div>
     </q-drawer>
 
@@ -60,65 +55,44 @@ import EssentialLink from "components/sidebar/EssentialLink.vue";
 
 const operationList = [
   {
-    title: "Income Records",
-    caption: "",
+    title: "Overview",
+    caption: "Summaries of everything",
+    icon: "money",
+    link: ""
+  },
+  {
+    title: "Records",
+    caption: "Income, Expenses and everything else",
     icon: "money",
     link: "#/income-transactions"
   },
   {
-    title: "Expense Records",
-    caption: "",
-    icon: "money",
-    link: ""
-  },
-  {
     title: "Loans & Debts",
-    caption: "",
+    caption: "Receivables and Payables",
     icon: "money",
     link: ""
   },
-  {
-    title: "Other Transactions",
-    caption: "",
-    icon: "money",
-    link: ""
-  },
-];
-
-const accountList = [
   {
     title: "Wallets",
-    caption: "",
-    icon: "school",
+    caption: "Cash, Bank and Digital Money",
+    icon: "money",
     link: ""
   },
   {
-    title: "Expense Accounts",
-    caption: "",
-    icon: "school",
-    link: ""
-  },
-  {
-    title: "Income Accounts",
-    caption: "",
-    icon: "school",
-    link: ""
-  },
-  {
-    title: "Asset Accounts",
-    caption: "",
-    icon: "school",
-    link: ""
-  },
-  {
-    title: "Other Accounts",
-    caption: "",
-    icon: "school",
+    title: "Assets",
+    caption: "Properties and Valuables",
+    icon: "money",
     link: ""
   },
 ];
 
-const partyList = [
+const entityList = [
+  {
+    title: "Parties & Vendors",
+    caption: "",
+    icon: "school",
+    link: "#/parties"
+  },
   {
     title: "Tags",
     caption: "",
@@ -126,7 +100,19 @@ const partyList = [
     link: ""
   },
   {
-    title: "Parties",
+    title: "Income Sources",
+    caption: "",
+    icon: "school",
+    link: ""
+  },
+  {
+    title: "Expense Avenues",
+    caption: "",
+    icon: "school",
+    link: ""
+  },
+  {
+    title: "Currencies",
     caption: "",
     icon: "school",
     link: ""
@@ -156,8 +142,7 @@ export default defineComponent({
 
     return {
       operationList,
-      accountList,
-      partyList,
+      entityList,
       reportList,
 
       leftDrawerOpen: isLeftDrawerOpen,
