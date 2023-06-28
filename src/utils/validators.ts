@@ -25,4 +25,10 @@ export const validators = {
       return isNumeric(val) || "A valid number is required";
     },
   ],
+  notes: [
+    (val: string) =>
+      !val ||
+      (val && val.length < 1000) ||
+      "Note must be less than 1000 characters",
+  ],
 };

@@ -18,10 +18,10 @@ const routes: RouteRecordRaw[] = [
       },
       // --- Core:
       {
-        path: "income-transactions",
-        name: "income-transactions",
-        component: () => import("pages/IncomeTransactionsPage.vue"),
-        meta: { requiresAuthentication: true, title: "Income" },
+        path: "records",
+        name: "records",
+        component: () => import("pages/RecordsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Records" },
       },
       {
         path: "wallets",

@@ -27,3 +27,16 @@ export const Collection = {
   ASSET: "asset",
   RECORD: "record",
 };
+
+export const RecordType = {
+  INCOME: "income",
+  EXPENSE: "expense",
+  ASSET_PURCHASE: "asset-purchase",
+  ASSET_SALE: "asset-sale",
+  ASSET_APPRECIATION_DEPRECIATION: "asset-appreciation-depreciation",
+  LENDING: "lending", // outgoing loan (receivable)
+  BORROWING: "borrowing", // incoming loan (payable)
+  REPAYMENT_GIVEN: "repayment-given",
+  REPAYMENT_RECEIVED: "repayment-received",
+  MONEY_TRANSFER: "money-transfer",
+};
