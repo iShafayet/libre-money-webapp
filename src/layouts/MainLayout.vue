@@ -58,31 +58,31 @@ const operationList = [
     title: "Overview",
     caption: "Summaries of everything",
     icon: "money",
-    link: ""
+    link: "#/overview"
   },
   {
     title: "Records",
     caption: "Income, Expenses and everything else",
     icon: "money",
-    link: "#/income-transactions"
+    link: "#/records"
   },
   {
     title: "Loans & Debts",
     caption: "Receivables and Payables",
     icon: "money",
-    link: ""
+    link: "#/loans-n-debts"
   },
   {
     title: "Wallets",
     caption: "Cash, Bank and Digital Money",
     icon: "money",
-    link: ""
+    link: "#/wallets"
   },
   {
     title: "Assets",
     caption: "Properties and Valuables",
     icon: "money",
-    link: ""
+    link: "#/assets"
   },
 ];
 

@@ -1,3 +1,12 @@
+function isNumeric(str: string) {
+  if (typeof str != "string") return false; // we only process strings!
+  return (
+    // @ts-ignore
+    !isNaN(str) && // use type coercion to parse the _entirety_ of the string (`parseFloat` alone does not do this)...
+    !isNaN(parseFloat(str))
+  ); // ...and ensure strings of whitespace fail
+}
+
 export const validators = {
   name: [(val: string) => (val && val.length > 0) || "Please type a name"],
   username: [
@@ -10,5 +19,10 @@ export const validators = {
     (val: string) =>
       (val && val.length > 0 && val.length < 4) ||
       "Sign must be within 1 to 3 characters",
+  ],
+  balance: [
+    (val: string) => {
+      return isNumeric(val) || "A valid number is required";
+    },
   ],
 };

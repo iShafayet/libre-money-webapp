@@ -23,6 +23,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/IncomeTransactionsPage.vue"),
         meta: { requiresAuthentication: true, title: "Income" },
       },
+      {
+        path: "wallets",
+        name: "wallets",
+        component: () => import("pages/WalletsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Wallets" },
+      },
       // --- Entities:
       {
         path: "parties",

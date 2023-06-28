@@ -4,13 +4,13 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
-        <q-btn color="primary" text-color="white" label="Add Income Source" @click="addIncomeSourceClicked" />
+        <q-btn color="primary" text-color="white" label="Add Wallet" @click="addWalletClicked" />
       </div>
 
       <div class="q-pa-md">
-        <q-table :loading="isLoading" title="Income Sources" :rows="rows" :columns="columns" row-key="_id" flat bordered
+        <q-table :loading="isLoading" title="Wallets" :rows="rows" :columns="columns" row-key="_id" flat bordered
           :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested">
+          @request="dataForTableRequested" class="std-table-non-morphing">
 
           <template v-slot:top-right>
             <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
@@ -45,16 +45,17 @@
 
 <script lang="ts">
 import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, rowsPerPageOptions } from "./../constants/constants";
+import { Collection, walletTypeList, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddIncomeSource from "./../components/AddIncomeSource.vue";
+import AddWallet from "./../components/AddWallet.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
-import { IncomeSource } from "src/models/income-source";
+import { Wallet } from "src/models/wallet";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
+import { Currency } from "src/models/currency";
 
 export default defineComponent({
-  name: "IncomeSourcesPage",
+  name: "WalletsPage",
   components: {},
   setup() {
 
@@ -74,6 +75,18 @@ export default defineComponent({
         align: "left",
         field: "name",
         sortable: true
+      },
+      {
+        name: "type", align: "left", label: "Type", sortable: true,
+        field: ((wallet: Wallet) => {
+          return walletTypeList.find(walletType => walletType.value === wallet.type)?.label;
+        }),
+      },
+      {
+        name: "balance", align: "left", label: "Balance", sortable: true,
+        field: ((wallet: Wallet) => {
+          return `${wallet._currencySign!} ${wallet.initialBalance}`;
+        }),
       },
       {
         name: "actions",
@@ -104,8 +117,8 @@ export default defineComponent({
       const skip = (page - 1) * rowsPerPage;
       const limit = rowsPerPage;
 
-      let res = await pouchdbService.listByCollection(Collection.INCOME_SOURCE);
-      let docList = res.docs as IncomeSource[];
+      let res = await pouchdbService.listByCollection(Collection.WALLET);
+      let docList = res.docs as Wallet[];
       if (searchFilter.value) {
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter(doc => regex.test(doc.name));
@@ -113,6 +126,8 @@ export default defineComponent({
       docList.sort((a, b) => {
         if (sortBy === "name") {
           return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        } else if (sortBy === "type") {
+          return b.type.localeCompare(a.type) * (descending ? -1 : 1);
         } else {
           return 0;
         }
@@ -120,6 +135,13 @@ export default defineComponent({
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);
+
+      let currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+      currentRows.forEach(row => {
+        row._currencySign = currencyList.find(currency => currency._id === row.currencyId)?.sign;
+      });
+
+      console.debug({ currentRows });
       rows.value = currentRows;
 
       pagination.value.rowsNumber = totalRowCount;
@@ -132,8 +154,8 @@ export default defineComponent({
     }
 
 
-    async function addIncomeSourceClicked() {
-      $q.dialog({ component: AddIncomeSource }).onOk((res) => {
+    async function addWalletClicked() {
+      $q.dialog({ component: AddWallet }).onOk((res) => {
         loadData();
       });
     }
@@ -142,19 +164,19 @@ export default defineComponent({
       dataForTableRequested(null);
     }
 
-    async function editClicked(incomeSource: IncomeSource) {
-      $q.dialog({ component: AddIncomeSource, componentProps: { existingIncomeSourceId: incomeSource._id } }).onOk((res) => {
+    async function editClicked(wallet: Wallet) {
+      $q.dialog({ component: AddWallet, componentProps: { existingWalletId: wallet._id } }).onOk((res) => {
         loadData();
       });
     }
 
-    async function deleteClicked(incomeSource: IncomeSource) {
-      let answer = await dialogService.confirm("Remove Income Source", `Are you sure you want to remove the Income Source "${incomeSource.name}"?`);
+    async function deleteClicked(wallet: Wallet) {
+      let answer = await dialogService.confirm("Remove wallet", `Are you sure you want to remove the wallet "${wallet.name}"?`);
       if (!answer) return;
 
-      let res = await pouchdbService.removeDoc(incomeSource);
+      let res = await pouchdbService.removeDoc(wallet);
       if (!res.ok) {
-        await dialogService.alert("Error", "There was an error trying to remove the incomeSource.");
+        await dialogService.alert("Error", "There was an error trying to remove the wallet.");
       }
 
       loadData();
@@ -171,7 +193,7 @@ export default defineComponent({
     });
 
     return {
-      addIncomeSourceClicked,
+      addWalletClicked,
       searchFilter,
       rowsPerPageOptions, columns, rows,
       isLoading,

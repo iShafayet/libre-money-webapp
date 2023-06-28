@@ -84,7 +84,7 @@ export default defineComponent({
     let rows: Ref<any[]> = ref([]);
 
     const pagination = ref({
-      sortBy: 'name',
+      sortBy: "name",
       descending: false,
       page: 1,
       rowsPerPage: 5,
