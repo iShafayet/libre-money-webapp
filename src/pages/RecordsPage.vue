@@ -67,7 +67,7 @@ export default defineComponent({
     async function loadData() {
       console.log("TODO");
 
-      let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs;
+      let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
       rows.value = dataRows;
     }
