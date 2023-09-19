@@ -63,8 +63,8 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { Ref, defineComponent, ref, watch } from "vue";
+<script lang="ts" setup>
+import { Ref, ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Record } from "src/models/record";
@@ -74,82 +74,58 @@ import { Collection, RecordType } from "src/constants/constants";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { dataInferenceService } from "src/services/data-inference-service";
 
-export default defineComponent({
-  name: "RecordsPage",
-  components: {},
-  setup() {
-    const $q = useQuasar();
+const $q = useQuasar();
 
-    // -----
+// ----- Refs
+const searchFilter: Ref<string | null> = ref(null);
+const isLoading = ref(false);
+const rows: Ref<InferredRecord[]> = ref([]);
 
-    const searchFilter: Ref<string | null> = ref(null);
+// ----- Functions
 
-    const isLoading = ref(false);
+async function loadData() {
+  await dataInferenceService.updateCurrencyCache();
 
-    let rows: Ref<InferredRecord[]> = ref([]);
+  let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
+  let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  rows.value = dataRows;
+}
 
-    // -----
+// ----- Event Handlers
 
-    async function addExpenseClicked() {
-      $q.dialog({ component: AddExpenseRecord }).onOk((res) => {
-        loadData();
-      });
-    }
-
-    async function loadData() {
-      await dataInferenceService.updateCurrencyCache();
-
-      console.log("TODO");
-
-      let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
-
-      let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
-
-      rows.value = dataRows;
-    }
-
-    async function editClicked(record: InferredRecord) {
-      console.log("TODO");
-
-      // $q.dialog({ component: AddRecord, componentProps: { existingRecordId: record._id } }).onOk((res) => {
-      //   loadData();
-      // });
-    }
-
-    async function deleteClicked(record: InferredRecord) {
-      let answer = await dialogService.confirm("Remove record", "Are you sure you want to remove the record?");
-      if (!answer) return;
-
-      let res = await pouchdbService.removeDoc(record);
-      if (!res.ok) {
-        await dialogService.alert("Error", "There was an error trying to remove the record.");
-      }
-
-      loadData();
-    }
-
-    // -----
-
+async function addExpenseClicked() {
+  $q.dialog({ component: AddExpenseRecord }).onOk((res) => {
     loadData();
+  });
+}
 
-    // -----
+async function editClicked(record: InferredRecord) {
+  $q.dialog({ component: AddExpenseRecord, componentProps: { existingRecordId: record._id } }).onOk((res) => {
+    loadData();
+  });
+}
 
-    watch(searchFilter, (_, __) => {
-      loadData();
-    });
+async function deleteClicked(record: InferredRecord) {
+  let answer = await dialogService.confirm("Remove record", "Are you sure you want to remove the record?");
+  if (!answer) return;
 
-    return {
-      addExpenseClicked,
-      searchFilter,
-      rows,
-      isLoading,
-      editClicked,
-      deleteClicked,
-      RecordType,
-      dataInferenceService,
-    };
-  },
+  let res = await pouchdbService.removeDoc(record);
+  if (!res.ok) {
+    await dialogService.alert("Error", "There was an error trying to remove the record.");
+  }
+
+  loadData();
+}
+
+// ----- Watchers
+
+watch(searchFilter, (_, __) => {
+  loadData();
 });
+
+// ----- Execution
+
+loadData();
 </script>
 
 <style scoped lang="scss">
