@@ -43,7 +43,12 @@
                   <div class="record-type" :data-record-type="record.type">
                     {{ record.type }}
                   </div>
-                  <div class="tag" v-for="tag in record.tagList" v-bind:key="tag._id">
+                  <div
+                    class="tag"
+                    v-for="tag in record.tagList"
+                    v-bind:key="tag._id"
+                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
+                  >
                     {{ tag.name }}
                   </div>
                 </div>
@@ -84,6 +89,7 @@ import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import { Collection, RecordType } from "src/constants/constants";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { dataInferenceService } from "src/services/data-inference-service";
+import { guessFontColorCode } from "src/utils/misc-utils";
 
 const $q = useQuasar();
 

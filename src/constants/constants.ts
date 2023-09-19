@@ -40,3 +40,5 @@ export const RecordType = {
   REPAYMENT_RECEIVED: "repayment-received",
   MONEY_TRANSFER: "money-transfer",
 };
+
+export const defaultTagColor = "#444444";

@@ -3,4 +3,5 @@ export type Tag = {
   _rev?: string;
   $collection: string;
   name: string;
+  color: string;
 };
