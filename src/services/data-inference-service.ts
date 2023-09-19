@@ -8,6 +8,7 @@ import { Party } from "src/models/party";
 import { Tag } from "src/models/tag";
 import { Currency } from "src/models/currency";
 import { assert } from "console";
+import { Wallet } from "src/models/wallet";
 
 let currencyCacheList: Currency[] = [];
 
@@ -30,6 +31,10 @@ export const dataInferenceService = {
       if (inferredRecord.expense.partyId) {
         inferredRecord.expense.party = await this.getParty(inferredRecord.expense.partyId);
       }
+
+      if (inferredRecord.expense.walletId) {
+        inferredRecord.expense.wallet = await this.getWallet(inferredRecord.expense.walletId);
+      }
     }
 
     inferredRecord.tagList = await this.getTagList(inferredRecord.tagIdList);
@@ -44,6 +49,11 @@ export const dataInferenceService = {
 
   async getParty(partyId: string) {
     const doc = (await pouchdbService.getDocById(partyId)) as Party;
+    return doc;
+  },
+
+  async getWallet(walletId: string) {
+    const doc = (await pouchdbService.getDocById(walletId)) as Wallet;
     return doc;
   },
 

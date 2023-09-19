@@ -52,10 +52,15 @@
               <div class="amounts-section">
                 <div class="amount">
                   {{ dataInferenceService.prettifyAmount(record.expense?.amount!, record.expense?.currencyId!) }}
+                  <div class="wallet" v-if="record.expense?.walletId">({{ record.expense.wallet.name }})</div>
                 </div>
                 <div class="unpaid-amount" v-if="record.expense?.amountUnpaid! > 0">
                   Unpaid:
                   {{ dataInferenceService.prettifyAmount(record.expense?.amountUnpaid!, record.expense?.currencyId!) }}
+                </div>
+                <div class="controls">
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editClicked(record)" />
+                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
                 </div>
               </div>
             </div>
@@ -187,6 +192,16 @@ loadData();
     .amount {
       font-size: 24px;
       display: inline-block;
+    }
+
+    .wallet {
+      font-size: 10px;
+    }
+
+    .controls {
+      .control-button {
+        margin: 2px;
+      }
     }
   }
 }

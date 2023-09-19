@@ -91,15 +91,36 @@ export default {
 
     if (props.existingRecordId) {
       isLoading.value = true;
-      // (async function () {
-      //   let res = await pouchdbService.getDocById(props.existingRecordId) as Record;
-      //   initialDoc = res;
-      //   recordName.value = res.name;
-      //   recordType.value = res.type;
-      //   recordInitialBalance.value = res.initialBalance;
-      //   recordCurrencyId.value = res.currencyId;
-      //   isLoading.value = false;
-      // })();
+      (async function () {
+        isLoading.value = true;
+        let res = (await pouchdbService.getDocById(props.existingRecordId)) as Record;
+        initialDoc = res;
+        if (!initialDoc.expense) {
+          // TODO show error message
+          return;
+        }
+
+        recordExpenseAvenueId.value = initialDoc.expense.expenseAvenueId;
+        recordAmount.value = asAmount(initialDoc.expense.amount);
+
+        recordCurrencyId.value = initialDoc.expense.currencyId;
+        recordPartyId.value = initialDoc.expense.partyId;
+        recordWalletId.value = initialDoc.expense.walletId;
+        recordAmountPaid.value = initialDoc.expense.amountPaid;
+        recordAmountUnpaid.value = initialDoc.expense.amountUnpaid;
+        recordTagIdList.value = initialDoc.tagIdList;
+        recordNotes.value = initialDoc.notes;
+
+        if (initialDoc.expense.amount === initialDoc.expense.amountPaid) {
+          paymentType.value = "full";
+        } else if (initialDoc.expense.amountPaid === 0) {
+          paymentType.value = "unpaid";
+        } else {
+          paymentType.value = "partial";
+        }
+
+        isLoading.value = false;
+      })();
     }
 
     async function performManualValidation() {
@@ -110,10 +131,6 @@ export default {
         }
       }
 
-      if (paymentType.value === "partial") {
-        recordAmountUnpaid.value = recordAmount.value - recordAmountPaid.value;
-      }
-
       if (paymentType.value === "unpaid") {
         recordWalletId.value = null;
       }
@@ -122,6 +139,10 @@ export default {
         recordAmountPaid.value = recordAmount.value;
         recordAmountUnpaid.value = 0;
       }
+
+      recordAmountPaid.value = Math.min(recordAmountPaid.value, recordAmount.value);
+
+      recordAmountUnpaid.value = recordAmount.value - recordAmountPaid.value;
 
       return true;
     }
