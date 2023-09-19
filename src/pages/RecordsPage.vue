@@ -27,7 +27,7 @@
         <template v-if="!isLoading">
           <div v-for="(record, index) in rows" class="record-row" v-bind:key="record._id">
             <!-- Expense - start -->
-            <div class="expense-row row" v-if="record.type === RecordType.EXPENSE" :data-index="index">
+            <div class="expense-row row" v-if="record.type === RecordType.EXPENSE && record.expense" :data-index="index">
               <div class="details-section">
                 <div class="primary-line">
                   {{ record.expense?.expenseAvenue.name }}
@@ -72,7 +72,7 @@
             <!-- Expense - end -->
 
             <!-- Income - start -->
-            <div class="income-row row" v-if="record.type === RecordType.INCOME" :data-index="index">
+            <div class="income-row row" v-else-if="record.type === RecordType.INCOME && record.income" :data-index="index">
               <div class="details-section">
                 <div class="primary-line">
                   {{ record.income?.incomeSource.name }}
@@ -117,7 +117,7 @@
             <!-- Income - end -->
 
             <!-- Money Transfer - start -->
-            <div class="money-transfer-row row" v-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
+            <div class="money-transfer-row row" v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
               <div class="details-section">
                 <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{ record.moneyTransfer.toWallet.name }}</div>
 
