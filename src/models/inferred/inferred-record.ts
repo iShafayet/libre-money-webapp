@@ -20,6 +20,26 @@ export type InferredRecord = Record & {
     fromWallet: Wallet;
     toWallet: Wallet;
   };
+
+  lending?: {
+    party: Party;
+    wallet: Wallet;
+  };
+  borrowing?: {
+    party: Party;
+    wallet: Wallet;
+  };
+  repaymentGiven?: {
+    party: Party;
+    wallet: Wallet;
+    originalBorrowingRecordId: string;
+  };
+  repaymentReceived?: {
+    party: Party;
+    wallet: Wallet;
+    originalLendingRecordId: string;
+  };
+
   tagList: Tag[];
   typePrettified: string;
 };

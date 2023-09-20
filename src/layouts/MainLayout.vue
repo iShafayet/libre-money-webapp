@@ -12,30 +12,23 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer class="std-column main-left-sidebar-drawer" v-model="leftDrawerOpen" show-if-above bordered
-      v-if="userStore.isUserLoggedIn">
+    <q-drawer class="std-column main-left-sidebar-drawer" v-model="leftDrawerOpen" show-if-above bordered v-if="userStore.isUserLoggedIn">
       <q-list>
-        <q-item-label header>
-          CORE
-        </q-item-label>
+        <q-item-label header> CORE </q-item-label>
         <EssentialLink v-for="link in operationList" :key="link.title" v-bind="link" />
       </q-list>
 
       <q-list>
-        <q-item-label header>
-          ENTITIES
-        </q-item-label>
+        <q-item-label header> ENTITIES </q-item-label>
         <EssentialLink v-for="link in entityList" :key="link.title" v-bind="link" />
       </q-list>
 
       <q-list>
-        <q-item-label header>
-          REPORTS
-        </q-item-label>
+        <q-item-label header> REPORTS </q-item-label>
         <EssentialLink v-for="link in reportList" :key="link.title" v-bind="link" />
       </q-list>
 
-      <div style="flex: 1;"></div>
+      <div style="flex: 1"></div>
 
       <div class="drawer-bottom">
         <div class="app-version">{{ appVersion }}</div>
@@ -58,31 +51,31 @@ const operationList = [
     title: "Overview",
     caption: "Summaries of everything",
     icon: "money",
-    link: "#/overview"
+    link: "#/overview",
   },
   {
     title: "Records",
     caption: "Income, Expenses and everything else",
     icon: "money",
-    link: "#/records"
+    link: "#/records",
   },
   {
     title: "Loans & Debts",
     caption: "Receivables and Payables",
     icon: "money",
-    link: "#/loans-n-debts"
+    link: "#/loans-and-debts",
   },
   {
     title: "Wallets",
     caption: "Cash, Bank and Digital Money",
     icon: "money",
-    link: "#/wallets"
+    link: "#/wallets",
   },
   {
     title: "Assets",
     caption: "Properties and Valuables",
     icon: "money",
-    link: "#/assets"
+    link: "#/assets",
   },
 ];
 
@@ -91,31 +84,31 @@ const entityList = [
     title: "Parties & Vendors",
     caption: "",
     icon: "school",
-    link: "#/parties"
+    link: "#/parties",
   },
   {
     title: "Tags",
     caption: "",
     icon: "school",
-    link: "#/tags"
+    link: "#/tags",
   },
   {
     title: "Income Sources",
     caption: "",
     icon: "school",
-    link: "#/income-sources"
+    link: "#/income-sources",
   },
   {
     title: "Expense Avenues",
     caption: "",
     icon: "school",
-    link: "#/expense-avenues"
+    link: "#/expense-avenues",
   },
   {
     title: "Currencies",
     caption: "",
     icon: "school",
-    link: "#/currencies"
+    link: "#/currencies",
   },
 ];
 
@@ -124,7 +117,7 @@ const reportList = [
     title: "Monthly Report",
     caption: "",
     icon: "school",
-    link: ""
+    link: "",
   },
 ];
 
@@ -132,7 +125,7 @@ export default defineComponent({
   name: "MainLayout",
 
   components: {
-    EssentialLink
+    EssentialLink,
   },
 
   setup() {
@@ -153,7 +146,7 @@ export default defineComponent({
 
       userStore,
     };
-  }
+  },
 });
 </script>
 

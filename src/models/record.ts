@@ -49,15 +49,33 @@ export type Record = {
   };
   lending?: {
     // essential
+    amount: number;
+    walletId: string;
+    currencyId: string;
+    partyId: string;
   };
   borrowing?: {
     // essential
+    amount: number;
+    walletId: string;
+    currencyId: string;
+    partyId: string;
   };
   repaymentGiven?: {
     // essential
+    amount: number;
+    walletId: string;
+    currencyId: string;
+    partyId: string;
+    originalBorrowingRecordId: string;
   };
   repaymentReceived?: {
     // essential
+    amount: number;
+    walletId: string;
+    currencyId: string;
+    partyId: string;
+    originalLendingRecordId: string;
   };
   moneyTransfer?: {
     fromWalletId: string;
