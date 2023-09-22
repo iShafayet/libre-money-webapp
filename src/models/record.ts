@@ -5,6 +5,7 @@ export type Record = {
   notes: string;
   type: string; // enum RecordType
   tagIdList: string[];
+  transactionEpoch: number;
   expense?: {
     // essential
     expenseAvenueId: string;

@@ -1,15 +1,12 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
     <q-card class="q-dialog-plugin">
-
       <q-card-section>
         <div class="std-dialog-title q-pa-md">{{ existingWalletId ? "Editing a Wallet" : "Adding a Wallet" }}</div>
         <q-form class="q-gutter-md q-pa-md" ref="walletForm">
           <q-input filled v-model="walletName" label="Name of the Wallet" lazy-rules :rules="validators.name" />
-          <q-select filled v-model="walletType" :options="walletTypeList" label="Type" emit-value map-options
-            class="std-margin-bottom-32" />
-          <q-input type="number" filled v-model="walletInitialBalance" label="Initial Balance" lazy-rules
-            :rules="validators.balance" />
+          <q-select filled v-model="walletType" :options="walletTypeList" label="Type" emit-value map-options class="std-margin-bottom-32" />
+          <q-input type="number" filled v-model="walletInitialBalance" label="Initial Balance" lazy-rules :rules="validators.balance" />
           <select-currency v-model="walletCurrencyId"></select-currency>
         </q-form>
       </q-card-section>
@@ -37,17 +34,15 @@ export default {
     existingWalletId: {
       type: String,
       required: false,
-      default: null
+      default: null,
     },
   },
 
   components: {
-    SelectCurrency
+    SelectCurrency,
   },
 
-  emits: [
-    ...useDialogPluginComponent.emits
-  ],
+  emits: [...useDialogPluginComponent.emits],
 
   setup(props) {
     let initialDoc: Wallet | null = null;
@@ -57,9 +52,7 @@ export default {
     const walletForm: Ref<QForm | null> = ref(null);
 
     const walletName: Ref<string | null> = ref(null);
-    const walletType: Ref<string | null> = ref(
-      walletTypeList.find(walletType => walletType.value === defaultWalletType)!.value
-    );
+    const walletType: Ref<string | null> = ref(walletTypeList.find((walletType) => walletType.value === defaultWalletType)!.value);
     const walletInitialBalance: Ref<number | null> = ref(null);
     const walletCurrencyId: Ref<string | null> = ref(null);
 
@@ -68,7 +61,7 @@ export default {
     if (props.existingWalletId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingWalletId) as Wallet;
+        let res = (await pouchdbService.getDocById(props.existingWalletId)) as Wallet;
         initialDoc = res;
         walletName.value = res.name;
         walletType.value = res.type;
@@ -78,7 +71,7 @@ export default {
       })();
     }
     async function okClicked() {
-      if (!await walletForm.value?.validate()) {
+      if (!(await walletForm.value?.validate())) {
         return;
       }
 
@@ -87,7 +80,7 @@ export default {
         name: walletName.value!,
         type: walletType.value!,
         initialBalance: walletInitialBalance.value!,
-        currencyId: walletCurrencyId.value!
+        currencyId: walletCurrencyId.value!,
       };
 
       if (initialDoc) {
@@ -111,11 +104,9 @@ export default {
       walletInitialBalance,
       walletCurrencyId,
       validators,
-      walletForm
+      walletForm,
     };
-  }
+  },
 };
 </script>
-<style scoped lang="ts">
-
-</style>
+<style scoped lang="ts"></style>

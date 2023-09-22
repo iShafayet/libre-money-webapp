@@ -1,3 +1,5 @@
+import { date } from "quasar";
+
 export async function sleep(duration: number) {
   return new Promise((accept) => {
     setTimeout(accept, duration);
@@ -12,7 +14,7 @@ export function asAmount(amount: number | string) {
   return parseFloat(String(amount)) || 0;
 }
 
-function hexToRgb(hex) {
+function hexToRgb(hex: any) {
   // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
   const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
   hex = hex.replace(shorthandRegex, function (m, r, g, b) {
@@ -42,4 +44,8 @@ export function guessFontColorCode(colorCode: string) {
   } catch (ex) {
     return "#ffffff";
   }
+}
+
+export function prettifyDate(timestamp: number) {
+  return date.formatDate(timestamp, "YYYY-MM-DD hh:mm:ss a");
 }

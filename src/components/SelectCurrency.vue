@@ -14,7 +14,7 @@ const value = computed({
   },
   set(value) {
     emit("update:modelValue", value);
-  }
+  },
 });
 
 const isLoading: Ref<boolean> = ref(true);
@@ -38,20 +38,33 @@ loadData();
 function filterCurrencyFn(val: string, update: any, abort: any) {
   update(() => {
     const needle = val.toLowerCase();
-    walletCurrencyList.value = fullWalletCurrencyList.value.filter(currency => {
+    walletCurrencyList.value = fullWalletCurrencyList.value.filter((currency) => {
       return currency.name.toLowerCase().includes(needle);
     });
   });
 }
-
 </script>
 
 <template>
-  <div style="text-align: center;" v-if="isLoading">
+  <div style="text-align: center" v-if="isLoading">
     <q-spinner color="primary" size="40px" :thickness="4" />
   </div>
 
-  <q-select filled v-model="value" :options="walletCurrencyList" label="Currency" emit-value map-options fill-input
-    use-input input-debounce="0" @filter="filterCurrencyFn" class="std-margin-bottom-32" option-value="_id"
-    option-label="name" hide-selected v-if="!isLoading" />
+  <q-select
+    filled
+    v-model="value"
+    :options="walletCurrencyList"
+    label="Currency"
+    emit-value
+    map-options
+    fill-input
+    use-input
+    input-debounce="0"
+    @filter="filterCurrencyFn"
+    class="std-margin-bottom-32"
+    option-value="_id"
+    option-label="name"
+    hide-selected
+    v-if="!isLoading"
+  />
 </template>

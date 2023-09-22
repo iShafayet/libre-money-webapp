@@ -5,18 +5,14 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import { Ref, computed, ref } from "vue";
 
 const props = defineProps({
-  modelValue: {
-
-  },
+  modelValue: {},
   mandatory: {
     type: Boolean,
-    default: true
-  }
+    default: true,
+  },
 });
 
-
 const emit = defineEmits(["update:modelValue"]);
-
 
 const value = computed({
   get() {
@@ -24,7 +20,7 @@ const value = computed({
   },
   set(value) {
     emit("update:modelValue", value);
-  }
+  },
 });
 
 const isLoading: Ref<boolean> = ref(true);
@@ -48,20 +44,34 @@ loadData();
 function filterPartyFn(val: string, update: any, abort: any) {
   update(() => {
     const needle = val.toLowerCase();
-    partyPartyList.value = fullPartyPartyList.value.filter(party => {
+    partyPartyList.value = fullPartyPartyList.value.filter((party) => {
       return party.name.toLowerCase().includes(needle);
     });
   });
 }
-
 </script>
 
 <template>
-  <div style="text-align: center;" v-if="isLoading">
+  <div style="text-align: center" v-if="isLoading">
     <q-spinner color="primary" size="40px" :thickness="4" />
   </div>
 
-  <q-select filled v-model="value" :options="partyPartyList" label="Party" emit-value map-options fill-input use-input
-    input-debounce="0" @filter="filterPartyFn" class="std-margin-bottom-32" option-value="_id" option-label="name"
-    hide-selected v-if="!isLoading" :clearable="!mandatory" />
+  <q-select
+    filled
+    v-model="value"
+    :options="partyPartyList"
+    label="Party"
+    emit-value
+    map-options
+    fill-input
+    use-input
+    input-debounce="0"
+    @filter="filterPartyFn"
+    class="std-margin-bottom-32"
+    option-value="_id"
+    option-label="name"
+    hide-selected
+    v-if="!isLoading"
+    :clearable="!mandatory"
+  />
 </template>

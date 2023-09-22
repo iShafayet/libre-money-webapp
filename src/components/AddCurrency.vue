@@ -1,13 +1,11 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
     <q-card class="q-dialog-plugin">
-
       <q-card-section>
         <div class="std-dialog-title q-pa-md">{{ existingCurrencyId ? "Editing a Currency" : "Adding a Currency" }}</div>
         <q-form class="q-gutter-md q-pa-md" ref="currencyForm">
           <q-input filled v-model="currencyName" label="Name of the Currency" lazy-rules :rules="validators.name" />
-          <q-input filled v-model="currencySign" label="Currency Sign (i.e. USD)" lazy-rules
-            :rules="validators.currencySign" />
+          <q-input filled v-model="currencySign" label="Currency Sign (i.e. USD)" lazy-rules :rules="validators.currencySign" />
         </q-form>
       </q-card-section>
 
@@ -32,13 +30,11 @@ export default {
     existingCurrencyId: {
       type: String,
       required: false,
-      default: null
+      default: null,
     },
   },
 
-  emits: [
-    ...useDialogPluginComponent.emits
-  ],
+  emits: [...useDialogPluginComponent.emits],
 
   setup(props) {
     let initialDoc: Currency | null = null;
@@ -55,7 +51,7 @@ export default {
     if (props.existingCurrencyId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingCurrencyId) as Currency;
+        let res = (await pouchdbService.getDocById(props.existingCurrencyId)) as Currency;
         initialDoc = res;
         currencyName.value = res.name;
         currencySign.value = res.sign;
@@ -63,7 +59,7 @@ export default {
       })();
     }
     async function okClicked() {
-      if (!await currencyForm.value?.validate()) {
+      if (!(await currencyForm.value?.validate())) {
         return;
       }
 
@@ -91,11 +87,9 @@ export default {
       currencyName,
       currencySign,
       validators,
-      currencyForm
+      currencyForm,
     };
-  }
+  },
 };
 </script>
-<style scoped lang="ts">
-
-</style>
+<style scoped lang="ts"></style>

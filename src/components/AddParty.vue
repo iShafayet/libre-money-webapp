@@ -1,7 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
     <q-card class="q-dialog-plugin">
-
       <q-card-section>
         <div class="std-dialog-title q-pa-md">{{ existingPartyId ? "Editing a Party" : "Adding a Party" }}</div>
         <q-form class="q-gutter-md q-pa-md" ref="partyForm">
@@ -31,13 +30,11 @@ export default {
     existingPartyId: {
       type: String,
       required: false,
-      default: null
+      default: null,
     },
   },
 
-  emits: [
-    ...useDialogPluginComponent.emits
-  ],
+  emits: [...useDialogPluginComponent.emits],
 
   setup(props) {
     let initialDoc: Party | null = null;
@@ -47,16 +44,14 @@ export default {
     const partyForm: Ref<QForm | null> = ref(null);
 
     const partyName: Ref<string | null> = ref(null);
-    const partyType: Ref<string | null> = ref(
-      partyTypeList.find(partyType => partyType.value === defaultPartyType)!.value
-    );
+    const partyType: Ref<string | null> = ref(partyTypeList.find((partyType) => partyType.value === defaultPartyType)!.value);
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
     if (props.existingPartyId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingPartyId) as Party;
+        let res = (await pouchdbService.getDocById(props.existingPartyId)) as Party;
         initialDoc = res;
         partyName.value = res.name;
         partyType.value = res.type;
@@ -64,7 +59,7 @@ export default {
       })();
     }
     async function okClicked() {
-      if (!await partyForm.value?.validate()) {
+      if (!(await partyForm.value?.validate())) {
         return;
       }
 
@@ -93,11 +88,9 @@ export default {
       partyName,
       partyType,
       validators,
-      partyForm
+      partyForm,
     };
-  }
+  },
 };
 </script>
-<style scoped lang="ts">
-
-</style>
+<style scoped lang="ts"></style>

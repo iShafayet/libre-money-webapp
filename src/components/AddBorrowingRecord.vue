@@ -18,6 +18,7 @@
 
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
+          <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
         </q-form>
       </q-card-section>
 
@@ -41,6 +42,7 @@ import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
 import { asAmount } from "src/utils/misc-utils";
 import { dataInferenceService } from "src/services/data-inference-service";
+import DateTimeInput from "./lib/DateTimeInput.vue";
 
 export default {
   props: {
@@ -55,6 +57,7 @@ export default {
     SelectWallet,
     SelectParty,
     SelectTag,
+    DateTimeInput,
   },
 
   emits: [...useDialogPluginComponent.emits],
@@ -78,6 +81,8 @@ export default {
     const recordTagIdList: Ref<string[]> = ref([]);
     const recordNotes: Ref<string | null> = ref(null);
 
+    const transactionEpoch: Ref<number> = ref(Date.now());
+
     if (props.existingRecordId) {
       isLoading.value = true;
       (async function () {
@@ -95,6 +100,8 @@ export default {
 
         recordTagIdList.value = initialDoc.tagIdList;
         recordNotes.value = initialDoc.notes;
+
+        transactionEpoch.value = initialDoc.transactionEpoch || Date.now();
 
         isLoading.value = false;
       })();
@@ -118,6 +125,7 @@ export default {
         notes: recordNotes.value!,
         type: recordType,
         tagIdList: recordTagIdList.value,
+        transactionEpoch: transactionEpoch.value,
         borrowing: {
           amount: asAmount(recordAmount.value),
           walletId: recordWalletId.value!,
@@ -151,6 +159,7 @@ export default {
       cancelClicked: onDialogCancel,
       isLoading,
       validators,
+      transactionEpoch,
       recordForm,
       paymentType,
       recordAmount,

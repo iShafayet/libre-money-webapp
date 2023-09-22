@@ -29,6 +29,8 @@
             <!-- Expense - start -->
             <div class="expense-row row" v-if="record.type === RecordType.EXPENSE && record.expense" :data-index="index">
               <div class="details-section">
+                <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
+
                 <div class="primary-line">
                   {{ record.expense?.expenseAvenue.name }}
                 </div>
@@ -74,6 +76,8 @@
             <!-- Income - start -->
             <div class="income-row row" v-else-if="record.type === RecordType.INCOME && record.income" :data-index="index">
               <div class="details-section">
+                <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
+
                 <div class="primary-line">
                   {{ record.income?.incomeSource.name }}
                 </div>
@@ -119,6 +123,8 @@
             <!-- Money Transfer - start -->
             <div class="money-transfer-row row" v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
               <div class="details-section">
+                <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
+
                 <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{ record.moneyTransfer.toWallet.name }}</div>
 
                 <div class="notes" v-if="record.notes">{{ record.notes }}</div>
@@ -179,7 +185,7 @@ import { dialogService } from "src/services/dialog-service";
 import { Collection, RecordType } from "src/constants/constants";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { dataInferenceService } from "src/services/data-inference-service";
-import { guessFontColorCode } from "src/utils/misc-utils";
+import { guessFontColorCode, prettifyDate } from "src/utils/misc-utils";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import AddIncomeRecord from "src/components/AddIncomeRecord.vue";
 import AddMoneyTransferRecord from "src/components/AddMoneyTransferRecord.vue";
@@ -200,6 +206,7 @@ async function loadData() {
 
   let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
   let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  dataRows.sort((a, b) => b.transactionEpoch || 0 - a.transactionEpoch || 0);
   rows.value = dataRows;
 
   isLoading.value = false;
@@ -276,6 +283,14 @@ loadData();
   margin-bottom: 12px;
   padding-bottom: 12px;
   border-bottom: 1px dashed #eaeaea;
+
+  .record-date {
+    font-size: 10px;
+    padding: 4px 8px;
+    background: #ff000012;
+    display: inline-block;
+    border-radius: 5px;
+  }
 
   .details-section {
     flex: 1;

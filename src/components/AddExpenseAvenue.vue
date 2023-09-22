@@ -1,7 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
     <q-card class="q-dialog-plugin">
-
       <q-card-section>
         <div class="std-dialog-title q-pa-md">
           {{ existingExpenseAvenueId ? "Editing an Expense Avenue" : "Adding an Expense Avenue" }}
@@ -32,13 +31,11 @@ export default {
     existingExpenseAvenueId: {
       type: String,
       required: false,
-      default: null
+      default: null,
     },
   },
 
-  emits: [
-    ...useDialogPluginComponent.emits
-  ],
+  emits: [...useDialogPluginComponent.emits],
 
   setup(props) {
     let initialDoc: ExpenseAvenue | null = null;
@@ -54,14 +51,14 @@ export default {
     if (props.existingExpenseAvenueId) {
       isLoading.value = true;
       (async function () {
-        let res = await pouchdbService.getDocById(props.existingExpenseAvenueId) as ExpenseAvenue;
+        let res = (await pouchdbService.getDocById(props.existingExpenseAvenueId)) as ExpenseAvenue;
         initialDoc = res;
         expenseAvenueName.value = res.name;
         isLoading.value = false;
       })();
     }
     async function okClicked() {
-      if (!await expenseAvenueForm.value?.validate()) {
+      if (!(await expenseAvenueForm.value?.validate())) {
         return;
       }
 
@@ -87,11 +84,9 @@ export default {
       isLoading,
       expenseAvenueName,
       validators,
-      expenseAvenueForm
+      expenseAvenueForm,
     };
-  }
+  },
 };
 </script>
-<style scoped lang="ts">
-
-</style>
+<style scoped lang="ts"></style>
