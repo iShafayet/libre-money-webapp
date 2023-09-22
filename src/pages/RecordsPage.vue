@@ -168,7 +168,7 @@
             </div>
             <!-- Money Transfer -->
 
-            <div class="misc-row" v-else :data-index="index">{{ record.type }} {{ record.expense?.amount }} {{ record.notes }}</div>
+            <div class="misc-row" v-else :data-index="index">{{ record }}</div>
           </div>
         </template>
       </div>
@@ -206,7 +206,7 @@ async function loadData() {
 
   let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
   let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
-  dataRows.sort((a, b) => b.transactionEpoch || 0 - a.transactionEpoch || 0);
+  dataRows.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
   rows.value = dataRows;
 
   isLoading.value = false;
