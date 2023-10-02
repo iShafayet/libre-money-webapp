@@ -10,6 +10,7 @@ import { Currency } from "src/models/currency";
 import { assert } from "console";
 import { Wallet } from "src/models/wallet";
 import { IncomeSource } from "src/models/income-source";
+import { Asset } from "src/models/asset";
 
 let currencyCacheList: Currency[] = [];
 
@@ -78,6 +79,11 @@ export const dataInferenceService = {
 
   async getWallet(walletId: string) {
     const doc = (await pouchdbService.getDocById(walletId)) as Wallet;
+    return doc;
+  },
+
+  async getAsset(assetId: string) {
+    const doc = (await pouchdbService.getDocById(assetId)) as Asset;
     return doc;
   },
 

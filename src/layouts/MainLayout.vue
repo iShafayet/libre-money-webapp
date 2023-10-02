@@ -54,7 +54,7 @@ import EssentialLink from "components/sidebar/EssentialLink.vue";
 const operationList = [
   {
     title: "Overview",
-    caption: "Summaries of everything",
+    caption: "Balances and Sums",
     icon: "money",
     link: "#/overview",
   },

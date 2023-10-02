@@ -39,14 +39,33 @@ export type Record = {
   assetPurchase?: {
     // essential
     assetId: string;
+    amount: number;
+    currencyId: string;
+    partyId: string | null;
+    // payment
+    walletId: string;
+    amountPaid: number;
+    // due
+    amountUnpaid: number;
   };
-  assetSales?: {
+  assetSale?: {
     // essential
     assetId: string;
+    amount: number;
+    currencyId: string;
+    partyId: string | null;
+    // payment
+    walletId: string;
+    amountPaid: number;
+    // due
+    amountUnpaid: number;
   };
   assetAppreciationDepreciation?: {
     // essential
     assetId: string;
+    type: string;
+    amount: number;
+    currencyId: string;
   };
   lending?: {
     // essential

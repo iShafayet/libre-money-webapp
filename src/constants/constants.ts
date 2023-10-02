@@ -15,6 +15,16 @@ export const walletTypeList = [
   { value: "other", label: "Other" },
 ];
 
+export const defaultAssetType = "investment";
+
+export const assetTypeList = [
+  { value: "investment", label: "Investment" },
+  { value: "property", label: "Property" },
+  { value: "trust-fund", label: "Trust Fund" },
+  { value: "long-term-deposit", label: "Long Term Deposit" },
+  { value: "other", label: "Other" },
+];
+
 export const defaultWalletType = "cash";
 
 export const Collection = {
