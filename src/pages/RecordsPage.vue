@@ -26,67 +26,24 @@
         </div>
         <template v-if="!isLoading">
           <div v-for="(record, index) in rows" class="record-row" v-bind:key="record._id">
-            <!-- Expense - start -->
-            <div class="expense-row row" v-if="record.type === RecordType.EXPENSE && record.expense" :data-index="index">
+            <!-- Unified Single Amount Record - start -->
+            <div class="single-amount-row row" v-if="isSingleAmountType(record)" :data-index="index">
               <div class="details-section">
                 <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
 
-                <div class="primary-line">
+                <div class="primary-line" v-if="record.type === RecordType.EXPENSE">
                   {{ record.expense?.expenseAvenue.name }}
                 </div>
-
-                <div class="row secondary-line">
-                  <div class="party" v-if="record.expense?.partyId">Party: {{ record.expense.party.name }}</div>
-                </div>
-
-                <div class="notes" v-if="record.notes">{{ record.notes }}</div>
-
-                <div class="row tags-line">
-                  <div class="record-type" :data-record-type="record.type">
-                    {{ record.typePrettified }}
-                  </div>
-                  <div
-                    class="tag"
-                    v-for="tag in record.tagList"
-                    v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
-                  >
-                    {{ tag.name }}
-                  </div>
-                </div>
-              </div>
-
-              <div class="amounts-section">
-                <div class="amount">
-                  {{ dataInferenceService.prettifyAmount(record.expense?.amount!, record.expense?.currencyId!) }}
-                </div>
-                <div class="wallet" v-if="record.expense?.walletId">({{ record.expense.wallet.name }})</div>
-                <div class="unpaid-amount" v-if="record.expense?.amountUnpaid! > 0">
-                  Unpaid:
-                  {{ dataInferenceService.prettifyAmount(record.expense?.amountUnpaid!, record.expense?.currencyId!) }}
-                </div>
-                <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editExpenseClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
-                </div>
-              </div>
-            </div>
-            <!-- Expense - end -->
-
-            <!-- Income - start -->
-            <div class="income-row row" v-else-if="record.type === RecordType.INCOME && record.income" :data-index="index">
-              <div class="details-section">
-                <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
-
-                <div class="primary-line">
+                <div class="primary-line" v-else-if="record.type === RecordType.INCOME">
                   {{ record.income?.incomeSource.name }}
                 </div>
+                <div class="primary-line" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
 
                 <div class="row secondary-line">
-                  <div class="party" v-if="record.income?.partyId">Party: {{ record.income.party.name }}</div>
+                  <div class="party" v-if="getParty(record)">Party: {{ getParty(record)?.name }}</div>
                 </div>
 
-                <div class="notes" v-if="record.notes">{{ record.notes }}</div>
+                <div class="notes" v-if="record.notes">Notes: {{ record.notes }}</div>
 
                 <div class="row tags-line">
                   <div class="record-type" :data-record-type="record.type">
@@ -105,20 +62,20 @@
 
               <div class="amounts-section">
                 <div class="amount">
-                  {{ dataInferenceService.prettifyAmount(record.income?.amount!, record.income?.currencyId!) }}
+                  {{ dataInferenceService.prettifyAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
-                <div class="wallet" v-if="record.income?.walletId">({{ record.income.wallet.name }})</div>
-                <div class="unpaid-amount" v-if="record.income?.amountUnpaid! > 0">
-                  Due:
-                  {{ dataInferenceService.prettifyAmount(record.income?.amountUnpaid!, record.income?.currencyId!) }}
+                <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
+                <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
+                  Unpaid:
+                  {{ dataInferenceService.prettifyAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editIncomeClicked(record)" />
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
                   <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
                 </div>
               </div>
             </div>
-            <!-- Income - end -->
+            <!-- Unified Single Amount Record -->
 
             <!-- Money Transfer - start -->
             <div class="money-transfer-row row" v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
@@ -189,6 +146,16 @@ import { guessFontColorCode, prettifyDate } from "src/utils/misc-utils";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import AddIncomeRecord from "src/components/AddIncomeRecord.vue";
 import AddMoneyTransferRecord from "src/components/AddMoneyTransferRecord.vue";
+import AddRepaymentReceivedRecord from "src/components/AddRepaymentReceivedRecord.vue";
+import AddRepaymentGivenRecord from "src/components/AddRepaymentGivenRecord.vue";
+import AddLendingRecord from "src/components/AddLendingRecord.vue";
+import AddBorrowingRecord from "src/components/AddBorrowingRecord.vue";
+import AddAssetPurchaseRecord from "src/components/AddAssetPurchaseRecord.vue";
+import AddAssetSaleRecord from "src/components/AddAssetSaleRecord.vue";
+import AddAssetAppreciationDepreciationRecord from "src/components/AddAssetAppreciationDepreciationRecord.vue";
+import { Party } from "src/models/party";
+import { Wallet } from "src/models/wallet";
+import { Asset } from "src/models/asset";
 
 const $q = useQuasar();
 
@@ -232,14 +199,29 @@ async function addMoneyTransferClicked() {
   });
 }
 
-async function editExpenseClicked(record: InferredRecord) {
-  $q.dialog({ component: AddExpenseRecord, componentProps: { existingRecordId: record._id } }).onOk((res) => {
-    loadData();
-  });
-}
+async function editSingleAmountRecordClicked(record: InferredRecord) {
+  let component: any = AddExpenseRecord;
+  if (record.type === RecordType.EXPENSE) {
+    component = AddExpenseRecord;
+  } else if (record.type === RecordType.INCOME) {
+    component = AddIncomeRecord;
+  } else if (record.type === RecordType.LENDING) {
+    component = AddLendingRecord;
+  } else if (record.type === RecordType.BORROWING) {
+    component = AddBorrowingRecord;
+  } else if (record.type === RecordType.REPAYMENT_GIVEN) {
+    component = AddRepaymentGivenRecord;
+  } else if (record.type === RecordType.REPAYMENT_RECEIVED) {
+    component = AddRepaymentReceivedRecord;
+  } else if (record.type === RecordType.ASSET_PURCHASE) {
+    component = AddAssetPurchaseRecord;
+  } else if (record.type === RecordType.ASSET_SALE) {
+    component = AddAssetSaleRecord;
+  } else if (record.type === RecordType.ASSET_APPRECIATION_DEPRECIATION) {
+    component = AddAssetAppreciationDepreciationRecord;
+  }
 
-async function editIncomeClicked(record: InferredRecord) {
-  $q.dialog({ component: AddIncomeRecord, componentProps: { existingRecordId: record._id } }).onOk((res) => {
+  $q.dialog({ component, componentProps: { existingRecordId: record._id } }).onOk((res) => {
     loadData();
   });
 }
@@ -260,6 +242,64 @@ async function deleteClicked(record: InferredRecord) {
   }
 
   loadData();
+}
+
+// ----- Computed and Embedded
+
+function isSingleAmountType(record: InferredRecord) {
+  return (
+    (record.type === RecordType.EXPENSE && record.expense) ||
+    (record.type === RecordType.INCOME && record.income) ||
+    (record.type === RecordType.LENDING && record.lending) ||
+    (record.type === RecordType.BORROWING && record.borrowing) ||
+    (record.type === RecordType.REPAYMENT_GIVEN && record.repaymentGiven) ||
+    (record.type === RecordType.REPAYMENT_RECEIVED && record.repaymentReceived) ||
+    (record.type === RecordType.ASSET_SALE && record.assetSale) ||
+    (record.type === RecordType.ASSET_PURCHASE && record.assetPurchase) ||
+    (record.type === RecordType.ASSET_APPRECIATION_DEPRECIATION && record.assetAppreciationDepreciation)
+  );
+}
+
+function getInnerKey(record: InferredRecord, key: string) {
+  if (record.type === RecordType.EXPENSE && record.expense) return (record.expense as any)[key];
+  if (record.type === RecordType.INCOME && record.income) return (record.income as any)[key];
+  if (record.type === RecordType.LENDING && record.lending) return (record.lending as any)[key];
+  if (record.type === RecordType.BORROWING && record.borrowing) return (record.borrowing as any)[key];
+  if (record.type === RecordType.REPAYMENT_GIVEN && record.repaymentGiven) return (record.repaymentGiven as any)[key];
+  if (record.type === RecordType.REPAYMENT_RECEIVED && record.repaymentReceived) return (record.repaymentReceived as any)[key];
+  if (record.type === RecordType.ASSET_SALE && record.assetSale) return (record.assetSale as any)[key];
+  if (record.type === RecordType.ASSET_PURCHASE && record.assetPurchase) return (record.assetPurchase as any)[key];
+  if (record.type === RecordType.ASSET_APPRECIATION_DEPRECIATION && record.assetAppreciationDepreciation)
+    return (record.assetAppreciationDepreciation as any)[key];
+  return null;
+}
+
+function getParty(record: InferredRecord): Party | null {
+  let party = getInnerKey(record, "party");
+  if (!party) return null;
+  return party as Party;
+}
+
+function getWallet(record: InferredRecord): Wallet | null {
+  let wallet = getInnerKey(record, "wallet");
+  if (!wallet) return null;
+  return wallet as Wallet;
+}
+
+function getAsset(record: InferredRecord): Asset | null {
+  let asset = getInnerKey(record, "asset");
+  if (!asset) return null;
+  return asset as Asset;
+}
+
+function getNumber(record: InferredRecord, key: string): number | null {
+  let value = getInnerKey(record, key);
+  return value;
+}
+
+function getString(record: InferredRecord, key: string): string | null {
+  let value = getInnerKey(record, key);
+  return value;
 }
 
 // ----- Watchers
@@ -306,6 +346,7 @@ loadData();
         display: inline-block;
         border-radius: 6px;
         text-transform: capitalize;
+        background-color: #e6e6e6;
 
         &[data-record-type="expense"] {
           background-color: $record-expense-primary-color;

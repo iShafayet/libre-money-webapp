@@ -4,6 +4,7 @@ import { Party } from "../party";
 import { Tag } from "../tag";
 import { Wallet } from "../wallet";
 import { IncomeSource } from "../income-source";
+import { Asset } from "../asset";
 
 export type InferredRecord = Record & {
   expense?: {
@@ -36,6 +37,20 @@ export type InferredRecord = Record & {
   repaymentReceived?: {
     party: Party;
     wallet: Wallet;
+  };
+
+  assetPurchase?: {
+    asset: Asset;
+    party: Party;
+    wallet: Wallet;
+  };
+  assetSale?: {
+    asset: Asset;
+    party: Party;
+    wallet: Wallet;
+  };
+  assetAppreciationDepreciation?: {
+    asset: Asset;
   };
 
   tagList: Tag[];
