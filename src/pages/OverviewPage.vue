@@ -96,6 +96,31 @@
         </table>
       </div>
     </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Assets</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Asset</th>
+              <th>Balance</th>
+            </tr>
+            <tr v-for="row in overview.assets.list" v-bind:key="row.assetId">
+              <td>{{ row.asset.name }}</td>
+              <td>{{ printAmount(row.balance) }}</td>
+            </tr>
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.assets.sumOfBalances) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
   </q-page>
 </template>
 

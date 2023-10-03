@@ -131,6 +131,9 @@ class ComputationService {
     res = await pouchdbService.listByCollection(Collection.WALLET);
     const walletList = res.docs as Wallet[];
 
+    res = await pouchdbService.listByCollection(Collection.ASSET);
+    const assetList = res.docs as Asset[];
+
     res = await pouchdbService.listByCollection(Collection.INCOME_SOURCE);
     const incomeSourceList = res.docs as IncomeSource[];
 
@@ -179,7 +182,10 @@ class ComputationService {
       wallets: {
         list: [],
         sumOfBalances: 0,
-        totalTransactionCount: 0,
+      },
+      assets: {
+        list: [],
+        sumOfBalances: 0,
       },
     };
 
@@ -309,6 +315,42 @@ class ComputationService {
       Object.keys(map).forEach((key) => {
         overview.wallets.list.push(map[key]);
         overview.wallets.sumOfBalances += map[key].balance;
+      });
+    }
+
+    // ============== Asset
+
+    {
+      const map: any = {};
+      for (const asset of assetList) {
+        const key = `${asset._id}`;
+        map[key] = {
+          assetId: asset._id,
+          asset: asset,
+          balance: 0,
+        };
+
+        const totalPurchases = recordList
+          .filter((record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase?.assetId === asset._id)
+          .reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
+
+        const totalSales = recordList
+          .filter((record) => record.type === RecordType.ASSET_SALE && record.assetSale?.assetId === asset._id)
+          .reduce((sum, record) => sum + record.assetSale!.amount, 0);
+
+        const totalAppreciation = recordList
+          .filter((record) => record.type === RecordType.ASSET_APPRECIATION_DEPRECIATION && record.assetAppreciationDepreciation?.assetId === asset._id)
+          .reduce(
+            (sum, record) => sum + record.assetAppreciationDepreciation!.amount * (record.assetAppreciationDepreciation!.type === "appreciation" ? 1 : -1),
+            0
+          );
+
+        map[key].balance = totalPurchases - totalSales + totalAppreciation;
+      }
+
+      Object.keys(map).forEach((key) => {
+        overview.assets.list.push(map[key]);
+        overview.assets.sumOfBalances += map[key].balance;
       });
     }
 

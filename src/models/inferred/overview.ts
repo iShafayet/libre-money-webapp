@@ -1,3 +1,4 @@
+import { Asset } from "../asset";
 import { Currency } from "../currency";
 import { ExpenseAvenue } from "../expense-avenue";
 import { IncomeSource } from "../income-source";
@@ -33,6 +34,14 @@ export type Overview = {
       walletId: string;
       balance: number;
       wallet: Wallet;
+    }[];
+    sumOfBalances: number;
+  };
+  assets: {
+    list: {
+      assetId: string;
+      balance: number;
+      asset: Asset;
     }[];
     sumOfBalances: number;
   };
