@@ -277,6 +277,8 @@ class ComputationService {
     {
       const map: any = {};
       for (const wallet of walletList) {
+        if (wallet.currencyId !== currencyId) continue;
+
         const key = `${wallet._id}`;
         map[key] = {
           walletId: wallet._id,
