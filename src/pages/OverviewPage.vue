@@ -1,7 +1,7 @@
 <template>
   <q-page class="items-center justify-evenly page">
     <q-card class="std-card">
-      <div class="filter-row q-pa-md q-gutter-sm" v-if="!isLoading">
+      <div class="filter-row q-pa-md q-gutter-sm" v-if="!isLoading" style="display: none">
         <div class="title">Filters</div>
         <select-currency v-model="recordCurrencyId"></select-currency>
         <date-input v-model="startEpoch" label="Start Date"></date-input>
@@ -18,35 +18,7 @@
 
     <q-card class="std-card" v-if="!isLoading && overview">
       <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Income</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Income Source</th>
-              <th>Transaction Count</th>
-              <th>Sum</th>
-            </tr>
-            <tr v-for="row in overview.income.list" v-bind:key="row.incomeSourceId">
-              <td>{{ row.incomeSource.name }}</td>
-              <td>{{ printCount(row.transactionCount) }}</td>
-              <td>{{ printAmount(row.sum) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printCount(overview.income.totalTransactionCount) }}</th>
-              <th>{{ printAmount(overview.income.grandSum) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Expense</div>
+        <div class="title">Expenses (Current Month)</div>
       </div>
 
       <div class="q-pa-md">
@@ -54,17 +26,14 @@
           <tbody>
             <tr>
               <th>Expense Avenue</th>
-              <th>Transaction Count</th>
               <th>Sum</th>
             </tr>
             <tr v-for="row in overview.expense.list" v-bind:key="row.expenseAvenueId">
               <td>{{ row.expenseAvenue.name }}</td>
-              <td>{{ printCount(row.transactionCount) }}</td>
               <td>{{ printAmount(row.sum) }}</td>
             </tr>
             <tr>
               <th>Grand Total</th>
-              <th>{{ printCount(overview.expense.totalTransactionCount) }}</th>
               <th>{{ printAmount(overview.expense.grandSum) }}</th>
             </tr>
           </tbody>
@@ -74,7 +43,7 @@
 
     <q-card class="std-card" v-if="!isLoading && overview">
       <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Wallets</div>
+        <div class="title">Wallet Balances</div>
       </div>
 
       <div class="q-pa-md">
@@ -91,179 +60,6 @@
             <tr>
               <th>Grand Total</th>
               <th>{{ printAmount(overview.wallets.sumOfBalances) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Assets</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Asset</th>
-              <th>Balance</th>
-            </tr>
-            <tr v-for="row in overview.assets.list" v-bind:key="row.assetId">
-              <td>{{ row.asset.name }}</td>
-              <td>{{ printAmount(row.balance) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.assets.sumOfBalances) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Receivables (Calculated)</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Party</th>
-              <th>Income Receivable</th>
-              <th>Asset Sales Receivable</th>
-            </tr>
-            <tr v-for="row in overview.computedReceivables.list" v-bind:key="row.partyId">
-              <td>{{ row.party.name }}</td>
-              <td>{{ printAmount(row.incomeReceivable) }}</td>
-              <td>{{ printAmount(row.salesReceivable) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</th>
-              <th>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Payables (Calculated)</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Party</th>
-              <th>Expense Payable</th>
-              <th>Asset Purchase Payable</th>
-            </tr>
-            <tr v-for="row in overview.computedPayables.list" v-bind:key="row.partyId">
-              <td>{{ row.party.name }}</td>
-              <td>{{ printAmount(row.expensePayable) }}</td>
-              <td>{{ printAmount(row.purchasePayable) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</th>
-              <th>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Loans and Debts</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Party</th>
-              <th>They owe you</th>
-              <th>You owe them</th>
-            </tr>
-            <tr v-for="row in overview.loanAndDebts.list" v-bind:key="row.partyId">
-              <td>{{ row.party.name }}</td>
-              <td>{{ printAmount(row.theyOweUserAmount) }}</td>
-              <td>{{ printAmount(row.userOwesThemAmount) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.loanAndDebts.userIsOwedTotalAmount) }}</th>
-              <th>{{ printAmount(overview.loanAndDebts.userOwesTotalAmount) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Final Balance</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Particular</th>
-              <th>Value of Assets</th>
-              <th>Liabilities</th>
-            </tr>
-            <tr>
-              <td>Wallets (Current Assets)</td>
-              <td>{{ printAmount(overview.wallets.sumOfBalances) }}</td>
-              <td>0</td>
-            </tr>
-            <tr>
-              <td>Assets</td>
-              <td>{{ printAmount(overview.assets.sumOfBalances) }}</td>
-              <td>0</td>
-            </tr>
-            <tr>
-              <td>Income Receivables</td>
-              <td>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</td>
-              <td>0</td>
-            </tr>
-            <tr>
-              <td>Sales Receivables</td>
-              <td>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</td>
-              <td>0</td>
-            </tr>
-            <tr>
-              <td>Loans (Receivables)</td>
-              <td>{{ printAmount(overview.loanAndDebts.userIsOwedTotalAmount) }}</td>
-              <td>0</td>
-            </tr>
-            <tr>
-              <td>Expense Payables</td>
-              <td>0</td>
-              <td>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</td>
-            </tr>
-            <tr>
-              <td>Asset Purchase Payables</td>
-              <td>0</td>
-              <td>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</td>
-            </tr>
-            <tr>
-              <td>Debt (Payables)</td>
-              <td>0</td>
-              <td>{{ printAmount(overview.loanAndDebts.userOwesTotalAmount) }}</td>
-            </tr>
-
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.finalBalance.totalAsset) }}</th>
-              <th>{{ printAmount(overview.finalBalance.totalLiability) }}</th>
             </tr>
           </tbody>
         </table>
