@@ -1,5 +1,5 @@
 <template>
-  <q-page class="row items-start justify-evenly">
+  <q-page class="items-center justify-evenly page">
     <q-card class="std-card">
       <div class="filter-row q-pa-md q-gutter-sm" v-if="!isLoading">
         <div class="title">Filters</div>
@@ -9,8 +9,8 @@
         <q-btn color="primary" label="Submit" @click="submitClicked" />
       </div>
 
-      <div class="q-pa-md">
-        <div class="loading-notifier" v-if="isLoading">
+      <div class="q-pa-md" v-if="isLoading">
+        <div class="loading-notifier">
           <q-spinner color="primary" size="32px"></q-spinner>
         </div>
       </div>
@@ -121,6 +121,65 @@
         </table>
       </div>
     </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Receivables (Calculated)</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Party</th>
+              <th>Income Receivable</th>
+              <th>Asset Sales Receivable</th>
+            </tr>
+            <tr v-for="row in overview.computedReceivables.list" v-bind:key="row.partyId">
+              <td>{{ row.party.name }}</td>
+              <td>{{ printAmount(row.incomeReceivable) }}</td>
+              <td>{{ printAmount(row.salesReceivable) }}</td>
+            </tr>
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</th>
+              <th>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Payables (Calculated)</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Party</th>
+              <th>Expense Payable</th>
+              <th>Asset Purchase Payable</th>
+            </tr>
+            <tr v-for="row in overview.computedPayables.list" v-bind:key="row.partyId">
+              <td>{{ row.party.name }}</td>
+              <td>{{ printAmount(row.expensePayable) }}</td>
+              <td>{{ printAmount(row.purchasePayable) }}</td>
+            </tr>
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</th>
+              <th>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
+    <br />
+    <div style="min-height: 120px; min-width: 300px; display: block"></div>
   </q-page>
 </template>
 
@@ -236,5 +295,10 @@ watch(recordCurrencyId, (newValue, __) => {
 .filter-row {
   display: flex;
   align-items: baseline;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
 }
 </style>

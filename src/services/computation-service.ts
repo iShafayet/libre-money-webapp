@@ -187,6 +187,16 @@ class ComputationService {
         list: [],
         sumOfBalances: 0,
       },
+      computedReceivables: {
+        list: [],
+        totalIncomeReceivables: 0,
+        totalSalesReceivables: 0,
+      },
+      computedPayables: {
+        list: [],
+        totalExpensePayables: 0,
+        totalPurchasePayables: 0,
+      },
     };
 
     // ============== Income
@@ -351,6 +361,72 @@ class ComputationService {
       Object.keys(map).forEach((key) => {
         overview.assets.list.push(map[key]);
         overview.assets.sumOfBalances += map[key].balance;
+      });
+    }
+
+    // ============== Computed Receivables
+
+    {
+      const map: any = {};
+      for (const party of partyList) {
+        const key = `${party._id}`;
+        map[key] = {
+          partyId: party._id,
+          incomeReceivable: 0,
+          salesReceivable: 0,
+          party,
+        };
+
+        map[key].incomeReceivable = recordList
+          .filter((record) => record.type === RecordType.INCOME && record.income?.partyId === party._id)
+          .reduce((sum, record) => sum + record.income!.amountUnpaid, 0);
+
+        map[key].salesReceivable = recordList
+          .filter((record) => record.type === RecordType.ASSET_SALE && record.assetSale?.partyId === party._id)
+          .reduce((sum, record) => sum + record.assetSale!.amountUnpaid, 0);
+      }
+
+      Object.keys(map).forEach((key) => {
+        overview.computedReceivables.list.push(map[key]);
+        overview.computedReceivables.totalIncomeReceivables += map[key].incomeReceivable;
+        overview.computedReceivables.totalSalesReceivables += map[key].salesReceivable;
+      });
+
+      overview.computedReceivables.list = overview.computedReceivables.list.filter((item) => {
+        return item.incomeReceivable > 0 || item.salesReceivable > 0;
+      });
+    }
+
+    // ============== Computed Payables
+
+    {
+      const map: any = {};
+      for (const party of partyList) {
+        const key = `${party._id}`;
+        map[key] = {
+          partyId: party._id,
+          expensePayable: 0,
+          purchasePayable: 0,
+          party,
+        };
+
+        map[key].expensePayable = recordList
+          .filter((record) => record.type === RecordType.EXPENSE && record.expense?.partyId === party._id)
+          .reduce((sum, record) => sum + record.expense!.amountUnpaid, 0);
+
+        map[key].purchasePayable = recordList
+          .filter((record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase?.partyId === party._id)
+          .reduce((sum, record) => sum + record.assetPurchase!.amountUnpaid, 0);
+      }
+
+      Object.keys(map).forEach((key) => {
+        overview.computedPayables.list.push(map[key]);
+        overview.computedPayables.totalExpensePayables += map[key].expensePayable;
+        overview.computedPayables.totalPurchasePayables += map[key].purchasePayable;
+      });
+
+      overview.computedPayables.list = overview.computedPayables.list.filter((item) => {
+        return item.expensePayable > 0 || item.purchasePayable > 0;
       });
     }
 

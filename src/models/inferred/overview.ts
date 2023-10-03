@@ -2,6 +2,7 @@ import { Asset } from "../asset";
 import { Currency } from "../currency";
 import { ExpenseAvenue } from "../expense-avenue";
 import { IncomeSource } from "../income-source";
+import { Party } from "../party";
 import { Wallet } from "../wallet";
 
 export type Overview = {
@@ -44,5 +45,25 @@ export type Overview = {
       asset: Asset;
     }[];
     sumOfBalances: number;
+  };
+  computedReceivables: {
+    list: {
+      partyId: string;
+      incomeReceivable: number;
+      salesReceivable: number;
+      party: Party;
+    }[];
+    totalIncomeReceivables: number;
+    totalSalesReceivables: number;
+  };
+  computedPayables: {
+    list: {
+      partyId: string;
+      expensePayable: number;
+      purchasePayable: number;
+      party: Party;
+    }[];
+    totalExpensePayables: number;
+    totalPurchasePayables: number;
   };
 };
