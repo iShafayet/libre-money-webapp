@@ -206,6 +206,70 @@
       </div>
     </q-card>
 
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Final Balance</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Particular</th>
+              <th>Value of Assets</th>
+              <th>Liabilities</th>
+            </tr>
+            <tr>
+              <td>Wallets (Current Assets)</td>
+              <td>{{ printAmount(overview.wallets.sumOfBalances) }}</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>Assets</td>
+              <td>{{ printAmount(overview.assets.sumOfBalances) }}</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>Income Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>Sales Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>Loans (Receivables)</td>
+              <td>{{ printAmount(overview.loanAndDebts.userIsOwedTotalAmount) }}</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>Expense Payables</td>
+              <td>0</td>
+              <td>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Asset Purchase Payables</td>
+              <td>0</td>
+              <td>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Debt (Payables)</td>
+              <td>0</td>
+              <td>{{ printAmount(overview.loanAndDebts.userOwesTotalAmount) }}</td>
+            </tr>
+
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.finalBalance.totalAsset) }}</th>
+              <th>{{ printAmount(overview.finalBalance.totalLiability) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
     <br />
     <div style="min-height: 120px; min-width: 300px; display: block"></div>
   </q-page>

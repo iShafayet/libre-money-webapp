@@ -76,4 +76,8 @@ export type Overview = {
     userIsOwedTotalAmount: number;
     userOwesTotalAmount: number;
   };
+  finalBalance: {
+    totalAsset: number;
+    totalLiability: number;
+  };
 };

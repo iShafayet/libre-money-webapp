@@ -204,6 +204,10 @@ class ComputationService {
         userIsOwedTotalAmount: 0,
         userOwesTotalAmount: 0,
       },
+      finalBalance: {
+        totalAsset: 0,
+        totalLiability: 0,
+      },
     };
 
     // ============== Income
@@ -461,6 +465,18 @@ class ComputationService {
         return item.userOwesThemAmount > 0 || item.theyOweUserAmount > 0;
       });
     }
+
+    // ============== Final Balance
+
+    overview.finalBalance.totalAsset =
+      overview.wallets.sumOfBalances +
+      overview.assets.sumOfBalances +
+      overview.computedReceivables.totalIncomeReceivables +
+      overview.computedReceivables.totalSalesReceivables +
+      overview.loanAndDebts.userIsOwedTotalAmount;
+
+    overview.finalBalance.totalLiability =
+      overview.computedPayables.totalExpensePayables + overview.computedPayables.totalPurchasePayables + overview.loanAndDebts.userOwesTotalAmount;
 
     return overview;
   }
