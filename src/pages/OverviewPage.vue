@@ -78,23 +78,18 @@ import DateInput from "src/components/lib/DateInput.vue";
 import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
+import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
 import { asAmount } from "src/utils/misc-utils";
 
 import { Ref, ref, watch } from "vue";
 
 const $q = useQuasar();
 
-function computeStartEpoch(now: number) {
-  let date = new Date(now);
-  date.setDate(1);
-  return date.getTime();
-}
-
 // ----- Refs
 
 const recordCurrencyId: Ref<string | null> = ref(null);
 
-const startEpoch: Ref<number> = ref(computeStartEpoch(Date.now()));
+const startEpoch: Ref<number> = ref(setDateToTheFirstDateOfMonth(Date.now()));
 const endEpoch: Ref<number> = ref(Date.now());
 const overview: Ref<Overview | null> = ref(null);
 

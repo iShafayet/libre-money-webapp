@@ -2,6 +2,8 @@
   <q-page class="row items-start justify-evenly">
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
+        <q-btn color="secondary" label="Edit Filters" @click="setFiltersClicked" />
+        <q-btn color="warning" label="Clear Filters" @click="clearFiltersClicked" v-if="recordFilters" />
         <div class="title"></div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
           <q-list>
@@ -160,6 +162,9 @@ import AddAssetAppreciationDepreciationRecord from "src/components/AddAssetAppre
 import { Party } from "src/models/party";
 import { Wallet } from "src/models/wallet";
 import { Asset } from "src/models/asset";
+import { RecordFilters } from "src/models/inferred/record-filters";
+import FilterRecordsDialog from "src/components/FilterRecordsDialog.vue";
+import { normalizeEpochRange } from "src/utils/date-utils";
 
 const $q = useQuasar();
 
@@ -172,6 +177,8 @@ const recordCountPerPage = 5;
 const paginationCurrentPage: Ref<number> = ref(1);
 const paginationMaxPage: Ref<number> = ref(1);
 
+const recordFilters: Ref<RecordFilters | null> = ref(null);
+
 // ----- Functions
 
 async function loadData() {
@@ -181,6 +188,19 @@ async function loadData() {
 
   let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
   let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+
+  if (recordFilters.value) {
+    let { recordTypeList } = recordFilters.value;
+    recordTypeList = recordTypeList.map((type) => (RecordType as any)[type]);
+    let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
+
+    console.log("recordTypeList", recordTypeList);
+    if (recordTypeList.length) {
+      dataRows = dataRows.filter((record) => recordTypeList.indexOf(record.type) > -1);
+    }
+    dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+  }
+
   dataRows.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
 
   paginationMaxPage.value = Math.ceil(dataRows.length / recordCountPerPage);
@@ -259,6 +279,18 @@ async function deleteClicked(record: InferredRecord) {
     await dialogService.alert("Error", "There was an error trying to remove the record.");
   }
 
+  loadData();
+}
+
+async function setFiltersClicked() {
+  $q.dialog({ component: FilterRecordsDialog, componentProps: { inputFilters: recordFilters.value } }).onOk((res: RecordFilters) => {
+    recordFilters.value = res;
+    loadData();
+  });
+}
+
+async function clearFiltersClicked() {
+  recordFilters.value = null;
   loadData();
 }
 

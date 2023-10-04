@@ -13,6 +13,7 @@ import { Asset } from "src/models/asset";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
 import { Overview } from "src/models/inferred/overview";
 import { dataInferenceService } from "./data-inference-service";
+import { normalizeEpochRange } from "src/utils/date-utils";
 
 let currencyCacheList: Currency[] = [];
 
@@ -114,25 +115,10 @@ class ComputationService {
     return loanAndDebtSummaryList;
   }
 
-  private normalizeEpochRange(startEpoch: number, endEpoch: number) {
-    const date1 = new Date(startEpoch);
-    date1.setHours(0);
-    date1.setMinutes(0);
-    date1.setSeconds(0);
-    startEpoch = date1.getTime();
-
-    const date2 = new Date(endEpoch);
-    date2.setHours(23);
-    date2.setMinutes(59);
-    date2.setSeconds(59);
-    endEpoch = date2.getTime();
-    return [startEpoch, endEpoch];
-  }
-
   async computeOverview(startEpoch: number, endEpoch: number, currencyId: string): Promise<Overview> {
     await dataInferenceService.updateCurrencyCache();
 
-    [startEpoch, endEpoch] = this.normalizeEpochRange(startEpoch, endEpoch);
+    [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
 
     // ============== Preparation
 
