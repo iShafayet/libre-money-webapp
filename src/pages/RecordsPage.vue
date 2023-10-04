@@ -194,7 +194,6 @@ async function loadData() {
     recordTypeList = recordTypeList.map((type) => (RecordType as any)[type]);
     let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
 
-    console.log("recordTypeList", recordTypeList);
     if (recordTypeList.length) {
       dataRows = dataRows.filter((record) => recordTypeList.indexOf(record.type) > -1);
     }
