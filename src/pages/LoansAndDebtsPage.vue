@@ -71,12 +71,18 @@ import AddRepaymentReceivedRecord from "src/components/AddRepaymentReceivedRecor
 import AddRepaymentGivenRecord from "src/components/AddRepaymentGivenRecord.vue";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
 import { computationService } from "src/services/computation-service";
+import { useRouter } from "vue-router";
+import { RecordFilters } from "src/models/inferred/record-filters";
+import { useRecordFiltersStore } from "src/stores/record-filters-store";
+
+const recordFiltersStore = useRecordFiltersStore();
 
 export default defineComponent({
   name: "WalletsPage",
   components: {},
   setup() {
     const $q = useQuasar();
+    const router = useRouter();
 
     // -----
 
@@ -228,9 +234,14 @@ export default defineComponent({
     }
 
     async function viewRecordsClicked(summary: LoanAndDebtSummary) {
-      // $q.dialog({ component: AddWallet, componentProps: { existingWalletId: wallet._id } }).onOk((res) => {
-      //   loadData();
-      // });
+      let recordFilter: RecordFilters = {
+        startEpoch: 0,
+        endEpoch: Date.now(),
+        recordTypeList: ["LENDING", "BORROWING", "REPAYMENT_GIVEN", "REPAYMENT_RECEIVED"],
+        partyId: summary.partyId,
+      };
+      recordFiltersStore.setRecordFilters(recordFilter);
+      router.push({ name: "records" });
     }
 
     async function addRepaymentReceivedRecordClicked(summary: LoanAndDebtSummary) {
