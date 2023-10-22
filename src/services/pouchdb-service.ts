@@ -30,7 +30,7 @@ function stripKnownTemporaryFields(doc: any) {
   });
 }
 
-const INTENTIONAL_DELAY = 300;
+const INTENTIONAL_DELAY = 1;
 
 async function delayIntentionally() {
   await sleep(INTENTIONAL_DELAY);
