@@ -197,6 +197,10 @@ export default defineComponent({
 
       await pouchdbService.getDb().destroy();
       await loginService.logout();
+
+      localStorage.clear();
+      sessionStorage.clear();
+
       // @ts-ignore
       window.location.reload(true);
     }
