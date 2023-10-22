@@ -1,15 +1,24 @@
+const tabStorageKey = "--ck-credentials";
+
 const inMemoryCredentials: {
   username: string;
   password: string;
-} = {
-  username: "",
-  password: "",
-};
+} = (() => {
+  const item = sessionStorage.getItem(tabStorageKey);
+  if (!item) {
+    return {
+      username: "",
+      password: "",
+    };
+  }
+  return JSON.parse(item);
+})();
 
 export const credentialService = {
   async storeCredentials(username: string, password: string) {
     inMemoryCredentials.username = username;
     inMemoryCredentials.password = password;
+    sessionStorage.setItem(tabStorageKey, JSON.stringify(inMemoryCredentials));
   },
 
   hasCredentials() {
@@ -23,6 +32,7 @@ export const credentialService = {
   async clearCredentials() {
     inMemoryCredentials.username = "";
     inMemoryCredentials.password = "";
+    sessionStorage.removeItem(tabStorageKey);
   },
 
   async injectCredentials(url: string) {
