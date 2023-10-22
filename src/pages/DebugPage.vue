@@ -2,8 +2,10 @@
   <q-page class="row items-center justify-evenly">
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
+        <q-btn color="red" text-color="white" label="Remove Local Data" @click="removeLocalDataClicked" />
+
         <div class="title"></div>
-        <q-btn color="primary" text-color="white" label="Add Wallet" @click="addWalletClicked" />
+        <q-btn color="primary" text-color="white" label="Add Document" @click="addDocumentClicked" />
       </div>
 
       <div class="q-pa-md">
@@ -55,10 +57,10 @@ import { Collection, walletTypeList, rowsPerPageOptions } from "./../constants/c
 import { useQuasar } from "quasar";
 import AddDocument from "./../components/AddDocument.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
-import { Wallet } from "src/models/wallet";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 import { Currency } from "src/models/currency";
+import { loginService } from "src/services/login-service";
 
 type EditableDocument = {
   _id: string;
@@ -173,7 +175,7 @@ export default defineComponent({
       isLoading.value = false;
     }
 
-    async function addWalletClicked() {
+    async function addDocumentClicked() {
       $q.dialog({ component: AddDocument }).onOk((res) => {
         loadData();
       });
@@ -189,13 +191,23 @@ export default defineComponent({
       });
     }
 
+    async function removeLocalDataClicked() {
+      let answer = await dialogService.confirm("Remove Local Data", "Are you sure you want to remove all local data? Any un-synced data will be lost forever.");
+      if (!answer) return;
+
+      await pouchdbService.getDb().destroy();
+      await loginService.logout();
+      // @ts-ignore
+      window.location.reload(true);
+    }
+
     async function deleteClicked(doc: EditableDocument) {
-      let answer = await dialogService.confirm("Remove wallet", `Are you sure you want to remove the document "${doc._id}"?`);
+      let answer = await dialogService.confirm("Remove document", `Are you sure you want to remove the document "${doc._id}"?`);
       if (!answer) return;
 
       let res = await pouchdbService.removeDoc(JSON.parse(doc.content));
       if (!res.ok) {
-        await dialogService.alert("Error", "There was an error trying to remove the wallet.");
+        await dialogService.alert("Error", "There was an error trying to remove the document.");
       }
 
       loadData();
@@ -212,7 +224,7 @@ export default defineComponent({
     });
 
     return {
-      addWalletClicked,
+      addDocumentClicked,
       searchFilter,
       rowsPerPageOptions,
       columns,
@@ -222,6 +234,7 @@ export default defineComponent({
       deleteClicked,
       pagination,
       dataForTableRequested,
+      removeLocalDataClicked,
     };
   },
 });
