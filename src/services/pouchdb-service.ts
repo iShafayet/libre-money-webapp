@@ -1,6 +1,9 @@
 import { remoteDataDatabaseName, remoteServerUrl } from "src/constants/config";
 import { sleep } from "src/utils/misc-utils";
 import { credentialService } from "./credential-service";
+import { useUserStore } from "src/stores/user";
+
+const userStore = useUserStore();
 
 const LOCAL_DB_NAME = "cash-keeper-main";
 
@@ -42,6 +45,7 @@ export const pouchdbService = {
     await delayIntentionally();
 
     doc = JSON.parse(JSON.stringify(doc));
+    doc.modifiedByUsername = userStore.currentUser?.username;
     stripKnownTemporaryFields(doc);
     if (doc._id) {
       return pouchdb.put(doc);
