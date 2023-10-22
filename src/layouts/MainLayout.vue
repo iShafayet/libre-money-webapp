@@ -9,6 +9,20 @@
         </q-toolbar-title>
 
         <div v-if="$route.meta.title">Cash Keeper</div>
+
+        <q-btn flat dense round icon="perm_identity">
+          <q-menu>
+            <q-list style="min-width: 100px">
+              <q-item clickable v-close-popup @click="syncClicked">
+                <q-item-section>Sync</q-item-section>
+              </q-item>
+              <q-separator />
+              <q-item clickable v-close-popup @click="logoutClicked">
+                <q-item-section>Logout</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
@@ -50,6 +64,11 @@
 import { defineComponent, ref } from "vue";
 import { useUserStore } from "src/stores/user";
 import EssentialLink from "components/sidebar/EssentialLink.vue";
+import { loginService } from "src/services/login-service";
+import { dialogService } from "src/services/dialog-service";
+import { sleep } from "src/utils/misc-utils";
+import { useQuasar } from "quasar";
+import SyncDialog from "src/components/SyncDialog.vue";
 
 const operationList = [
   {
@@ -143,9 +162,25 @@ export default defineComponent({
   },
 
   setup() {
+    const $q = useQuasar();
+
     const isLeftDrawerOpen = ref(false);
 
     const userStore = useUserStore();
+
+    async function logoutClicked() {
+      let [successful, failureReason] = await loginService.logout();
+      if (!successful) {
+        await dialogService.alert("Logout Error", failureReason as string);
+      }
+      await sleep(100);
+      // @ts-ignore
+      window.location.reload(true);
+    }
+
+    async function syncClicked() {
+      $q.dialog({ component: SyncDialog, componentProps: { bidirectional: true } });
+    }
 
     return {
       operationList,
@@ -159,6 +194,8 @@ export default defineComponent({
       appVersion: "v0.0.1 (POC)",
       miscList,
       userStore,
+      logoutClicked,
+      syncClicked,
     };
   },
 });

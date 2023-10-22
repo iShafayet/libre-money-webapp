@@ -1,4 +1,6 @@
+import { remoteDataDatabaseName, remoteServerUrl } from "src/constants/config";
 import { sleep } from "src/utils/misc-utils";
+import { credentialService } from "./credential-service";
 
 const LOCAL_DB_NAME = "cash-keeper-main";
 
@@ -78,5 +80,33 @@ export const pouchdbService = {
     await delayIntentionally();
 
     return await pouchdb.remove(doc._id, doc._rev);
+  },
+
+  async sync() {
+    return await new Promise((accept, reject) => {
+      const remoteDbUrl = `${remoteServerUrl}/${remoteDataDatabaseName}`;
+      const remoteDB = new PouchDB(remoteDbUrl, {
+        auth: credentialService.getCredentials(),
+      });
+
+      let errorCount = 0;
+
+      pouchdb
+        .sync(remoteDB)
+        .on("complete", function () {
+          console.debug("Sync ended");
+          accept(errorCount);
+        })
+        .on("denied", function (err) {
+          console.error(err);
+          errorCount += 1;
+        })
+        .on("error", function (err) {
+          console.error(err);
+          console.debug(err);
+          console.debug("Sync error");
+          reject(err);
+        });
+    });
   },
 };
