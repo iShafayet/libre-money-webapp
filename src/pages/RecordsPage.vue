@@ -183,7 +183,7 @@ const searchFilter: Ref<string | null> = ref(null);
 const isLoading = ref(false);
 const rows: Ref<InferredRecord[]> = ref([]);
 
-const recordCountPerPage = 5;
+const recordCountPerPage = 10;
 const paginationCurrentPage: Ref<number> = ref(1);
 const paginationMaxPage: Ref<number> = ref(1);
 

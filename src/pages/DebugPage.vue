@@ -61,6 +61,7 @@ import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 import { Currency } from "src/models/currency";
 import { loginService } from "src/services/login-service";
+import { usePaginationSizeStore } from "src/stores/pagination";
 
 type EditableDocument = {
   _id: string;
@@ -114,11 +115,12 @@ export default defineComponent({
 
     let rows: Ref<any[]> = ref([]);
 
+    const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
       sortBy: "name",
       descending: false,
       page: 1,
-      rowsPerPage: 5,
+      rowsPerPage: paginationSizeStore.paginationSize,
       rowsNumber: 0,
     });
 
@@ -128,6 +130,7 @@ export default defineComponent({
       let inputPagination = props?.pagination || pagination.value;
 
       const { page, rowsPerPage, sortBy, descending } = inputPagination;
+      paginationSizeStore.setPaginationSize(rowsPerPage);
 
       isLoading.value = true;
 

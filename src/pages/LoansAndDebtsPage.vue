@@ -80,6 +80,7 @@ import { useRouter } from "vue-router";
 import { RecordFilters } from "src/models/inferred/record-filters";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import LoansAndDebtsDetailsDialog from "src/components/LoansAndDebtsDetailsDialog.vue";
+import { usePaginationSizeStore } from "src/stores/pagination";
 
 const recordFiltersStore = useRecordFiltersStore();
 
@@ -131,11 +132,12 @@ export default defineComponent({
 
     let rows: Ref<any[]> = ref([]);
 
+    const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
       sortBy: "name",
       descending: false,
       page: 1,
-      rowsPerPage: 5,
+      rowsPerPage: paginationSizeStore.paginationSize,
       rowsNumber: 0,
     });
 
@@ -145,6 +147,7 @@ export default defineComponent({
       let inputPagination = props?.pagination || pagination.value;
 
       const { page, rowsPerPage, sortBy, descending } = inputPagination;
+      paginationSizeStore.setPaginationSize(rowsPerPage);
 
       isLoading.value = true;
 

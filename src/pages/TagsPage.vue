@@ -56,6 +56,7 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import { Tag } from "src/models/tag";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
+import { usePaginationSizeStore } from "src/stores/pagination";
 
 export default defineComponent({
   name: "TagsPage",
@@ -94,11 +95,12 @@ export default defineComponent({
 
     let rows: Ref<any[]> = ref([]);
 
+    const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
       sortBy: "name",
       descending: false,
       page: 1,
-      rowsPerPage: 5,
+      rowsPerPage: paginationSizeStore.paginationSize,
       rowsNumber: 0,
     });
 
@@ -108,6 +110,7 @@ export default defineComponent({
       let inputPagination = props?.pagination || pagination.value;
 
       const { page, rowsPerPage, sortBy, descending } = inputPagination;
+      paginationSizeStore.setPaginationSize(rowsPerPage);
 
       isLoading.value = true;
 
