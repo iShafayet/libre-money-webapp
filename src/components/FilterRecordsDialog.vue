@@ -14,8 +14,8 @@
       </q-card-section>
 
       <q-card-actions class="row justify-end">
+        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
         <q-btn color="primary" label="OK" @click="okClicked" />
-        <q-btn color="primary" label="Cancel" @click="cancelClicked" />
       </q-card-actions>
     </q-card>
   </q-dialog>

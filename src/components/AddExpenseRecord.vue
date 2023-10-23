@@ -35,8 +35,8 @@
       <q-card-actions class="row justify-end bottom-action-row">
         <q-btn color="secondary" label="Save as template" @click="saveAsTemplateClicked" />
         <div class="spacer"></div>
+        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
         <q-btn color="primary" label="Save" @click="okClicked" />
-        <q-btn color="warning" label="Cancel" @click="cancelClicked" />
       </q-card-actions>
     </q-card>
   </q-dialog>

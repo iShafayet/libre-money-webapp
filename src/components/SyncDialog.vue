@@ -31,7 +31,6 @@
 </template>
 
 <script lang="ts">
-import P from "app/dist/spa/assets/IndexPage.b8702312";
 import { useDialogPluginComponent } from "quasar";
 import { partyTypeList } from "src/constants/constants";
 import { credentialService } from "src/services/credential-service";
