@@ -1,4 +1,4 @@
-import { Collection, RecordType } from "src/constants/constants";
+import { Collection, RecordType, assetLiquidityList } from "src/constants/constants";
 import { ExpenseAvenue } from "src/models/expense-avenue";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { Record } from "src/models/record";
@@ -241,6 +241,7 @@ class ComputationService {
       },
       assets: {
         list: [],
+        sumByLiquidity: [],
         sumOfBalances: 0,
       },
       computedReceivables: {
@@ -259,6 +260,14 @@ class ComputationService {
         userOwesTotalAmount: 0,
       },
       finalBalance: {
+        totalAsset: 0,
+        totalLiability: 0,
+      },
+      finalCurrentBalance: {
+        totalAsset: 0,
+        totalLiability: 0,
+      },
+      finalCurrentBalanceWithHighLiquidity: {
         totalAsset: 0,
         totalLiability: 0,
       },
@@ -433,6 +442,14 @@ class ComputationService {
         overview.assets.list.push(map[key]);
         overview.assets.sumOfBalances += map[key].balance;
       });
+
+      overview.assets.sumByLiquidity = assetLiquidityList.map((assetLiquidity) => {
+        const sum = overview.assets.list.filter((asset) => asset.asset.liquidity === assetLiquidity.value).reduce((sum, asset) => asset.balance + sum, 0);
+        return {
+          liquidity: assetLiquidity.label,
+          sum,
+        };
+      });
     }
 
     // ============== Computed Receivables
@@ -525,6 +542,31 @@ class ComputationService {
         return item.userOwesThemAmount > 0 || item.theyOweUserAmount > 0;
       });
     }
+
+    // ============== Final Current Balance
+
+    overview.finalCurrentBalance.totalAsset =
+      overview.wallets.sumOfBalances +
+      overview.computedReceivables.totalIncomeReceivables +
+      overview.computedReceivables.totalSalesReceivables +
+      overview.loanAndDebts.userIsOwedTotalAmount;
+
+    overview.finalBalance.totalLiability =
+      overview.computedPayables.totalExpensePayables + overview.computedPayables.totalPurchasePayables + overview.loanAndDebts.userOwesTotalAmount;
+
+    // ============== Final Current Balance with High Liquidity
+
+    overview.finalCurrentBalanceWithHighLiquidity.highLiquidiyAssetValue = overview.assets.sumByLiquidity.find((sum) => sum.liquidity === "High")!.sum;
+
+    overview.finalCurrentBalanceWithHighLiquidity.totalAsset =
+      overview.wallets.sumOfBalances +
+      overview.finalCurrentBalanceWithHighLiquidity.highLiquidiyAssetValue +
+      overview.computedReceivables.totalIncomeReceivables +
+      overview.computedReceivables.totalSalesReceivables +
+      overview.loanAndDebts.userIsOwedTotalAmount;
+
+    overview.finalCurrentBalanceWithHighLiquidity.totalLiability =
+      overview.computedPayables.totalExpensePayables + overview.computedPayables.totalPurchasePayables + overview.loanAndDebts.userOwesTotalAmount;
 
     // ============== Final Balance
 

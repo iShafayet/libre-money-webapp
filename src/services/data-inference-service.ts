@@ -1,4 +1,4 @@
-import { Collection, RecordType } from "src/constants/constants";
+import { Collection, RecordType, assetLiquidityList, assetTypeList } from "src/constants/constants";
 import { ExpenseAvenue } from "src/models/expense-avenue";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { Record } from "src/models/record";
@@ -222,6 +222,14 @@ class DataInferenceService {
   async getTagList(tagIdList: string[]) {
     const docList = (await pouchdbService.listByCollection(Collection.TAG)).docs as Tag[];
     return docList.filter((tag) => tagIdList.includes(tag._id!));
+  }
+
+  toProperAssetType(asset: Asset) {
+    return assetTypeList.find((assetType) => assetType.value === asset.type)?.label;
+  }
+
+  toProperAssetLiquidity(asset: Asset) {
+    return assetLiquidityList.find((assetLiquidity) => assetLiquidity.value === asset.liquidity)?.label;
   }
 }
 

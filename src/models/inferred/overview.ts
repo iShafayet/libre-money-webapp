@@ -44,6 +44,10 @@ export type Overview = {
       balance: number;
       asset: Asset;
     }[];
+    sumByLiquidity: {
+      liquidity: string;
+      sum: number;
+    }[];
     sumOfBalances: number;
   };
   computedReceivables: {
@@ -75,6 +79,15 @@ export type Overview = {
     }[];
     userIsOwedTotalAmount: number;
     userOwesTotalAmount: number;
+  };
+  finalCurrentBalance: {
+    totalAsset: number;
+    totalLiability: number;
+  };
+  finalCurrentBalanceWithHighLiquidity: {
+    totalAsset: number;
+    highLiquidiyAssetValue: number;
+    totalLiability: number;
   };
   finalBalance: {
     totalAsset: number;

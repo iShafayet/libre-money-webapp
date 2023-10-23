@@ -65,7 +65,7 @@
 
 <script lang="ts">
 import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, RecordType, assetTypeList, rowsPerPageOptions } from "./../constants/constants";
+import { Collection, RecordType, assetLiquidityList, assetTypeList, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
 import AddAsset from "./../components/AddAsset.vue";
 import AddAssetPurchaseRecord from "./../components/AddAssetPurchaseRecord.vue";
@@ -79,6 +79,7 @@ import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 import { Currency } from "src/models/currency";
 import { computationService } from "src/services/computation-service";
+import { dataInferenceService } from "src/services/data-inference-service";
 
 export default defineComponent({
   name: "AssetsPage",
@@ -106,9 +107,14 @@ export default defineComponent({
         align: "left",
         label: "Type",
         sortable: true,
-        field: (asset: Asset) => {
-          return assetTypeList.find((assetType) => assetType.value === asset.type)?.label;
-        },
+        field: dataInferenceService.toProperAssetType,
+      },
+      {
+        name: "liquidity",
+        align: "left",
+        label: "LIquidity",
+        sortable: true,
+        field: dataInferenceService.toProperAssetLiquidity,
       },
       {
         name: "balance",

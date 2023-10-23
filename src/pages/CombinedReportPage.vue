@@ -128,10 +128,38 @@
             <tr>
               <th>Asset</th>
               <th>Balance</th>
+              <th>Liquidity</th>
             </tr>
             <tr v-for="row in overview.assets.list" v-bind:key="row.assetId">
               <td>{{ row.asset.name }}</td>
               <td>{{ printAmount(row.balance) }}</td>
+              <td>{{ dataInferenceService.toProperAssetLiquidity(row.asset) }}</td>
+            </tr>
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.assets.sumOfBalances) }}</th>
+              <th></th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Assets (by Liquidity)</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Liquidity</th>
+              <th>Sum</th>
+            </tr>
+            <tr v-for="row in overview.assets.sumByLiquidity" v-bind:key="row.liquidity">
+              <td>{{ row.liquidity }}</td>
+              <td>{{ printAmount(row.sum) }}</td>
             </tr>
             <tr>
               <th>Grand Total</th>
@@ -228,6 +256,129 @@
 
     <q-card class="std-card" v-if="!isLoading && overview">
       <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Final Current Balance</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Particular</th>
+              <th>Value of Assets</th>
+              <th>Liabilities</th>
+            </tr>
+            <tr>
+              <td>Wallets (Current Assets)</td>
+              <td>{{ printAmount(overview.wallets.sumOfBalances) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Income Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Sales Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Loans (Receivables)</td>
+              <td>{{ printAmount(overview.loanAndDebts.userIsOwedTotalAmount) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Expense Payables</td>
+              <td></td>
+              <td>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Asset Purchase Payables</td>
+              <td></td>
+              <td>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Debt (Payables)</td>
+              <td></td>
+              <td>{{ printAmount(overview.loanAndDebts.userOwesTotalAmount) }}</td>
+            </tr>
+
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.finalCurrentBalance.totalAsset) }}</th>
+              <th>{{ printAmount(overview.finalCurrentBalance.totalLiability) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
+        <div class="title">Final Current Balance with High Liquidity Assets</div>
+      </div>
+
+      <div class="q-pa-md">
+        <table class="overview-table">
+          <tbody>
+            <tr>
+              <th>Particular</th>
+              <th>Value of Assets</th>
+              <th>Liabilities</th>
+            </tr>
+            <tr>
+              <td>Wallets (Current Assets)</td>
+              <td>{{ printAmount(overview.wallets.sumOfBalances) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>High Liquidity Assets</td>
+              <td>{{ printAmount(overview.finalCurrentBalanceWithHighLiquidity.highLiquidiyAssetValue) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Income Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalIncomeReceivables) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Sales Receivables</td>
+              <td>{{ printAmount(overview.computedReceivables.totalSalesReceivables) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Loans (Receivables)</td>
+              <td>{{ printAmount(overview.loanAndDebts.userIsOwedTotalAmount) }}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Expense Payables</td>
+              <td></td>
+              <td>{{ printAmount(overview.computedPayables.totalExpensePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Asset Purchase Payables</td>
+              <td></td>
+              <td>{{ printAmount(overview.computedPayables.totalPurchasePayables) }}</td>
+            </tr>
+            <tr>
+              <td>Debt (Payables)</td>
+              <td></td>
+              <td>{{ printAmount(overview.loanAndDebts.userOwesTotalAmount) }}</td>
+            </tr>
+
+            <tr>
+              <th>Grand Total</th>
+              <th>{{ printAmount(overview.finalCurrentBalanceWithHighLiquidity.totalAsset) }}</th>
+              <th>{{ printAmount(overview.finalCurrentBalanceWithHighLiquidity.totalLiability) }}</th>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </q-card>
+
+    <q-card class="std-card" v-if="!isLoading && overview">
+      <div class="title-row q-pa-md q-gutter-sm">
         <div class="title">Final Balance</div>
       </div>
 
@@ -303,6 +454,7 @@ import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
 import { asAmount } from "src/utils/misc-utils";
+import { dataInferenceService } from "src/services/data-inference-service";
 
 import { Ref, ref, watch } from "vue";
 

@@ -25,6 +25,15 @@ export const assetTypeList = [
   { value: "other", label: "Other" },
 ];
 
+export const defaultAssetLiquidity = "unsure";
+
+export const assetLiquidityList = [
+  { value: "high", label: "High" },
+  { value: "moderate", label: "Moderate" },
+  { value: "low", label: "Low" },
+  { value: "unsure", label: "Unsure" },
+];
+
 export const defaultWalletType = "cash";
 
 export const Collection = {
