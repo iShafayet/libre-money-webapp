@@ -50,7 +50,7 @@
       <div style="flex: 1"></div>
 
       <div class="drawer-bottom">
-        <div class="app-version">{{ appVersion }}</div>
+        <div class="app-version">Cash Keeper {{ appVersion }}</div>
       </div>
     </q-drawer>
 
@@ -74,31 +74,31 @@ const operationList = [
   {
     title: "Overview",
     caption: "Balances and Sums",
-    icon: "money",
+    icon: "functions",
     link: "#/overview",
   },
   {
     title: "Records",
     caption: "Income, Expenses and everything else",
-    icon: "money",
+    icon: "format_list_bulleted",
     link: "#/records",
   },
   {
     title: "Loans & Debts",
     caption: "Receivables and Payables",
-    icon: "money",
+    icon: "request_quote",
     link: "#/loans-and-debts",
   },
   {
     title: "Wallets",
     caption: "Cash, Bank and Digital Money",
-    icon: "money",
+    icon: "account_balance_wallet",
     link: "#/wallets",
   },
   {
     title: "Assets",
     caption: "Properties and Valuables",
-    icon: "money",
+    icon: "account_balance",
     link: "#/assets",
   },
 ];
@@ -107,31 +107,31 @@ const entityList = [
   {
     title: "Parties & Vendors",
     caption: "",
-    icon: "school",
+    icon: "shop",
     link: "#/parties",
   },
   {
     title: "Tags",
     caption: "",
-    icon: "school",
+    icon: "tag",
     link: "#/tags",
   },
   {
     title: "Income Sources",
     caption: "",
-    icon: "school",
+    icon: "iso",
     link: "#/income-sources",
   },
   {
     title: "Expense Avenues",
     caption: "",
-    icon: "school",
+    icon: "iso",
     link: "#/expense-avenues",
   },
   {
     title: "Currencies",
     caption: "",
-    icon: "school",
+    icon: "attach_money",
     link: "#/currencies",
   },
 ];
@@ -140,7 +140,7 @@ const reportList = [
   {
     title: "Combined Report",
     caption: "",
-    icon: "school",
+    icon: "description",
     link: "#/combined-report",
   },
 ];
@@ -149,7 +149,7 @@ const miscList = [
   {
     title: "Debug",
     caption: "",
-    icon: "school",
+    icon: "bug_report",
     link: "#/debug",
   },
 ];
@@ -191,7 +191,7 @@ export default defineComponent({
       toggleLeftDrawer() {
         isLeftDrawerOpen.value = !isLeftDrawerOpen.value;
       },
-      appVersion: "v0.0.1 (POC)",
+      appVersion: "ver 0.0.1 (POC)",
       miscList,
       userStore,
       logoutClicked,
@@ -203,8 +203,9 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .drawer-bottom {
-  background: #ececec;
-  padding: 12px;
+  background: rgb(29, 29, 29);
+  padding: 18px;
   font-size: 12px;
+  color: whitesmoke;
 }
 </style>
