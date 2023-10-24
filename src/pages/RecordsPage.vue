@@ -412,10 +412,7 @@ loadData();
 
   .record-date {
     font-size: 10px;
-    padding: 4px 8px;
-    background: #ff000012;
     display: inline-block;
-    border-radius: 5px;
   }
 
   .details-section {

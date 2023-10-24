@@ -47,5 +47,9 @@ export function guessFontColorCode(colorCode: string) {
 }
 
 export function prettifyDate(timestamp: number) {
-  return date.formatDate(timestamp, "YYYY-MM-DD hh:mm:ss a");
+  return date.formatDate(timestamp, "YYYY MMM DD");
+}
+
+export function prettifyDateTime(timestamp: number) {
+  return date.formatDate(timestamp, "YYYY MMM DD hh:mm:ss a");
 }
