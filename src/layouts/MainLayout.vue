@@ -50,7 +50,7 @@
       <div style="flex: 1"></div>
 
       <div class="drawer-bottom">
-        <div class="app-version">Cash Keeper {{ appVersion }}</div>
+        <div class="app-version"><img class="logo" src="icons/android-chrome-192x192.png" alt="CK" />Cash Keeper {{ appVersion }}</div>
       </div>
     </q-drawer>
 
@@ -219,5 +219,15 @@ export default defineComponent({
   padding: 18px;
   font-size: 12px;
   color: whitesmoke;
+}
+.app-version {
+  display: flex;
+  align-items: center;
+}
+.logo {
+  margin-right: 8px;
+  margin-bottom: 4px;
+  width: 40px;
+  height: 40px;
 }
 </style>
