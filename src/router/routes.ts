@@ -91,7 +91,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/CombinedReportPage.vue"),
         meta: { requiresAuthentication: true, title: "Combined Report" },
       },
-      // --- Debug:
+      // --- Misc:
+      {
+        path: "memos",
+        name: "memos",
+        component: () => import("pages/MemosPage.vue"),
+        meta: { requiresAuthentication: true, title: "Memos" },
+      },
       {
         path: "debug",
         name: "debug",

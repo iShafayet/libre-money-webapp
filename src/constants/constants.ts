@@ -47,6 +47,7 @@ export const Collection = {
   RECORD: "record",
   RECORD_TEMPLATE: "record-template",
   BUDGET: "budget",
+  MEMO: "memo",
 };
 
 export const RecordType = {

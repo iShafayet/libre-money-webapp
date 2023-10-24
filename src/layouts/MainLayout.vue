@@ -153,6 +153,12 @@ const reportList = [
 
 const miscList = [
   {
+    title: "Memos",
+    caption: "",
+    icon: "edit_note",
+    link: "#/memos",
+  },
+  {
     title: "Debug",
     caption: "",
     icon: "bug_report",
