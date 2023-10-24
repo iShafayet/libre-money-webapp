@@ -1,0 +1,56 @@
+// app global css in SCSS form
+
+body {
+  background-color: antiquewhite;
+}
+
+.std-column {
+  display: flex !important;
+  flex-direction: column;
+}
+
+.std-dialog-title {
+  font-size: 20px;
+}
+
+.main-left-sidebar-drawer {
+  background-color: lightgrey;
+}
+
+.std-card {
+  min-width: 300px;
+  max-width: 900px;
+  width: 100%;
+  margin: 12px;
+
+  .title-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    .title {
+      flex: 1;
+      font-size: 20px;
+    }
+  }
+}
+
+.std-table-non-morphing {
+  td:not(:last-child) {
+    text-wrap: wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .search-field {
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+}
+
+.std-margin-bottom-32 {
+  margin-bottom: 32px;
+}
+
+.spacer {
+  flex: 1;
+}
