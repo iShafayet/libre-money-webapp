@@ -610,14 +610,14 @@ class ComputationService {
         const finerRecordList = narrowedRecordList.filter(
           (record) => record.type === RecordType.EXPENSE && record.expense && record.expense.currencyId === budget.currencyId
         );
-        usedAmount += finerRecordList.reduce((sum, record) => record.expense!.amount, 0);
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
       }
 
       if (budget.includeAssetPurchases) {
         const finerRecordList = narrowedRecordList.filter(
           (record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase && record.assetPurchase.currencyId === budget.currencyId
         );
-        usedAmount += finerRecordList.reduce((sum, record) => record.expense!.amount, 0);
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
       }
 
       budget._usedAmount = usedAmount;
