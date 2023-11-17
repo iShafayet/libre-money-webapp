@@ -66,7 +66,7 @@ function filterRecordTypeFn(val: string, update: any, abort: any) {
     filled
     v-model="value"
     :options="recordTypeList"
-    label="RecordTypes"
+    label="Record Types"
     emit-value
     map-options
     use-input

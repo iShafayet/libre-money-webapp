@@ -60,7 +60,7 @@ function filterPartyFn(val: string, update: any, abort: any) {
     filled
     v-model="value"
     :options="partyPartyList"
-    label="Party"
+    label="Party / Vendor"
     emit-value
     map-options
     fill-input

@@ -47,7 +47,10 @@
                 <div class="primary-line" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
 
                 <div class="row secondary-line">
-                  <div class="party" v-if="getParty(record)">Party: {{ getParty(record)?.name }}</div>
+                  <div class="party" v-if="getParty(record)">
+                    <span class="party-type">{{ getParty(record)?.type }}</span
+                    >: {{ getParty(record)?.name }}
+                  </div>
                 </div>
 
                 <div class="notes" v-if="record.notes">Notes: {{ record.notes }}</div>
@@ -440,11 +443,6 @@ loadData();
           background-color: $record-income-primary-color;
           color: $record-income-text-color;
         }
-
-        &[data-record-type="money-transfer"] {
-          background-color: $record-money-transfer-primary-color;
-          color: $record-money-transfer-text-color;
-        }
       }
 
       .tag {
@@ -509,5 +507,9 @@ loadData();
       margin-bottom: 8px;
     }
   }
+}
+
+.party-type {
+  text-transform: capitalize;
 }
 </style>
