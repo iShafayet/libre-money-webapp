@@ -109,14 +109,14 @@
               </div>
 
               <div class="amounts-section">
-                <div class="row">
-                  <div class="amount-left-col">
+                <div class="row amounts-section-row">
+                  <div class="amount-col amount-left-col">
                     <div class="amount amount-out">
                       Out {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.fromWallet.name }})</div>
                   </div>
-                  <div>
+                  <div class="amount-col amount-right-col">
                     <div class="amount amount-in">
                       In {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
                     </div>
@@ -496,6 +496,18 @@ loadData();
 
   .amount-out {
     color: rgb(112, 7, 7);
+  }
+
+  @media (max-width: $breakpoint-xs-max) {
+    .amount-left-col {
+      margin-right: 0px;
+    }
+    .amounts-section-row {
+      flex-direction: column;
+    }
+    .amount-col {
+      margin-bottom: 8px;
+    }
   }
 }
 </style>
