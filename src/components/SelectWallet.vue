@@ -5,7 +5,7 @@ import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Ref, computed, ref, watch } from "vue";
 
-const props = defineProps(["modelValue", "label", "limitByCurrencyId"]);
+const props = defineProps(["modelValue", "label", "limitByCurrencyId", "preselect"]);
 const emit = defineEmits(["update:modelValue"]);
 
 const value = computed({
@@ -53,7 +53,9 @@ async function loadData() {
   setTimeout(() => {
     let isSelectedValueValid = value.value && walletList.value.find((_w) => _w._id === value.value);
     if ((walletList.value.length && !value.value) || (value.value && !isSelectedValueValid)) {
-      value.value = walletList.value[0]._id;
+      if (props.preselect) {
+        value.value = walletList.value[0]._id;
+      }
     }
   }, 10);
 }
@@ -95,5 +97,6 @@ watch(limitByCurrencyId, () => {
     option-label="name"
     hide-selected
     v-if="!isLoading"
+    clearable
   />
 </template>

@@ -4,4 +4,5 @@ export type RecordFilters = {
   recordTypeList: string[];
   tagList: string[];
   partyId?: string | null;
+  walletId?: string | null;
 };

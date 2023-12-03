@@ -210,7 +210,7 @@ async function loadData() {
   let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
   if (recordFilters.value) {
-    let { recordTypeList, partyId, tagList } = recordFilters.value;
+    let { recordTypeList, partyId, tagList, walletId } = recordFilters.value;
     recordTypeList = recordTypeList.map((type) => (RecordType as any)[type]);
     let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
 
@@ -235,6 +235,21 @@ async function loadData() {
           record.borrowing?.partyId === partyId ||
           record.repaymentGiven?.partyId === partyId ||
           record.repaymentReceived?.partyId === partyId
+      );
+    }
+    if (walletId) {
+      dataRows = dataRows.filter(
+        (record) =>
+          record.income?.walletId === walletId ||
+          record.expense?.walletId === walletId ||
+          record.assetPurchase?.walletId === walletId ||
+          record.assetSale?.walletId === walletId ||
+          record.lending?.walletId === walletId ||
+          record.borrowing?.walletId === walletId ||
+          record.repaymentGiven?.walletId === walletId ||
+          record.repaymentReceived?.walletId === walletId ||
+          record.moneyTransfer?.fromWalletId === walletId ||
+          record.moneyTransfer?.toWalletId === walletId
       );
     }
     dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);

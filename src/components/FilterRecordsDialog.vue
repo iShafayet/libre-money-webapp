@@ -14,6 +14,9 @@
         <div style="margin-top: -12px">
           <select-tag v-model="recordFilters.tagList"></select-tag>
         </div>
+        <div style="margin-top: -12px">
+          <select-wallet v-model="recordFilters.walletId"></select-wallet>
+        </div>
       </q-card-section>
 
       <q-card-actions class="row justify-end">
@@ -37,6 +40,7 @@ import SelectRecordType from "./SelectRecordType.vue";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
+import SelectWallet from "./SelectWallet.vue";
 
 export default {
   props: {
@@ -47,7 +51,7 @@ export default {
     },
   },
 
-  components: { DateInput, SelectRecordType, SelectParty, SelectTag },
+  components: { DateInput, SelectRecordType, SelectParty, SelectTag, SelectWallet },
 
   emits: [...useDialogPluginComponent.emits],
 
@@ -68,6 +72,7 @@ export default {
         recordTypeList: [],
         tagList: [],
         partyId: null,
+        walletId: null,
       };
     }
     isLoading.value = false;
