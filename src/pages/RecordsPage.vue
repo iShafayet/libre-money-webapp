@@ -199,8 +199,7 @@ async function loadData() {
 
   await dataInferenceService.updateCurrencyCache();
 
-  let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
-  let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
   if (recordFilters.value) {
     let { recordTypeList, partyId, tagList } = recordFilters.value;
@@ -248,7 +247,9 @@ async function loadData() {
   }
 
   let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
-  rows.value = dataRows.slice(startIndex, startIndex + recordCountPerPage);
+
+  let inferredDataRows = await Promise.all(dataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  rows.value = inferredDataRows.slice(startIndex, startIndex + recordCountPerPage);
 
   isLoading.value = false;
 }
