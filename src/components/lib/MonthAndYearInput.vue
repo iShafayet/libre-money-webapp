@@ -33,10 +33,6 @@ function nextMonth() {
   if (props.month! < monthNameList.length - 1) {
     emit("update:month", props.month! + 1);
     emit("selection");
-  } else {
-    emit("update:month", props.month! + 0);
-    emit("update:year", props.year! + 1);
-    emit("selection");
   }
 }
 

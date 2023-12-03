@@ -4,7 +4,11 @@
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
         <q-btn color="warning" label="Clear Filters" @click="clearFiltersClicked" v-if="recordFilters" />
-        <div class="title"></div>
+        <div class="title">
+          <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
+            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
+          </div>
+        </div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
           <q-list>
             <q-item clickable v-close-popup @click="addExpenseFromTemplateClicked">
@@ -26,9 +30,9 @@
         </q-btn-dropdown>
       </div>
 
-      <div class="q-pa-md" style="padding-top: 0px">
+      <div class="q-pa-md" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
         <div class="sub-heading" v-if="recordFilters">Filtered Records</div>
-        <div class="month-and-year-input-wrapper" v-else>
+        <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.lt.sm">
           <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
         </div>
 
