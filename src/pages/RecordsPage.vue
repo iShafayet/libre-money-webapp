@@ -184,17 +184,20 @@ import { normalizeEpochRange } from "src/utils/date-utils";
 import SelectTemplateDialog from "src/components/SelectTemplateDialog.vue";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import MonthAndYearInput from "src/components/lib/MonthAndYearInput.vue";
+import { useRecordPaginationSizeStore } from "src/stores/record-pagination";
 
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
+
+const recordPaginationStore = useRecordPaginationSizeStore();
 
 // ----- Refs
 const searchFilter: Ref<string | null> = ref(null);
 const isLoading = ref(false);
 const rows: Ref<InferredRecord[]> = ref([]);
 
-const recordCountPerPage = 10;
+const recordCountPerPage = recordPaginationStore.recordPaginationSize;
 const paginationCurrentPage: Ref<number> = ref(1);
 const paginationMaxPage: Ref<number> = ref(1);
 

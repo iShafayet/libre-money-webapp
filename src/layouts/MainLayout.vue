@@ -159,6 +159,12 @@ const miscList = [
     link: "#/memos",
   },
   {
+    title: "Settings",
+    caption: "",
+    icon: "settings",
+    link: "#/settings",
+  },
+  {
     title: "Debug",
     caption: "",
     icon: "bug_report",
