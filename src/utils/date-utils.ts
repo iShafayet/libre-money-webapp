@@ -4,6 +4,43 @@ export function setDateToTheFirstDateOfMonth(now: number) {
   return date.getTime();
 }
 
+export function setDateToTheLastDateOfPreviousMonth(now: number) {
+  const date = new Date(now);
+  date.setDate(1);
+  date.setDate(date.getDate() - 1);
+  return date.getTime();
+}
+
+export function setDateToTheFirstDateOfPreviousMonth(now: number) {
+  const date = new Date(now);
+  date.setDate(1);
+  date.setMonth(date.getMonth() - 1);
+  return date.getTime();
+}
+
+export function setDateToTheFirstDateOfYear(now: number) {
+  const date = new Date(now);
+  date.setDate(1);
+  date.setMonth(0);
+  return date.getTime();
+}
+
+export function setDateToTheLastDateOfPreviousYear(now: number) {
+  const date = new Date(now);
+  date.setDate(1);
+  date.setMonth(0);
+  date.setDate(date.getDate() - 1);
+  return date.getTime();
+}
+
+export function setDateToTheFirstDateOfPreviousYear(now: number) {
+  const date = new Date(now);
+  date.setDate(1);
+  date.setMonth(0);
+  date.setFullYear(date.getFullYear() - 1);
+  return date.getTime();
+}
+
 export function normalizeEpochRange(startEpoch: number, endEpoch: number) {
   const date1 = new Date(startEpoch);
   date1.setHours(0);
