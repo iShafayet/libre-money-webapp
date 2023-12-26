@@ -79,7 +79,7 @@
               </div>
 
               <div class="amounts-section">
-                <div class="amount">
+                <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
                   {{ dataInferenceService.getPrintableAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
@@ -387,6 +387,14 @@ async function clearFiltersClicked() {
 
 // ----- Computed and Embedded
 
+function isRecordInFlow(record: InferredRecord) {
+  return [RecordType.INCOME, RecordType.BORROWING, RecordType.REPAYMENT_RECEIVED, RecordType.ASSET_SALE].includes(record.type);
+}
+
+function isRecordOutFlow(record: InferredRecord) {
+  return [RecordType.EXPENSE, RecordType.LENDING, RecordType.REPAYMENT_GIVEN, RecordType.ASSET_PURCHASE].includes(record.type);
+}
+
 function isSingleAmountType(record: InferredRecord) {
   return (
     (record.type === RecordType.EXPENSE && record.expense) ||
@@ -519,6 +527,14 @@ loadData();
     .amount {
       font-size: 24px;
       display: inline-block;
+    }
+
+    .amount-in {
+      color: rgb(7, 112, 7);
+    }
+
+    .amount-out {
+      color: rgb(112, 7, 7);
     }
 
     .wallet {
