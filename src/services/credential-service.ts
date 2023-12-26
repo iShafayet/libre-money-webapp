@@ -1,10 +1,10 @@
-const tabStorageKey = "--ck-credentials";
+const LOCAL_OR_TAB_STORAGE_KEY = "--ck-credentials";
 
 const inMemoryCredentials: {
   username: string;
   password: string;
 } = (() => {
-  const item = sessionStorage.getItem(tabStorageKey);
+  const item = sessionStorage.getItem(LOCAL_OR_TAB_STORAGE_KEY) || localStorage.getItem(LOCAL_OR_TAB_STORAGE_KEY);
   if (!item) {
     return {
       username: "",
@@ -15,10 +15,14 @@ const inMemoryCredentials: {
 })();
 
 export const credentialService = {
-  async storeCredentials(username: string, password: string) {
+  async storeCredentials(username: string, password: string, shouldRememberPassword: boolean) {
     inMemoryCredentials.username = username;
     inMemoryCredentials.password = password;
-    sessionStorage.setItem(tabStorageKey, JSON.stringify(inMemoryCredentials));
+    if (shouldRememberPassword) {
+      localStorage.setItem(LOCAL_OR_TAB_STORAGE_KEY, JSON.stringify(inMemoryCredentials));
+    } else {
+      sessionStorage.setItem(LOCAL_OR_TAB_STORAGE_KEY, JSON.stringify(inMemoryCredentials));
+    }
   },
 
   hasCredentials() {
@@ -32,7 +36,8 @@ export const credentialService = {
   async clearCredentials() {
     inMemoryCredentials.username = "";
     inMemoryCredentials.password = "";
-    sessionStorage.removeItem(tabStorageKey);
+    sessionStorage.removeItem(LOCAL_OR_TAB_STORAGE_KEY);
+    localStorage.removeItem(LOCAL_OR_TAB_STORAGE_KEY);
   },
 
   async injectCredentials(url: string) {

@@ -8,6 +8,8 @@
 
         <q-input type="password" filled v-model="password" label="Password" hint="Your password" lazy-rules :rules="validators.password" />
 
+        <q-checkbox v-model="shouldRememberPassword" label="Store password on this device" />
+
         <div>
           <q-btn label="Login" type="submit" color="primary" />
           <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
@@ -33,16 +35,24 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
 
+    const isLoading = ref(false);
+
     const username: Ref<string | null> = ref(null);
     const password: Ref<string | null> = ref(null);
+
+    const shouldRememberPassword: Ref<boolean> = ref(false);
 
     return {
       validators,
       username,
       password,
+      shouldRememberPassword,
 
       async onSubmit() {
-        let [successful, failureReason] = await loginService.login(username.value!, password.value!);
+        isLoading.value = true;
+        let [successful, failureReason] = await loginService.login(username.value!, password.value!, shouldRememberPassword.value);
+        isLoading.value = false;
+
         if (!successful) {
           await dialogService.alert("Login Error", failureReason as string);
           return;
