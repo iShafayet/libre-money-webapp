@@ -1,6 +1,6 @@
 <template>
   <q-page class="items-center page">
-    <div class="q-pa-md row justify-end" style="margin-bottom: -56px; width: 100%">
+    <div class="q-pa-md row justify-end std-card" style="margin-right: 0; margin-bottom: -56px; width: 100%">
       <select-currency v-model="recordCurrencyId"></select-currency>
     </div>
 
