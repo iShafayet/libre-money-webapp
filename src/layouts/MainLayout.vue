@@ -209,7 +209,7 @@ export default defineComponent({
       toggleLeftDrawer() {
         isLeftDrawerOpen.value = !isLeftDrawerOpen.value;
       },
-      appVersion: "ver 0.1.1 (Alpha)",
+      appVersion: "ver 0.1.2 (Alpha)",
       miscList,
       userStore,
       logoutClicked,
