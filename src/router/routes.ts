@@ -99,6 +99,12 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuthentication: true, title: "Memos" },
       },
       {
+        path: "settings",
+        name: "settings",
+        component: () => import("pages/SettingsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Settings" },
+      },
+      {
         path: "debug",
         name: "debug",
         component: () => import("pages/DebugPage.vue"),

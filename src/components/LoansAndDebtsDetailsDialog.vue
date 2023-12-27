@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
     <q-card class="q-dialog-plugin">
       <q-card-section v-if="recordSummary">
         <div class="std-dialog-title q-pa-md">Loan and Debt Summary</div>
@@ -55,6 +55,7 @@ import SelectRecordType from "./SelectRecordType.vue";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
 import SelectParty from "./SelectParty.vue";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
+import { asAmount, prettifyAmount } from "src/utils/misc-utils";
 
 export default {
   props: {
@@ -87,7 +88,7 @@ export default {
     }
 
     function printAmount(amount: number) {
-      return `${recordSummary.value?.currencySign} ${amount.toLocaleString("en-US")}`;
+      return `${recordSummary.value?.currencySign} ${prettifyAmount(amount)}`;
     }
 
     return {

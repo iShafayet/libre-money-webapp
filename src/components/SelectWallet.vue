@@ -5,7 +5,7 @@ import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Ref, computed, ref, watch } from "vue";
 
-const props = defineProps(["modelValue", "label", "limitByCurrencyId"]);
+const props = defineProps(["modelValue", "label", "limitByCurrencyId", "preselect"]);
 const emit = defineEmits(["update:modelValue"]);
 
 const value = computed({
@@ -36,23 +36,26 @@ const limitByCurrencyId = computed({
 });
 
 const isLoading: Ref<boolean> = ref(true);
-const walletWalletList: Ref<Wallet[]> = ref([]);
-const fullWalletWalletList: Ref<Wallet[]> = ref([]);
+const walletList: Ref<Wallet[]> = ref([]);
+const fullWalletList: Ref<Wallet[]> = ref([]);
 
 async function loadData() {
   isLoading.value = true;
 
   let list = (await pouchdbService.listByCollection(Collection.WALLET)).docs as Wallet[];
+  list.sort((a, b) => a.name.localeCompare(b.name));
   if (props.limitByCurrencyId) {
     list = list.filter((item) => item.currencyId === props.limitByCurrencyId);
   }
-  fullWalletWalletList.value = list;
-  walletWalletList.value = fullWalletWalletList.value;
+  fullWalletList.value = list;
+  walletList.value = fullWalletList.value;
   isLoading.value = false;
   setTimeout(() => {
-    let isSelectedValueValid = value.value && walletWalletList.value.find((_w) => _w._id === value.value);
-    if ((walletWalletList.value.length && !value.value) || (value.value && !isSelectedValueValid)) {
-      value.value = walletWalletList.value[0]._id;
+    let isSelectedValueValid = value.value && walletList.value.find((_w) => _w._id === value.value);
+    if ((walletList.value.length && !value.value) || (value.value && !isSelectedValueValid)) {
+      if (props.preselect) {
+        value.value = walletList.value[0]._id;
+      }
     }
   }, 10);
 }
@@ -62,7 +65,7 @@ loadData();
 function filterWalletFn(val: string, update: any, abort: any) {
   update(() => {
     const needle = val.toLowerCase();
-    walletWalletList.value = fullWalletWalletList.value.filter((wallet) => {
+    walletList.value = fullWalletList.value.filter((wallet) => {
       return wallet.name.toLowerCase().includes(needle);
     });
   });
@@ -81,7 +84,7 @@ watch(limitByCurrencyId, () => {
   <q-select
     filled
     v-model="value"
-    :options="walletWalletList"
+    :options="walletList"
     :label="label || 'Wallet'"
     emit-value
     map-options
@@ -94,5 +97,6 @@ watch(limitByCurrencyId, () => {
     option-label="name"
     hide-selected
     v-if="!isLoading"
+    clearable
   />
 </template>

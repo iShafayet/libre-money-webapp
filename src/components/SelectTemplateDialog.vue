@@ -1,5 +1,5 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" persistent>
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
     <q-card class="q-dialog-plugin">
       <q-card-section>
         <div class="std-dialog-title q-pa-md">Select a Template</div>
@@ -64,6 +64,8 @@ export default {
 
     async function loadData() {
       let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD_TEMPLATE)).docs as Record[];
+      rawDataRows.sort((a, b) => a.templateName?.localeCompare(b.templateName || "") || 0);
+
       templateList.value = rawDataRows;
     }
 

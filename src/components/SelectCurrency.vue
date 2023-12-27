@@ -5,7 +5,7 @@ import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Ref, computed, ref } from "vue";
 
-const props = defineProps(["modelValue"]);
+const props = defineProps(["modelValue", "label"]);
 const emit = defineEmits(["update:modelValue"]);
 
 const value = computed({
@@ -17,6 +17,15 @@ const value = computed({
   },
 });
 
+const label = computed({
+  get() {
+    return props.label;
+  },
+  set(value) {
+    return null;
+  },
+});
+
 const isLoading: Ref<boolean> = ref(true);
 const walletCurrencyList: Ref<Currency[]> = ref([]);
 const fullWalletCurrencyList: Ref<Currency[]> = ref([]);
@@ -24,6 +33,8 @@ const fullWalletCurrencyList: Ref<Currency[]> = ref([]);
 async function loadData() {
   isLoading.value = true;
   fullWalletCurrencyList.value = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+  fullWalletCurrencyList.value.sort((a, b) => a.name.localeCompare(b.name));
+
   walletCurrencyList.value = fullWalletCurrencyList.value;
   isLoading.value = false;
   setTimeout(() => {
@@ -54,7 +65,7 @@ function filterCurrencyFn(val: string, update: any, abort: any) {
     filled
     v-model="value"
     :options="walletCurrencyList"
-    label="Currency"
+    :label="label || 'Currency'"
     emit-value
     map-options
     fill-input

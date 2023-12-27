@@ -32,6 +32,7 @@ async function loadData() {
       label,
     };
   });
+  list.sort((a, b) => a.label.localeCompare(b.label));
 
   fullRecordTypeList.value = list;
   recordTypeList.value = fullRecordTypeList.value;
@@ -66,7 +67,7 @@ function filterRecordTypeFn(val: string, update: any, abort: any) {
     filled
     v-model="value"
     :options="recordTypeList"
-    label="RecordTypes"
+    label="Record Types"
     emit-value
     map-options
     use-input

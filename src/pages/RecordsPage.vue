@@ -4,7 +4,11 @@
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
         <q-btn color="warning" label="Clear Filters" @click="clearFiltersClicked" v-if="recordFilters" />
-        <div class="title"></div>
+        <div class="title">
+          <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
+            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
+          </div>
+        </div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
           <q-list>
             <q-item clickable v-close-popup @click="addExpenseFromTemplateClicked">
@@ -26,8 +30,12 @@
         </q-btn-dropdown>
       </div>
 
-      <div class="q-pa-md">
-        <div class="sub-heading">Records</div>
+      <div class="q-pa-md" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
+        <div class="sub-heading" v-if="recordFilters">Filtered Records</div>
+        <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.lt.sm">
+          <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
+        </div>
+
         <div class="loading-notifier" v-if="isLoading">
           <q-spinner color="primary" size="32px"></q-spinner>
         </div>
@@ -47,7 +55,10 @@
                 <div class="primary-line" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
 
                 <div class="row secondary-line">
-                  <div class="party" v-if="getParty(record)">Party: {{ getParty(record)?.name }}</div>
+                  <div class="party" v-if="getParty(record)">
+                    <span class="party-type">{{ getParty(record)?.type }}</span
+                    >: {{ getParty(record)?.name }}
+                  </div>
                 </div>
 
                 <div class="notes" v-if="record.notes">Notes: {{ record.notes }}</div>
@@ -68,13 +79,13 @@
               </div>
 
               <div class="amounts-section">
-                <div class="amount">
-                  {{ dataInferenceService.prettifyAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
+                <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
+                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
                 <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
                   Unpaid:
-                  {{ dataInferenceService.prettifyAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
+                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="controls">
                   <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
@@ -109,16 +120,16 @@
               </div>
 
               <div class="amounts-section">
-                <div class="row">
-                  <div class="amount-left-col">
+                <div class="row amounts-section-row">
+                  <div class="amount-col amount-left-col">
                     <div class="amount amount-out">
-                      Out {{ dataInferenceService.prettifyAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
+                      Out {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.fromWallet.name }})</div>
                   </div>
-                  <div>
+                  <div class="amount-col amount-right-col">
                     <div class="amount amount-in">
-                      In {{ dataInferenceService.prettifyAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
+                      In {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.toWallet.name }})</div>
                   </div>
@@ -172,22 +183,29 @@ import FilterRecordsDialog from "src/components/FilterRecordsDialog.vue";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import SelectTemplateDialog from "src/components/SelectTemplateDialog.vue";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
+import MonthAndYearInput from "src/components/lib/MonthAndYearInput.vue";
+import { useRecordPaginationSizeStore } from "src/stores/record-pagination";
 
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
+
+const recordPaginationStore = useRecordPaginationSizeStore();
 
 // ----- Refs
 const searchFilter: Ref<string | null> = ref(null);
 const isLoading = ref(false);
 const rows: Ref<InferredRecord[]> = ref([]);
 
-const recordCountPerPage = 10;
+const recordCountPerPage = recordPaginationStore.recordPaginationSize;
 const paginationCurrentPage: Ref<number> = ref(1);
 const paginationMaxPage: Ref<number> = ref(1);
 
 const recordFilters: Ref<RecordFilters | null> = ref(recordFiltersStore.recordFilters || null);
 recordFiltersStore.setRecordFilters(null);
+
+const filterMonth: Ref<number> = ref(new Date().getMonth());
+const filterYear: Ref<number> = ref(new Date().getFullYear());
 
 // ----- Functions
 
@@ -196,16 +214,21 @@ async function loadData() {
 
   await dataInferenceService.updateCurrencyCache();
 
-  let rawDataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
-  let dataRows = await Promise.all(rawDataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
   if (recordFilters.value) {
-    let { recordTypeList, partyId } = recordFilters.value;
+    let { recordTypeList, partyId, tagList, walletId, searchString } = recordFilters.value;
     recordTypeList = recordTypeList.map((type) => (RecordType as any)[type]);
     let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
 
     if (recordTypeList.length) {
       dataRows = dataRows.filter((record) => recordTypeList.indexOf(record.type) > -1);
+    }
+
+    if (tagList.length) {
+      dataRows = dataRows.filter((record) => {
+        return record.tagIdList.some((tagId) => tagList.includes(tagId));
+      });
     }
 
     if (partyId) {
@@ -221,6 +244,34 @@ async function loadData() {
           record.repaymentReceived?.partyId === partyId
       );
     }
+    if (walletId) {
+      dataRows = dataRows.filter(
+        (record) =>
+          record.income?.walletId === walletId ||
+          record.expense?.walletId === walletId ||
+          record.assetPurchase?.walletId === walletId ||
+          record.assetSale?.walletId === walletId ||
+          record.lending?.walletId === walletId ||
+          record.borrowing?.walletId === walletId ||
+          record.repaymentGiven?.walletId === walletId ||
+          record.repaymentReceived?.walletId === walletId ||
+          record.moneyTransfer?.fromWalletId === walletId ||
+          record.moneyTransfer?.toWalletId === walletId
+      );
+    }
+
+    if (searchString && searchString.length > 0) {
+      dataRows = dataRows.filter((record) => record.notes && String(record.notes).indexOf(searchString) > -1);
+    }
+
+    dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+  } else {
+    let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
+    let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
+    rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+    rangeEnd.setDate(rangeEnd.getDate() - 1);
+
+    let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
     dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
   }
 
@@ -232,12 +283,18 @@ async function loadData() {
   }
 
   let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
-  rows.value = dataRows.slice(startIndex, startIndex + recordCountPerPage);
+
+  let inferredDataRows = await Promise.all(dataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+  rows.value = inferredDataRows.slice(startIndex, startIndex + recordCountPerPage);
 
   isLoading.value = false;
 }
 
 // ----- Event Handlers
+
+async function monthAndYearSelected() {
+  loadData();
+}
 
 async function addExpenseClicked() {
   $q.dialog({ component: AddExpenseRecord }).onOk((res) => {
@@ -327,6 +384,14 @@ async function clearFiltersClicked() {
 }
 
 // ----- Computed and Embedded
+
+function isRecordInFlow(record: InferredRecord) {
+  return [RecordType.INCOME, RecordType.BORROWING, RecordType.REPAYMENT_RECEIVED, RecordType.ASSET_SALE].includes(record.type);
+}
+
+function isRecordOutFlow(record: InferredRecord) {
+  return [RecordType.EXPENSE, RecordType.LENDING, RecordType.REPAYMENT_GIVEN, RecordType.ASSET_PURCHASE].includes(record.type);
+}
 
 function isSingleAmountType(record: InferredRecord) {
   return (
@@ -440,11 +505,6 @@ loadData();
           background-color: $record-income-primary-color;
           color: $record-income-text-color;
         }
-
-        &[data-record-type="money-transfer"] {
-          background-color: $record-money-transfer-primary-color;
-          color: $record-money-transfer-text-color;
-        }
       }
 
       .tag {
@@ -465,6 +525,14 @@ loadData();
     .amount {
       font-size: 24px;
       display: inline-block;
+    }
+
+    .amount-in {
+      color: rgb(7, 112, 7);
+    }
+
+    .amount-out {
+      color: rgb(112, 7, 7);
     }
 
     .wallet {
@@ -497,15 +565,25 @@ loadData();
   .amount-out {
     color: rgb(112, 7, 7);
   }
+
+  @media (max-width: $breakpoint-xs-max) {
+    .amount-left-col {
+      margin-right: 0px;
+    }
+    .amounts-section-row {
+      flex-direction: column;
+    }
+    .amount-col {
+      margin-bottom: 8px;
+    }
+  }
 }
 
-.loading-notifier {
-  width: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  justify-items: center;
-  padding: 24px;
-  padding-top: 0px;
+.party-type {
+  text-transform: capitalize;
+}
+
+.month-and-year-input-wrapper {
+  text-align: center;
 }
 </style>

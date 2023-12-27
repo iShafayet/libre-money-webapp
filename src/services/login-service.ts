@@ -25,9 +25,9 @@ export const loginService = {
     }
   },
 
-  async login(username: string, password: string) {
+  async login(username: string, password: string, shouldRememberPassword: boolean) {
     try {
-      await credentialService.storeCredentials(username, password);
+      await credentialService.storeCredentials(username, password, shouldRememberPassword);
 
       const validateUrl = `${remoteServerUrl}/${remoteDataDatabaseName}/_all_docs`;
       const validateResponse = await axios.get(validateUrl, {

@@ -453,12 +453,14 @@ import DateInput from "src/components/lib/DateInput.vue";
 import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount, prettifyAmount, prettifyCount } from "src/utils/misc-utils";
 import { dataInferenceService } from "src/services/data-inference-service";
 
 import { Ref, ref, watch } from "vue";
+import { useSettingsStore } from "src/stores/settings";
 
 const $q = useQuasar();
+const settingsStore = useSettingsStore();
 
 function computeStartEpoch(now: number) {
   let date = new Date(now);
@@ -468,7 +470,7 @@ function computeStartEpoch(now: number) {
 
 // ----- Refs
 
-const recordCurrencyId: Ref<string | null> = ref(null);
+const recordCurrencyId: Ref<string | null> = ref(settingsStore.defaultCurrencyId);
 
 const startEpoch: Ref<number> = ref(computeStartEpoch(Date.now()));
 const endEpoch: Ref<number> = ref(Date.now());
@@ -520,11 +522,11 @@ async function presetClicked(rangeIdentifier: string) {
 // ----- Computed and Embedded
 
 function printAmount(amount: number) {
-  return `${overview.value?.currency.sign} ${amount.toLocaleString("en-US")}`;
+  return `${overview.value?.currency.sign} ${prettifyAmount(amount)}`;
 }
 
 function printCount(count: number) {
-  return `${count.toLocaleString("en-US")}`;
+  return `${prettifyCount(count)}`;
 }
 
 // ----- Watchers

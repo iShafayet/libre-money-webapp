@@ -20,6 +20,7 @@ export const usePaginationSizeStore = defineStore("paginationSize", {
 
   actions: {
     setPaginationSize(paginationSize: number) {
+      paginationSize = parseInt(String(paginationSize));
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(paginationSize));
       this.paginationSize = paginationSize;
     },
