@@ -9,7 +9,6 @@ import {
 } from "./date-utils";
 
 export const getStartAndEndEpochFromPreset = (newPreset: string) => {
-  console.log(newPreset);
   const range = { startEpoch: 0, endEpoch: 0 };
   if (newPreset === "current-year") {
     range.startEpoch = setDateToTheFirstDateOfYear(Date.now());

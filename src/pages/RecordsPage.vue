@@ -271,8 +271,6 @@ async function loadData() {
     rangeEnd.setMonth(rangeEnd.getMonth() + 1);
     rangeEnd.setDate(rangeEnd.getDate() - 1);
 
-    console.log(rangeStart, rangeEnd);
-
     let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
     dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
   }
