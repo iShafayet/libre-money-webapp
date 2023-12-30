@@ -170,33 +170,7 @@ loadData();
 </script>
 
 <style scoped lang="scss">
-.overview-table {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.overview-table td,
-.overview-table th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.overview-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.overview-table tr:hover {
-  background-color: #ddd;
-}
-
-.overview-table th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #426689;
-  color: whitesmoke;
-}
+@import url(./../css/table.scss);
 
 .filter-row {
   display: flex;
