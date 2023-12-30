@@ -12,6 +12,17 @@
       </div>
     </q-card>
 
+    <q-card class="std-card" v-if="!isLoading && !overview">
+      <div class="q-pa-md q-gutter-sm">
+        <div>
+          Welcome to Cash Keeper!<br /><br />
+          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started guide.<br /><br />
+          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your data to this device.<br /><br />
+          Enjoy!
+        </div>
+      </div>
+    </q-card>
+
     <q-card class="std-card" v-if="!isLoading && budgetList.length > 0">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title">Budgets (Active)</div>
@@ -170,33 +181,7 @@ loadData();
 </script>
 
 <style scoped lang="scss">
-.overview-table {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.overview-table td,
-.overview-table th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.overview-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.overview-table tr:hover {
-  background-color: #ddd;
-}
-
-.overview-table th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #426689;
-  color: whitesmoke;
-}
+@import url(./../css/table.scss);
 
 .filter-row {
   display: flex;

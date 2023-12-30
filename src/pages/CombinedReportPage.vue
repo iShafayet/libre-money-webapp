@@ -543,6 +543,8 @@ watch(recordCurrencyId, (newValue, __) => {
 </script>
 
 <style scoped lang="scss">
+@import url(./../css/table.scss);
+
 .loading-notifier {
   width: 100;
   display: flex;
@@ -551,34 +553,6 @@ watch(recordCurrencyId, (newValue, __) => {
   justify-items: center;
   padding: 24px;
   padding-top: 0px;
-}
-
-.overview-table {
-  font-family: Arial, Helvetica, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-.overview-table td,
-.overview-table th {
-  border: 1px solid #ddd;
-  padding: 8px;
-}
-
-.overview-table tr:nth-child(even) {
-  background-color: #f2f2f2;
-}
-
-.overview-table tr:hover {
-  background-color: #ddd;
-}
-
-.overview-table th {
-  padding-top: 12px;
-  padding-bottom: 12px;
-  text-align: left;
-  background-color: #426689;
-  color: whitesmoke;
 }
 
 .filter-section {
