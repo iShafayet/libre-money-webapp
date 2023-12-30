@@ -166,21 +166,25 @@ class ComputationService {
     return loanAndDebtSummaryList;
   }
 
-  async computeOverview(startEpoch: number, endEpoch: number, currencyId: string): Promise<Overview> {
+  async computeOverview(startEpoch: number, endEpoch: number, currencyId: string): Promise<Overview | null> {
     await dataInferenceService.updateCurrencyCache();
 
     [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
 
     // ============== Preparation
 
-    let res = await pouchdbService.listByCollection(Collection.RECORD);
+    let res = await pouchdbService.listByCollection(Collection.CURRENCY);
+    const currencyList = res.docs as Currency[];
+
+    if (currencyList.length === 0) {
+      return null;
+    }
+
+    res = await pouchdbService.listByCollection(Collection.RECORD);
     const fullRecordList = res.docs as Record[];
 
     res = await pouchdbService.listByCollection(Collection.PARTY);
     const partyList = res.docs as Party[];
-
-    res = await pouchdbService.listByCollection(Collection.CURRENCY);
-    const currencyList = res.docs as Currency[];
 
     res = await pouchdbService.listByCollection(Collection.WALLET);
     const walletList = res.docs as Wallet[];
