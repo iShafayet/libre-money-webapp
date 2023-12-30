@@ -637,7 +637,7 @@ class ComputationService {
     }
   }
 
-  async computeQuickSummaryForCurrency(startEpoch: number, endEpoch: number, currency: Currency): Promise<QuickSummary> {
+  async computeQuickSummaryForCurrency(startEpoch: number, endEpoch: number, currency: Currency, fullRecordList: Record[] = []): Promise<QuickSummary> {
     [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
     const currencyId = currency._id!;
 
@@ -650,8 +650,6 @@ class ComputationService {
       totalOutFlow: 0,
       totalFlowBalance: 0,
     };
-
-    const fullRecordList = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
     const recordList = fullRecordList
       .filter((record) => {
@@ -738,12 +736,12 @@ class ComputationService {
     return quickSummary;
   }
 
-  async computeQuickSummary(startEpoch: number, endEpoch: number): Promise<QuickSummary[]> {
+  async computeQuickSummary(startEpoch: number, endEpoch: number, recordList: Record[]): Promise<QuickSummary[]> {
     const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
 
     return await Promise.all(
       currencyList.map(async (currency) => {
-        return computationService.computeQuickSummaryForCurrency(startEpoch, endEpoch, currency);
+        return computationService.computeQuickSummaryForCurrency(startEpoch, endEpoch, currency, recordList);
       })
     );
   }
