@@ -107,4 +107,5 @@ export type Record = {
     toAmount: number;
     _toCurrencySign?: string;
   };
+  modifiedByUsername?: string;
 };
