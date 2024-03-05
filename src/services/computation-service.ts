@@ -567,7 +567,7 @@ class ComputationService {
         const finerRecordList = narrowedRecordList.filter(
           (record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase && record.assetPurchase.currencyId === budget.currencyId
         );
-        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
       }
 
       budget._usedAmount = usedAmount;
