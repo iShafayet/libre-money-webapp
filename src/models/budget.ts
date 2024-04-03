@@ -13,5 +13,5 @@ export type Budget = {
   tagIdBlackList: string[];
   currencyId: string;
   _currencySign?: string;
-  _usedAmount: number;
+  _usedAmount?: number;
 };
