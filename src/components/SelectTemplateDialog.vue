@@ -10,7 +10,8 @@
               <div class="template-container">
                 <div>{{ template.templateName }}</div>
                 <div class="spacer"></div>
-                <q-btn-dropdown size="md" color="primary" label="Use Template" split @click="useTemplateClicked(template)">
+                <q-btn-dropdown size="md" color="primary" label="Use" split @click="useTemplateClicked(template)"
+                  style="margin-left: 8px;">
                   <q-list>
                     <q-item clickable v-close-popup @click="deleteTemplateClicked(template)">
                       <q-item-section>
@@ -25,8 +26,10 @@
         </div>
       </q-card-section>
 
-      <q-card-actions class="row justify-start">
-        <q-btn color="blue-grey" label="Close" @click="cancelClicked" />
+      <q-card-actions class="row justify-start std-bottom-action-row">
+        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
+        <div class="spacer"></div>
+        <q-btn color="secondary" label="Manage Templates" @click="manageClicked" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -41,6 +44,7 @@ import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
+import { useRouter } from "vue-router";
 
 export default {
   props: {
@@ -55,6 +59,7 @@ export default {
 
   setup(props) {
     const $q = useQuasar();
+    const router = useRouter();
 
     const isLoading = ref(false);
 
@@ -73,6 +78,10 @@ export default {
 
     async function useTemplateClicked(template: Record) {
       onDialogOK(template);
+    }
+
+    function manageClicked() {
+      router.push({ name: "templates" });
     }
 
     async function deleteTemplateClicked(template: Record) {
@@ -97,6 +106,7 @@ export default {
       validators,
       useTemplateClicked,
       deleteTemplateClicked,
+      manageClicked
     };
   },
 };

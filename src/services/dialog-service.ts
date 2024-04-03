@@ -38,4 +38,28 @@ export const dialogService = {
         });
     });
   },
+
+  prompt(title: string, message: string, initialValue: string): Promise<string | null> {
+    return new Promise((accept) => {
+      Dialog.create({
+        title,
+        message,
+        prompt: {
+          model: initialValue,
+          type: "text",
+        },
+        cancel: true,
+        persistent: true,
+      })
+        .onOk((answer) => {
+          accept(answer);
+        })
+        .onCancel(() => {
+          accept(null);
+        })
+        .onDismiss(() => {
+          accept(null);
+        });
+    });
+  },
 };

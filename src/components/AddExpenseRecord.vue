@@ -7,7 +7,8 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-expense-avenue v-model="recordExpenseAvenueId"></select-expense-avenue>
-          <q-input type="number" filled v-model="recordAmount" label="Expense Amount" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Expense Amount" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordCurrencySign }}</div>
             </template>
@@ -20,23 +21,33 @@
             <q-tab name="unpaid" label="Unpaid" />
           </q-tabs>
 
-          <select-wallet v-model="recordWalletId" v-if="paymentType == 'full' || paymentType == 'partial'" :limitByCurrencyId="recordCurrencyId">
+          <select-wallet v-model="recordWalletId" v-if="paymentType == 'full' || paymentType == 'partial'"
+            :limitByCurrencyId="recordCurrencyId">
           </select-wallet>
-          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules :rules="validators.balance" v-if="paymentType == 'partial'" />
+          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules
+            :rules="validators.balance" v-if="paymentType == 'partial'" />
           <div v-if="paymentType == 'partial'">Amount remaining: {{ recordAmountUnpaid }}</div>
 
-          <select-party v-model="recordPartyId" :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
+          <select-party v-model="recordPartyId"
+            :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
           <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
         </q-form>
       </q-card-section>
 
-      <q-card-actions class="row justify-end bottom-action-row">
-        <q-btn color="secondary" label="Save as template" @click="saveAsTemplateClicked" />
-        <div class="spacer"></div>
+      <q-card-actions class="row justify-start std-bottom-action-row">
         <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
-        <q-btn color="primary" label="Save" @click="okClicked" />
+        <div class="spacer"></div>
+        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px;">
+          <q-list>
+            <q-item clickable v-close-popup @click="saveAsTemplateClicked">
+              <q-item-section>
+                <q-item-label>Save as Template</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -255,36 +266,26 @@ export default {
     }
 
     async function saveAsTemplateClicked() {
-      $q.dialog({
-        title: "Saving as template",
-        message: "Provide a unique name for the template",
-        prompt: {
-          model: "",
-          type: "text",
+      let templateName = await dialogService.prompt("Saving as template", "Provide a unique name for the template", "");
+      if (!templateName) return;
+      let partialRecord: Record = {
+        $collection: Collection.RECORD_TEMPLATE,
+        templateName,
+        notes: recordNotes.value!,
+        type: recordType,
+        tagIdList: recordTagIdList.value,
+        transactionEpoch: transactionEpoch.value,
+        expense: {
+          expenseAvenueId: recordExpenseAvenueId.value!,
+          amount: asAmount(recordAmount.value),
+          currencyId: recordCurrencyId.value!,
+          partyId: recordPartyId.value,
+          walletId: recordWalletId.value!,
+          amountPaid: asAmount(recordAmountPaid.value),
+          amountUnpaid: asAmount(recordAmountUnpaid.value),
         },
-        cancel: true,
-        persistent: true,
-      }).onOk((templateName: string) => {
-        let partialRecord: Record = {
-          $collection: Collection.RECORD_TEMPLATE,
-          templateName,
-          notes: recordNotes.value!,
-          type: recordType,
-          tagIdList: recordTagIdList.value,
-          transactionEpoch: transactionEpoch.value,
-          expense: {
-            expenseAvenueId: recordExpenseAvenueId.value!,
-            amount: asAmount(recordAmount.value),
-            currencyId: recordCurrencyId.value!,
-            partyId: recordPartyId.value,
-            walletId: recordWalletId.value!,
-            amountPaid: asAmount(recordAmountPaid.value),
-            amountUnpaid: asAmount(recordAmountUnpaid.value),
-          },
-        };
-
-        pouchdbService.upsertDoc(partialRecord);
-      });
+      };
+      pouchdbService.upsertDoc(partialRecord);
     }
 
     watch(recordCurrencyId, async (newCurrencyId: any) => {
@@ -317,10 +318,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="scss">
-.bottom-action-row {
-  margin-left: 26px;
-  margin-right: 26px;
-  margin-bottom: 26px;
-}
-</style>
+<style scoped lang="scss"></style>

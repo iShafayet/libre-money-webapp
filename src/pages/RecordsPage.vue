@@ -12,11 +12,6 @@
         </div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
           <q-list>
-            <q-item clickable v-close-popup @click="addExpenseFromTemplateClicked">
-              <q-item-section>
-                <q-item-label>Add Expense from Templates</q-item-label>
-              </q-item-section>
-            </q-item>
             <q-item clickable v-close-popup @click="addIncomeClicked">
               <q-item-section>
                 <q-item-label>Add Income</q-item-label>
@@ -25,6 +20,12 @@
             <q-item clickable v-close-popup @click="addMoneyTransferClicked">
               <q-item-section>
                 <q-item-label>Transfer Money</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+            <q-item clickable v-close-popup @click="applyTemplateClicked">
+              <q-item-section>
+                <q-item-label>Use Template</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -272,8 +273,6 @@ async function loadData() {
 
   let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
-  console.log("MAIN EVENT", JSON.parse(JSON.stringify(recordFilters.value)));
-
   if (recordFilters.value) {
     let { recordTypeList, partyId, tagIdWhiteList, tagIdBlackList, walletId, searchString } = recordFilters.value;
 
@@ -371,7 +370,7 @@ async function addExpenseClicked() {
   });
 }
 
-async function addExpenseFromTemplateClicked() {
+async function applyTemplateClicked() {
   $q.dialog({ component: SelectTemplateDialog, componentProps: { templateType: "expense" } }).onOk((selectedTemplate: Record) => {
     $q.dialog({ component: AddExpenseRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk((res) => {
       paginationCurrentPage.value = 1;
