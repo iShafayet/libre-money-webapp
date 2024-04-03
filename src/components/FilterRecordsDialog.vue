@@ -17,7 +17,7 @@
           <select-party v-model="recordFilters.partyId" :mandatory="false"></select-party>
         </div>
         <div style="margin-top: -12px">
-          <select-tag v-model="recordFilters.tagList"></select-tag>
+          <select-tag v-model="recordFilters.tagIdWhiteList"></select-tag>
         </div>
         <div style="margin-top: -12px">
           <select-wallet v-model="recordFilters.walletId"></select-wallet>
@@ -88,7 +88,8 @@ export default {
         startEpoch: Date.now(),
         endEpoch: Date.now(),
         recordTypeList: [],
-        tagList: [],
+        tagIdWhiteList: [],
+        tagIdBlackList: [],
         partyId: null,
         walletId: null,
         searchString: "",
