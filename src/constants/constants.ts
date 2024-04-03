@@ -34,6 +34,13 @@ export const assetLiquidityList = [
   { value: "unsure", label: "Unsure" },
 ];
 
+export const defaultViewOptionList = [
+  { value: "overview", label: "Overview" },
+  { value: "records", label: "Records" },
+  { value: "templates", label: "Templates" },
+  { value: "budgets", label: "Budgets" },
+];
+
 export const defaultWalletType = "cash";
 
 export const Collection = {

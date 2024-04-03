@@ -51,6 +51,17 @@ body {
   margin-bottom: 32px;
 }
 
+.std-margin-top-12 {
+  margin-top: 12px;
+}
+
+.std-toggle {
+  margin-top: -12px;
+  display: flex;
+  justify-content: end;
+  width: calc(100% - 16px);
+}
+
 .spacer {
   flex: 1;
 }

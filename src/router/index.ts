@@ -1,13 +1,9 @@
 import { route } from "quasar/wrappers";
-import {
-  createMemoryHistory,
-  createRouter,
-  createWebHashHistory,
-  createWebHistory,
-} from "vue-router";
+import { createMemoryHistory, createRouter, createWebHashHistory, createWebHistory } from "vue-router";
 
 import routes from "./routes";
 import { useUserStore } from "src/stores/user";
+import { useSettingsStore } from "src/stores/settings";
 
 /*
  * If not building with SSR mode, you can
@@ -19,11 +15,7 @@ import { useUserStore } from "src/stores/user";
  */
 
 export default route(function (/* { store, ssrContext } */) {
-  const createHistory = process.env.SERVER
-    ? createMemoryHistory
-    : process.env.VUE_ROUTER_MODE === "history"
-    ? createWebHistory
-    : createWebHashHistory;
+  const createHistory = process.env.SERVER ? createMemoryHistory : process.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory;
 
   const Router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
@@ -36,14 +28,26 @@ export default route(function (/* { store, ssrContext } */) {
   });
 
   Router.beforeEach((to, from, next) => {
+    console.debug({ to, from });
+    const settingsStore = useSettingsStore();
+
+    if (from.fullPath === "/" && to.fullPath === "/") {
+      if (settingsStore.rememberLastOpenedView) {
+        return next({ path: settingsStore.lastOpenedView });
+      } else {
+        return next({ name: settingsStore.defaultView });
+      }
+    }
+
     const isUserLoggedIn = useUserStore().isUserLoggedIn;
-    const doesRouteRequireAuthentication = to.matched.some(
-      (record) => record.meta.requiresAuthentication
-    );
+    const doesRouteRequireAuthentication = to.matched.some((record) => record.meta.requiresAuthentication);
     if (doesRouteRequireAuthentication && !isUserLoggedIn) {
-      next({ name: "login", query: { next: to.fullPath } });
+      return next({ name: "login", query: { next: to.fullPath } });
     } else {
-      next();
+      if (to.meta?.rememberable) {
+        settingsStore.setLastOpenedView(to.fullPath);
+      }
+      return next();
     }
   });
 
