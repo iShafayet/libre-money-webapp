@@ -3,10 +3,13 @@
     <q-card class="q-dialog-plugin">
       <q-card-section v-if="recordFilters">
         <div class="std-dialog-title q-pa-md">Record Filters</div>
-        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value map-options />
+        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value
+          map-options />
         <div class="row no-wrap" style="margin-top: 8px">
-          <date-input v-model="recordFilters.startEpoch" label="Start Date" @update:model-value="startEpochChanged"></date-input>
-          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged" style="margin-left: 4px"></date-input>
+          <date-input v-model="recordFilters.startEpoch" label="Start Date"
+            @update:model-value="startEpochChanged"></date-input>
+          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged"
+            style="margin-left: 4px"></date-input>
         </div>
         <br />
         <select-record-type v-model="recordFilters.recordTypeList" />
@@ -136,4 +139,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

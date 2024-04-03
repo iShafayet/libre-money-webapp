@@ -9,15 +9,8 @@
           </div>
         </div>
         <q-form @submit="onSubmit" class="q-gutter-md q-pa-md" v-if="needsPasswordInput">
-          <q-input
-            type="password"
-            filled
-            v-model="password"
-            :label="`Your password for ${username}`"
-            :hint="`Your password for ${username}`"
-            lazy-rules
-            :rules="validators.password"
-          />
+          <q-input type="password" filled v-model="password" :label="`Your password for ${username}`"
+            :hint="`Your password for ${username}`" lazy-rules :rules="validators.password" />
           <div></div>
         </q-form>
       </q-card-section>
@@ -130,4 +123,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>
