@@ -28,7 +28,7 @@ export default route(function (/* { store, ssrContext } */) {
   });
 
   Router.beforeEach((to, from, next) => {
-    console.debug({ to, from });
+    console.debug("Navigation", { to, from });
     const settingsStore = useSettingsStore();
 
     if (from.fullPath === "/" && to.fullPath === "/") {
