@@ -8,7 +8,7 @@
  * @param {cancelObj} [options.cancelObj='canceled'] Specify the error object to be rejected.
  * @returns {Function} Returns the new debounced function.
  */
-function debounceAsync(func, wait = 0, { leading = false, cancelObj = "canceled" } = {}) {
+function debounceAsync(func, wait = 0, { leading = false, cancelObj = new Error("Debounced") } = {}) {
   let timerId, latestResolve, shouldCancel;
 
   return function (...args) {

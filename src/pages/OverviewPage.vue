@@ -114,13 +114,8 @@ async function loadOverview() {
   let newOverview = await computationService.computeOverview(startEpoch.value, endEpoch.value, recordCurrencyId.value!);
   overview.value = newOverview;
 }
-const loadOverviewDebounced = debounceAsync(loadOverview, 1000, { leading: false });
 
-async function loadData() {
-  isLoading.value = true;
-
-  await loadOverviewDebounced();
-
+async function loadBudgets() {
   let res = await pouchdbService.listByCollection(Collection.BUDGET);
   let newBudgetList = res.docs as Budget[];
   newBudgetList = newBudgetList.filter((budget) => budget.currencyId === recordCurrencyId.value!)
@@ -128,6 +123,22 @@ async function loadData() {
   await computationService.computeUsedAmountForBudgetListInPlace(newBudgetList);
   newBudgetList.sort((a, b) => a.name.localeCompare(b.name));
   budgetList.value = newBudgetList;
+}
+
+const loadOverviewDebounced = debounceAsync(loadOverview, 1000, { leading: false });
+
+async function loadData() {
+  isLoading.value = true;
+
+  try {
+    await loadOverviewDebounced();
+  } catch (ex) {
+    if (ex && (ex as Error).message.indexOf("Debounced") > -1) {
+      return;
+    }
+    throw ex;
+  }
+  await loadBudgets();
 
   isLoading.value = false;
 }
@@ -161,6 +172,7 @@ watch(recordCurrencyId, (newValue, __) => {
 
 // ----- Execution
 
+loadData();
 
 </script>
 
