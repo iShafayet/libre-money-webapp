@@ -66,7 +66,7 @@ import SelectWallet from "./SelectWallet.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
 import { NotificationType, dialogService } from "src/services/dialog-service";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount, deepClone } from "src/utils/misc-utils";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import { dataInferenceService } from "src/services/data-inference-service";
 
@@ -202,17 +202,9 @@ export default {
       return true;
     }
 
-    async function okClicked() {
-      if (!(await recordForm.value?.validate())) {
-        return;
-      }
-
-      if (!(await performManualValidation())) {
-        return;
-      }
-
+    function populatePartialRecord() {
       let record: Record = {
-        $collection: Collection.RECORD,
+        $collection: "INVALID",
         notes: recordNotes.value!,
         type: recordType,
         tagIdList: recordTagIdList.value,
@@ -227,38 +219,37 @@ export default {
           amountUnpaid: asAmount(recordAmountUnpaid.value),
         },
       };
+
+      return record;
+    }
+
+    async function okClicked() {
+      if (!(await recordForm.value?.validate())) return;
+      if (!(await performManualValidation())) return;
+
+      let record: Record = populatePartialRecord();
+      record.$collection = Collection.RECORD;
 
       if (initialDoc) {
         record = Object.assign({}, initialDoc, record);
       }
 
-      console.debug("Saving record: ", JSON.stringify(record, null, 2));
-
+      console.debug("Saving record: ", deepClone(record));
       pouchdbService.upsertDoc(record);
-
       onDialogOK();
     }
 
     async function saveAsTemplateClicked() {
+      if (!(await performManualValidation())) return;
+
       let templateName = await dialogService.prompt("Saving as template", "Provide a unique name for the template", "");
       if (!templateName) return;
-      let partialRecord: Record = {
-        $collection: Collection.RECORD_TEMPLATE,
-        templateName,
-        notes: recordNotes.value!,
-        type: recordType,
-        tagIdList: recordTagIdList.value,
-        transactionEpoch: transactionEpoch.value,
-        assetPurchase: {
-          assetId: recordAssetId.value!,
-          amount: asAmount(recordAmount.value),
-          currencyId: recordCurrencyId.value!,
-          partyId: recordPartyId.value,
-          walletId: recordWalletId.value!,
-          amountPaid: asAmount(recordAmountPaid.value),
-          amountUnpaid: asAmount(recordAmountUnpaid.value),
-        },
-      };
+
+      let partialRecord: Record = populatePartialRecord();
+      partialRecord.$collection = Collection.RECORD_TEMPLATE;
+      partialRecord.templateName = templateName;
+
+      console.debug("Saving record as template: ", deepClone(partialRecord));
       pouchdbService.upsertDoc(partialRecord);
       dialogService.notify(NotificationType.SUCCESS, "Template saved.");
       onDialogCancel();
