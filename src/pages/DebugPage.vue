@@ -46,17 +46,15 @@
 </template>
 
 <script lang="ts">
-import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, walletTypeList, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddDocument from "./../components/AddDocument.vue";
-import { pouchdbService } from "src/services/pouchdb-service";
-import { dialogService } from "src/services/dialog-service";
-import { sleep } from "src/utils/misc-utils";
-import { Currency } from "src/models/currency";
-import { loginService } from "src/services/login-service";
-import { usePaginationSizeStore } from "src/stores/pagination";
 import { dataBackupService } from "src/services/data-backup-service";
+import { dialogService } from "src/services/dialog-service";
+import { localDataService } from "src/services/local-data-service";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { usePaginationSizeStore } from "src/stores/pagination";
+import { Ref, defineComponent, ref, watch } from "vue";
+import AddDocument from "./../components/AddDocument.vue";
+import { rowsPerPageOptions } from "./../constants/constants";
 
 type EditableDocument = {
   _id: string;
@@ -196,17 +194,7 @@ export default defineComponent({
     }
 
     async function removeLocalDataClicked() {
-      let answer = await dialogService.confirm("Remove Local Data", "Are you sure you want to remove all local data? Any un-synced data will be lost forever.");
-      if (!answer) return;
-
-      await pouchdbService.getDb().destroy();
-      await loginService.logout();
-
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // @ts-ignore
-      window.location.reload(true);
+      localDataService.removeLocalData();
     }
 
     async function downloadLocalDataClicked() {

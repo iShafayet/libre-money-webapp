@@ -8,8 +8,9 @@
           {{ $route.meta.title || "Cash Keeper" }}
         </q-toolbar-title>
 
-        <div v-if="$route.meta.title && !isDevDatabase">Cash Keeper</div>
+        <div v-if="$route.meta.title && !isDevDatabase && !isDevMachine">Cash Keeper</div>
         <div class="dev-mode-notification" v-if="isDevDatabase">DEV DB</div>
+        <div class="dev-mode-warning" v-if="!isDevDatabase && isDevMachine">PROD DB in DEV ENV</div>
 
         <q-btn flat dense round icon="perm_identity">
           <q-menu>
@@ -198,13 +199,19 @@ export default defineComponent({
 
     const isLeftDrawerOpen = ref(false);
     const isDevDatabase = ref(false);
+    const isDevMachine = ref(false);
 
     const userStore = useUserStore();
 
     function checkIfInDevMode() {
       isDevDatabase.value = false;
+      isDevMachine.value = false;
       if (userStore.user && userStore.user.domain.indexOf("test") > -1) {
         isDevDatabase.value = true;
+      }
+
+      if (window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1) {
+        isDevMachine.value = true;
       }
     }
     userStore.$subscribe(checkIfInDevMode);
@@ -252,7 +259,8 @@ export default defineComponent({
       syncClicked,
       verionClicked,
 
-      isDevDatabase
+      isDevDatabase,
+      isDevMachine
     };
   },
 });
@@ -281,6 +289,13 @@ export default defineComponent({
 
 .dev-mode-notification {
   background-color: yellow;
+  color: black;
+  padding: 0px 8px;
+  font-weight: bold;
+}
+
+.dev-mode-warning {
+  background-color: red;
   color: black;
   padding: 0px 8px;
   font-weight: bold;

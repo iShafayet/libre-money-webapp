@@ -14,9 +14,11 @@
 
         <q-checkbox v-model="shouldRememberPassword" label="Store password on this device" />
 
-        <div>
+        <div class="row">
+          <q-btn label="Reset Local Data" type="button" color="grey" flat class="q-ml-sm"
+            @click="removeLocalDataClicked" />
+          <div class="spacer"></div>
           <q-btn label="Login" type="submit" color="primary" />
-          <q-btn label="Reset" type="reset" color="primary" flat class="q-ml-sm" />
         </div>
       </q-form>
     </q-card>
@@ -24,9 +26,10 @@
 </template>
 
 <script lang="ts">
-import { QForm, dom, useQuasar } from "quasar";
+import { QForm, useQuasar } from "quasar";
 import { configService } from "src/services/config-service";
 import { NotificationType, dialogService } from "src/services/dialog-service";
+import { localDataService } from "src/services/local-data-service";
 import { loginService } from "src/services/login-service";
 import { validators } from "src/utils/validators";
 import { Ref, defineComponent, ref } from "vue";
@@ -44,7 +47,8 @@ export default defineComponent({
 
     const loginForm: Ref<QForm | null> = ref(null);
 
-    const domain: Ref<string | null> = ref(configService.getDomainName(false));
+    const previousDomainName = configService.getDomainName(false);
+    const domain: Ref<string | null> = ref(previousDomainName);
 
     const username: Ref<string | null> = ref(null);
     const password: Ref<string | null> = ref(null);
@@ -62,6 +66,17 @@ export default defineComponent({
       async onSubmit() {
         const isValid = await loginForm.value!.validate();
         if (!isValid) return;
+
+        if (previousDomainName && previousDomainName !== domain.value) {
+          const message = `Your new domain ${domain.value} is different from ${previousDomainName}. 
+          If you continue with this login, your data from ${previousDomainName} will be copied over to ${domain.value} once you sync. Continue?`;
+          const answerContinue = await dialogService.confirm("Please confirm", message);
+          if (!answerContinue) {
+            const message = "Hint: to clear local data on this device use the \"Reset Local Data\" button";
+            await dialogService.alert("Login aborted", message);
+            return;
+          }
+        }
 
         configService.setDomainName(domain.value || "");
 
@@ -83,10 +98,12 @@ export default defineComponent({
         }
       },
 
-      onReset() {
+      async removeLocalDataClicked() {
+        domain.value = null;
         username.value = null;
         password.value = null;
-      },
+        localDataService.removeLocalData();
+      }
     };
   },
 });
