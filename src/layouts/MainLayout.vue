@@ -46,6 +46,11 @@
       </q-list>
 
       <q-list>
+        <q-item-label header> ACCOUNTING </q-item-label>
+        <EssentialLink v-for="link in accountingList" :key="link.title" v-bind="link" />
+      </q-list>
+
+      <q-list>
         <q-item-label header> MISC </q-item-label>
         <EssentialLink v-for="link in miscList" :key="link.title" v-bind="link" />
       </q-list>
@@ -166,6 +171,33 @@ const reportList = [
   },
 ];
 
+const accountingList = [
+  {
+    title: "Chart of Accounts",
+    caption: "",
+    icon: "calculate",
+    link: "#/accounting/chart-of-accounts",
+  },
+  {
+    title: "Journal",
+    caption: "",
+    icon: "calculate",
+    link: "#/accounting/journal",
+  },
+  {
+    title: "Income Statement",
+    caption: "",
+    icon: "calculate",
+    link: "#/accounting/income-statement",
+  },
+  {
+    title: "Balance Sheet",
+    caption: "",
+    icon: "calculate",
+    link: "#/accounting/balance-sheet",
+  },
+];
+
 const miscList = [
   {
     title: "Memos",
@@ -245,6 +277,7 @@ export default defineComponent({
       operationList,
       entityList,
       reportList,
+      accountingList,
 
       leftDrawerOpen: isLeftDrawerOpen,
       toggleLeftDrawer() {

@@ -90,12 +90,19 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/CurrenciesPage.vue"),
         meta: { requiresAuthentication: true, title: "Currencies", rememberable: true },
       },
-      // --- Entities:
+      // --- Reports:
       {
         path: "combined-report",
         name: "combined-report",
         component: () => import("pages/CombinedReportPage.vue"),
         meta: { requiresAuthentication: true, title: "Combined Report", rememberable: true },
+      },
+      // --- Accounting:
+      {
+        path: "accounting/journal",
+        name: "acc-journal",
+        component: () => import("pages/AccJournalPage.vue"),
+        meta: { requiresAuthentication: true, title: "Journal", rememberable: true },
       },
       // --- Misc:
       {
