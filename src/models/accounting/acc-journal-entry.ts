@@ -3,6 +3,8 @@ import { AccAccount } from "./acc-account";
 export type AccDebitOrCredit = {
   account: AccAccount;
   amount: number;
+  currencyId: string;
+  _currencySign?: string;
 };
 
 export type AccJournalEntry = {
@@ -12,5 +14,6 @@ export type AccJournalEntry = {
   debitList: AccDebitOrCredit[];
   sumCredits: number;
   sumDebits: number;
+  description: string;
   notes: string;
 };
