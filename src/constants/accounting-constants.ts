@@ -19,6 +19,8 @@ export const AccDefaultAccounts: Record<string, { type: string; code: string; na
   LIABILITY__CREDIT_CARD_DEBT: { type: "Liability", code: "LIABILITY__CREDIT_CARD_DEBT", name: "Credit Card Debt" },
   INCOME__COMBINED_INCOME: { type: "Income", code: "INCOME__COMBINED_INCOME", name: "Combined Income" },
   INCOME__MINOR_ADJUSTMENT: { type: "Income", code: "INCOME__MINOR_ADJUSTMENT", name: "Minor Income Adjustment" },
+  INCOME__ASSET_APPRECIATION: { type: "Income", code: "INCOME__ASSET_APPRECIATION", name: "Asset Appreciation" },
   EXPENSE__COMBINED_EXPENSE: { type: "Expense", code: "EXPENSE__COMBINED_EXPENSE", name: "Combined Expense" },
   EXPENSE__MINOR_ADJUSTMENT: { type: "Expense", code: "EXPENSE__MINOR_ADJUSTMENT", name: "Minor Expense Adjustment" },
+  EXPENSE__ASSET_DEPRECIATION: { type: "Expense", code: "EXPENSE__ASSET_DEPRECIATION", name: "Asset Depreciation" },
 };

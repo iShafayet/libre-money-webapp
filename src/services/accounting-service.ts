@@ -333,6 +333,50 @@ class AccountingService {
           description += "Unpaid. ";
         }
       }
+      // ================ ASSET_APPRECIATION_DEPRECIATION
+      else if (record.type === RecordType.ASSET_APPRECIATION_DEPRECIATION && record.assetAppreciationDepreciation) {
+        const { assetAppreciationDepreciation } = record;
+
+        const liquidityLookup: Record<string, string> = {
+          high: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__HIGH_LIQUIDITY.code,
+          moderate: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__MEDIUM_LIQUIDITY.code,
+          low: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__LOW_LIQUIDITY.code,
+          unsure: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__UNKNOWN_LIQUIDITY.code,
+        };
+
+        if (assetAppreciationDepreciation.type === "appreciation") {
+          debitList.push({
+            account: accountMap[liquidityLookup[assetAppreciationDepreciation.asset.liquidity]],
+            currencyId: assetAppreciationDepreciation.currencyId,
+            amount: asAmount(assetAppreciationDepreciation.amount),
+          });
+          creditList.push({
+            account: accountMap[AccDefaultAccounts.INCOME__ASSET_APPRECIATION.code],
+            currencyId: assetAppreciationDepreciation.currencyId,
+            amount: asAmount(assetAppreciationDepreciation.amount),
+          });
+          description += `Asset "${assetAppreciationDepreciation.asset.name}" appreciated by ${dataInferenceService.getPrintableAmount(
+            assetAppreciationDepreciation.amount,
+            assetAppreciationDepreciation.currencyId
+          )}. `;
+        } else {
+          creditList.push({
+            account: accountMap[liquidityLookup[assetAppreciationDepreciation.asset.liquidity]],
+            currencyId: assetAppreciationDepreciation.currencyId,
+            amount: asAmount(assetAppreciationDepreciation.amount),
+          });
+          debitList.push({
+            account: accountMap[AccDefaultAccounts.EXPENSE__ASSET_DEPRECIATION.code],
+            currencyId: assetAppreciationDepreciation.currencyId,
+            amount: asAmount(assetAppreciationDepreciation.amount),
+          });
+
+          description += `Asset "${assetAppreciationDepreciation.asset.name}" depreciated by ${dataInferenceService.getPrintableAmount(
+            assetAppreciationDepreciation.amount,
+            assetAppreciationDepreciation.currencyId
+          )}. `;
+        }
+      }
 
       const sumCredits = creditList.reduce((sum, credit) => sum + credit.amount, 0);
       const sumDebits = debitList.reduce((sum, credit) => sum + credit.amount, 0);
