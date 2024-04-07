@@ -2,7 +2,7 @@ import { AccDefaultAccounts } from "src/constants/accounting-constants";
 import { AccAccount } from "src/models/accounting/acc-account";
 import { dataInferenceService } from "./data-inference-service";
 import { pouchdbService } from "./pouchdb-service";
-import { Collection, RecordType, walletTypeList } from "src/constants/constants";
+import { Collection, RecordType, assetLiquidityList, walletTypeList } from "src/constants/constants";
 import { Record as SourceRecord } from "src/models/record";
 import { AccDebitOrCredit, AccJournalEntry } from "src/models/accounting/acc-journal-entry";
 import { asAmount } from "src/utils/misc-utils";
@@ -45,7 +45,6 @@ class AccountingService {
       // ================ EXPENSE
       if (record.type === RecordType.EXPENSE && record.expense) {
         const { expense } = record;
-        console.log(record);
 
         debitList.push({
           account: accountMap[AccDefaultAccounts.EXPENSE__COMBINED_EXPENSE.code],
@@ -96,7 +95,6 @@ class AccountingService {
       // ================ INCOME
       else if (record.type === RecordType.INCOME && record.income) {
         const { income } = record;
-        console.log(record);
 
         creditList.push({
           account: accountMap[AccDefaultAccounts.INCOME__COMBINED_INCOME.code],
@@ -147,7 +145,6 @@ class AccountingService {
       // ================ MONEY TRANSFER
       else if (record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer) {
         const { moneyTransfer } = record;
-        console.log(record);
 
         // Source
         if (moneyTransfer.fromWallet.type === "credit-card") {
@@ -218,6 +215,122 @@ class AccountingService {
             });
             description += `Gained during transfer: ${dataInferenceService.getPrintableAmount(diff, moneyTransfer.toCurrencyId)}. `;
           }
+        }
+      }
+      // ================ ASSET_PURCHASE
+      else if (record.type === RecordType.ASSET_PURCHASE && record.assetPurchase) {
+        const { assetPurchase } = record;
+
+        const liquidityLookup: Record<string, string> = {
+          high: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__HIGH_LIQUIDITY.code,
+          moderate: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__MEDIUM_LIQUIDITY.code,
+          low: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__LOW_LIQUIDITY.code,
+          unsure: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__UNKNOWN_LIQUIDITY.code,
+        };
+        debitList.push({
+          account: accountMap[liquidityLookup[assetPurchase.asset.liquidity]],
+          currencyId: assetPurchase.currencyId,
+          amount: asAmount(assetPurchase.amount),
+        });
+        description += `Purchased asset "${assetPurchase.asset.name}" for ${dataInferenceService.getPrintableAmount(
+          assetPurchase.amount,
+          assetPurchase.currencyId
+        )}. `;
+
+        if (assetPurchase.amountPaid > 0 && assetPurchase.wallet) {
+          if (assetPurchase.wallet.type === "credit-card") {
+            creditList.push({
+              account: accountMap[AccDefaultAccounts.LIABILITY__CREDIT_CARD_DEBT.code],
+              currencyId: assetPurchase.currencyId,
+              amount: asAmount(assetPurchase.amountPaid),
+            });
+          } else if (assetPurchase.wallet.type === "cash") {
+            creditList.push({
+              account: accountMap[AccDefaultAccounts.ASSET__CURRENT_ASSET__CASH.code],
+              currencyId: assetPurchase.currencyId,
+              amount: asAmount(assetPurchase.amountPaid),
+            });
+          } else {
+            creditList.push({
+              account: accountMap[AccDefaultAccounts.ASSET__CURRENT_ASSET__BANK_AND_EQUIVALENT.code],
+              currencyId: assetPurchase.currencyId,
+              amount: asAmount(assetPurchase.amountPaid),
+            });
+          }
+          if (assetPurchase.amount === assetPurchase.amountPaid) {
+            description += `Fully paid from "${assetPurchase.wallet.name}" (${assetPurchase.wallet.type}). `;
+          } else {
+            creditList.push({
+              account: accountMap[AccDefaultAccounts.LIABILITY__ACCOUNTS_PAYABLE.code],
+              currencyId: assetPurchase.currencyId,
+              amount: asAmount(assetPurchase.amount) - asAmount(assetPurchase.amountPaid),
+            });
+            description += `Partially paid from "${assetPurchase.wallet.name}" (${assetPurchase.wallet.type}). `;
+          }
+        } else {
+          creditList.push({
+            account: accountMap[AccDefaultAccounts.LIABILITY__ACCOUNTS_PAYABLE.code],
+            currencyId: assetPurchase.currencyId,
+            amount: asAmount(assetPurchase.amount),
+          });
+          description += "Unpaid. ";
+        }
+      }
+      // ================ ASSET_SALE
+      else if (record.type === RecordType.ASSET_SALE && record.assetSale) {
+        const { assetSale } = record;
+
+        const liquidityLookup: Record<string, string> = {
+          high: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__HIGH_LIQUIDITY.code,
+          moderate: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__MEDIUM_LIQUIDITY.code,
+          low: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__LOW_LIQUIDITY.code,
+          unsure: AccDefaultAccounts.ASSET__NON_CURRENT_ASSET__UNKNOWN_LIQUIDITY.code,
+        };
+
+        creditList.push({
+          account: accountMap[liquidityLookup[assetSale.asset.liquidity]],
+          currencyId: assetSale.currencyId,
+          amount: asAmount(assetSale.amount),
+        });
+        description += `Sold asset "${assetSale.asset.name}" for ${dataInferenceService.getPrintableAmount(assetSale.amount, assetSale.currencyId)}. `;
+
+        if (assetSale.amountPaid > 0 && assetSale.wallet) {
+          if (assetSale.wallet.type === "credit-card") {
+            debitList.push({
+              account: accountMap[AccDefaultAccounts.LIABILITY__CREDIT_CARD_DEBT.code],
+              currencyId: assetSale.currencyId,
+              amount: asAmount(assetSale.amountPaid),
+            });
+          } else if (assetSale.wallet.type === "cash") {
+            debitList.push({
+              account: accountMap[AccDefaultAccounts.ASSET__CURRENT_ASSET__CASH.code],
+              currencyId: assetSale.currencyId,
+              amount: asAmount(assetSale.amountPaid),
+            });
+          } else {
+            debitList.push({
+              account: accountMap[AccDefaultAccounts.ASSET__CURRENT_ASSET__BANK_AND_EQUIVALENT.code],
+              currencyId: assetSale.currencyId,
+              amount: asAmount(assetSale.amountPaid),
+            });
+          }
+          if (assetSale.amount === assetSale.amountPaid) {
+            description += `Fully received payment in "${assetSale.wallet.name}" (${assetSale.wallet.type}). `;
+          } else {
+            creditList.push({
+              account: accountMap[AccDefaultAccounts.LIABILITY__ACCOUNTS_PAYABLE.code],
+              currencyId: assetSale.currencyId,
+              amount: asAmount(assetSale.amount) - asAmount(assetSale.amountPaid),
+            });
+            description += `Partially received payment in "${assetSale.wallet.name}" (${assetSale.wallet.type}). `;
+          }
+        } else {
+          debitList.push({
+            account: accountMap[AccDefaultAccounts.ASSET__ACCOUNTS_RECEIVABLE.code],
+            currencyId: assetSale.currencyId,
+            amount: asAmount(assetSale.amount),
+          });
+          description += "Unpaid. ";
         }
       }
 
