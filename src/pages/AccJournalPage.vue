@@ -164,6 +164,10 @@ loadData();
         padding: 4px;
       }
 
+      .notes-text {
+        font-size: 12px;
+      }
+
       .debit-sum,
       .credit-sum,
       .column-spacer {

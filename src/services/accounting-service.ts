@@ -52,7 +52,7 @@ class AccountingService {
           currencyId: expense.currencyId,
           amount: asAmount(expense.amount),
         });
-        description += `Spent ${expense.amount} as "${expense.expenseAvenue.name}". `;
+        description += `Spent ${dataInferenceService.getPrintableAmount(expense.amount, expense.currencyId)} as "${expense.expenseAvenue.name}". `;
 
         if (expense.amountPaid > 0 && expense.wallet) {
           if (expense.wallet.type === "credit-card") {
@@ -103,7 +103,7 @@ class AccountingService {
           currencyId: income.currencyId,
           amount: asAmount(income.amount),
         });
-        description += `Earned ${income.amount} as "${income.incomeSource.name}". `;
+        description += `Earned ${dataInferenceService.getPrintableAmount(income.amount, income.currencyId)} as "${income.incomeSource.name}". `;
 
         if (income.amountPaid > 0 && income.wallet) {
           if (income.wallet.type === "credit-card") {
