@@ -12,6 +12,18 @@ import { dataInferenceService } from "./data-inference-service";
 import { pouchdbService } from "./pouchdb-service";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 
+export type AccAccountingReturnable = {
+  accountMap: Record<string, AccAccount>;
+  accountList: AccAccount[];
+  journalEntryList: AccJournalEntry[];
+};
+
+let accountingReturnCache: AccAccountingReturnable | null = null;
+
+pouchdbService.registerUpsertListener(() => {
+  accountingReturnCache = null;
+});
+
 class AccountingService {
   private flattenCreditOrDebitListOfTheSameCurrency(creditOrDebitList: AccDebitOrCredit[]) {
     if (creditOrDebitList.length === 0) {
@@ -856,7 +868,11 @@ class AccountingService {
     }
   }
 
-  async initiateAccounting() {
+  async initiateAccounting(): Promise<AccAccountingReturnable> {
+    if (accountingReturnCache) {
+      return accountingReturnCache;
+    }
+
     // Populate all accounting heads
     const { accountMap, accountList } = await this.populateAccountMapAndList();
 
@@ -880,12 +896,14 @@ class AccountingService {
     // Adjust date stamps for the opening balance
     await this.adjustOpeningBalanceDate(journalEntryList);
 
-    // return as an object
-    return {
+    accountingReturnCache = {
       accountMap,
       accountList,
       journalEntryList,
     };
+
+    // return as an object
+    return accountingReturnCache;
   }
 
   private async createOpeningBalanceEntriesForGivenListInner(beforeRangeEntryList: AccJournalEntry[], filters: AccJournalFilters, description: string) {
