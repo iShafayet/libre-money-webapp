@@ -152,7 +152,7 @@ export default defineComponent({
     }
 
     async function ledgerClicked(account: AccAccount) {
-      router.push({ path: `/accounting/ledger/code:${account.code}` });
+      router.push({ path: `/accounting/ledger/${account.code}` });
     }
 
     async function editClicked(account: AccAccount) {

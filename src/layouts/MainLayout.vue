@@ -173,7 +173,7 @@ const reportList = [
 
 const accountingList = [
   {
-    title: "Chart of Accounts",
+    title: "Accounts",
     caption: "",
     icon: "calculate",
     link: "#/accounting/accounts",

@@ -11,6 +11,8 @@ import { asFinancialAmount } from "src/utils/misc-utils";
 import { dataInferenceService } from "./data-inference-service";
 import { pouchdbService } from "./pouchdb-service";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
+import { AccLedgerEntry } from "src/models/accounting/acc-ledger-entry";
+import { AccLedger } from "src/models/accounting/acc-ledger";
 
 export type AccAccountingReturnable = {
   accountMap: Record<string, AccAccount>;
@@ -851,7 +853,8 @@ class AccountingService {
         if (creditOrDebit.currencyId) {
           creditOrDebit._currencySign = currencyMap[creditOrDebit.currencyId].sign;
         } else {
-          console.log("Missing Currency", journalEntry);
+          console.debug("Missing Currency:", journalEntry);
+          throw new Error("Missing Currency");
         }
       }
     }
@@ -1014,6 +1017,86 @@ class AccountingService {
     await this.adjustOpeningBalanceDate(filteredEntryList);
 
     return filteredEntryList;
+  }
+
+  private async injectCurencyAndOtherMetaDataToLedgerEntries(ledgerEntryList: AccLedgerEntry[]) {
+    const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+    const currencyMap: Record<string, Currency> = {};
+    currencyList.forEach((currency) => {
+      currencyMap[currency._id!] = currency;
+    });
+
+    for (const journalEntry of ledgerEntryList) {
+      journalEntry._currencySign = currencyMap[journalEntry.currencyId].sign;
+    }
+  }
+
+  async generateLedgerFromJournal(journalEntryList: AccJournalEntry[], accountMap: Record<string, AccAccount>, accountCode: string) {
+    const ledgerEntryList: AccLedgerEntry[] = [];
+
+    const account = accountMap[accountCode];
+    const isBalanceDebit = ["Asset", "Expense"].includes(account.type);
+
+    const currencyIdVsBalanceMap: Record<string, number> = {};
+    const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+    currencyList.forEach((currency) => {
+      currencyIdVsBalanceMap[currency._id!] = 0;
+    });
+
+    let serialSeed = 0;
+    for (const journalEntry of journalEntryList) {
+      const debitEntry = journalEntry.debitList.find((item) => item.account.code === accountCode);
+      const creditEntry = journalEntry.debitList.find((item) => item.account.code === accountCode);
+      if (!debitEntry && !creditEntry) continue;
+
+      let currencyId = "";
+      let debitAmount = 0;
+      let creditAmount = 0;
+
+      if (debitEntry) {
+        debitAmount = debitEntry.amount;
+        currencyId = debitEntry.currencyId;
+        if (isBalanceDebit) {
+          currencyIdVsBalanceMap[debitEntry.currencyId] += debitAmount;
+        } else {
+          currencyIdVsBalanceMap[debitEntry.currencyId] -= debitAmount;
+        }
+      } else if (creditEntry) {
+        creditAmount = creditEntry.amount;
+        currencyId = creditEntry.currencyId;
+        if (!isBalanceDebit) {
+          currencyIdVsBalanceMap[creditEntry.currencyId] += creditAmount;
+        } else {
+          currencyIdVsBalanceMap[creditEntry.currencyId] -= creditAmount;
+        }
+      }
+
+      const ledgerEntry: AccLedgerEntry = {
+        serial: serialSeed++,
+        account,
+        entryEpoch: journalEntry.entryEpoch,
+        isBalanceDebit,
+        currencyId,
+        debitAmount: asFinancialAmount(debitAmount),
+        creditAmount: asFinancialAmount(creditAmount),
+        balance: asFinancialAmount(currencyIdVsBalanceMap[currencyId]),
+        description: journalEntry.description,
+        notes: journalEntry.notes,
+        journalEntryRef: journalEntry,
+      };
+
+      ledgerEntryList.push(ledgerEntry);
+    }
+
+    await this.injectCurencyAndOtherMetaDataToLedgerEntries(ledgerEntryList);
+
+    const ledger: AccLedger = {
+      ledgerEntryList,
+      account,
+      isBalanceDebit,
+    };
+
+    return ledger;
   }
 }
 

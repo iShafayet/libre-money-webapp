@@ -126,7 +126,7 @@ async function loadData() {
     } = await accountingService.initiateAccounting();
 
     fullJournalEntryList = journalEntryList;
-    console.log({ fullJournalEntryList });
+    console.debug({ fullJournalEntryList });
   }
 
   filteredJournalEntryList = await accountingService.applyJournalFilters(fullJournalEntryList, filters.value);

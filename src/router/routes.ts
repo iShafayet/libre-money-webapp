@@ -111,7 +111,7 @@ const routes: RouteRecordRaw[] = [
         meta: { requiresAuthentication: true, title: "Accounts", rememberable: true },
       },
       {
-        path: "accounting/ledger",
+        path: "accounting/ledger/:accountCode",
         name: "acc-ledger",
         component: () => import("pages/AccLedgerPage.vue"),
         meta: { requiresAuthentication: true, title: "Ledger", rememberable: false },
