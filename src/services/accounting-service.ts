@@ -1046,7 +1046,7 @@ class AccountingService {
     let serialSeed = 0;
     for (const journalEntry of journalEntryList) {
       const debitEntry = journalEntry.debitList.find((item) => item.account.code === accountCode);
-      const creditEntry = journalEntry.debitList.find((item) => item.account.code === accountCode);
+      const creditEntry = journalEntry.creditList.find((item) => item.account.code === accountCode);
       if (!debitEntry && !creditEntry) continue;
 
       let currencyId = "";
