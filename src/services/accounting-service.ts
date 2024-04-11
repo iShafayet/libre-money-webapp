@@ -1045,47 +1045,65 @@ class AccountingService {
 
     let serialSeed = 0;
     for (const journalEntry of journalEntryList) {
-      const debitEntry = journalEntry.debitList.find((item) => item.account.code === accountCode);
-      const creditEntry = journalEntry.creditList.find((item) => item.account.code === accountCode);
-      if (!debitEntry && !creditEntry) continue;
+      const debitEntryList = journalEntry.debitList.filter((item) => item.account.code === accountCode);
+      const creditEntryList = journalEntry.creditList.filter((item) => item.account.code === accountCode);
+      if (debitEntryList.length === 0 && creditEntryList.length === 0) continue;
 
-      let currencyId = "";
-      let debitAmount = 0;
-      let creditAmount = 0;
+      for (const debitEntry of debitEntryList) {
+        const creditAmount = 0;
+        const debitAmount = debitEntry.amount;
+        const currencyId = debitEntry.currencyId;
 
-      if (debitEntry) {
-        debitAmount = debitEntry.amount;
-        currencyId = debitEntry.currencyId;
         if (isBalanceDebit) {
           currencyIdVsBalanceMap[debitEntry.currencyId] += debitAmount;
         } else {
           currencyIdVsBalanceMap[debitEntry.currencyId] -= debitAmount;
         }
-      } else if (creditEntry) {
-        creditAmount = creditEntry.amount;
-        currencyId = creditEntry.currencyId;
+
+        const ledgerEntry: AccLedgerEntry = {
+          serial: serialSeed++,
+          account,
+          entryEpoch: journalEntry.entryEpoch,
+          isBalanceDebit,
+          currencyId,
+          debitAmount: asFinancialAmount(debitAmount),
+          creditAmount: asFinancialAmount(creditAmount),
+          balance: asFinancialAmount(currencyIdVsBalanceMap[currencyId]),
+          description: journalEntry.description,
+          notes: journalEntry.notes,
+          journalEntryRef: journalEntry,
+        };
+
+        ledgerEntryList.push(ledgerEntry);
+      }
+
+      for (const creditEntry of creditEntryList) {
+        const debitAmount = 0;
+        const creditAmount = creditEntry.amount;
+        const currencyId = creditEntry.currencyId;
+
         if (!isBalanceDebit) {
           currencyIdVsBalanceMap[creditEntry.currencyId] += creditAmount;
         } else {
           currencyIdVsBalanceMap[creditEntry.currencyId] -= creditAmount;
         }
+
+        const ledgerEntry: AccLedgerEntry = {
+          serial: serialSeed++,
+          account,
+          entryEpoch: journalEntry.entryEpoch,
+          isBalanceDebit,
+          currencyId,
+          debitAmount: asFinancialAmount(debitAmount),
+          creditAmount: asFinancialAmount(creditAmount),
+          balance: asFinancialAmount(currencyIdVsBalanceMap[currencyId]),
+          description: journalEntry.description,
+          notes: journalEntry.notes,
+          journalEntryRef: journalEntry,
+        };
+
+        ledgerEntryList.push(ledgerEntry);
       }
-
-      const ledgerEntry: AccLedgerEntry = {
-        serial: serialSeed++,
-        account,
-        entryEpoch: journalEntry.entryEpoch,
-        isBalanceDebit,
-        currencyId,
-        debitAmount: asFinancialAmount(debitAmount),
-        creditAmount: asFinancialAmount(creditAmount),
-        balance: asFinancialAmount(currencyIdVsBalanceMap[currencyId]),
-        description: journalEntry.description,
-        notes: journalEntry.notes,
-        journalEntryRef: journalEntry,
-      };
-
-      ledgerEntryList.push(ledgerEntry);
     }
 
     await this.injectCurencyAndOtherMetaDataToLedgerEntries(ledgerEntryList);
