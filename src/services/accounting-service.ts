@@ -412,6 +412,21 @@ class AccountingService {
       }
     }
 
+    // Equity offset to maintain separate accounts across multiple currencies. See Issue #20
+    if (moneyTransfer.toCurrencyId !== moneyTransfer.fromCurrencyId) {
+      debitList.push({
+        account: accountMap[AccDefaultAccounts.EQUITY__INTERCURRENCY.code],
+        currencyId: moneyTransfer.fromCurrencyId,
+        amount: asFinancialAmount(moneyTransfer.fromAmount),
+      });
+
+      creditList.push({
+        account: accountMap[AccDefaultAccounts.EQUITY__INTERCURRENCY.code],
+        currencyId: moneyTransfer.toCurrencyId,
+        amount: asFinancialAmount(moneyTransfer.toAmount),
+      });
+    }
+
     return { creditList, debitList, description };
   }
 

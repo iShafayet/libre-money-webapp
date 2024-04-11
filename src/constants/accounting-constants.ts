@@ -8,6 +8,7 @@ export const AccAccountType = {
 
 export const AccDefaultAccounts: Record<string, { type: string; code: string; name: string }> = {
   EQUITY__OPENING_BALANCE: { type: "Equity", code: "EQUITY__OPENING_BALANCE", name: "Opening Balance" },
+  EQUITY__INTERCURRENCY: { type: "Equity", code: "EQUITY__INTERCURRENCY", name: "Inter-currency Equity" },
   ASSET__CURRENT_ASSET__CASH: { type: "Asset", code: "ASSET__CURRENT_ASSET__CASH", name: "Cash" },
   ASSET__CURRENT_ASSET__BANK_AND_EQUIVALENT: { type: "Asset", code: "ASSET__CURRENT_ASSET__BANK_AND_EQUIVALENT", name: "Bank and Equivalent" },
   ASSET__NON_CURRENT_ASSET__HIGH_LIQUIDITY: { type: "Asset", code: "ASSET__NON_CURRENT_ASSET__HIGH_LIQUIDITY", name: "High Liquidity Assets" },
