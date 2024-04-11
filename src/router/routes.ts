@@ -116,6 +116,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/AccLedgerPage.vue"),
         meta: { requiresAuthentication: true, title: "Ledger", rememberable: false },
       },
+      {
+        path: "accounting/trial-balance",
+        name: "acc-trial-balance",
+        component: () => import("pages/AccTrialBalancePage.vue"),
+        meta: { requiresAuthentication: true, title: "Trial Balance", rememberable: true },
+      },
       // --- Misc:
       {
         path: "memos",

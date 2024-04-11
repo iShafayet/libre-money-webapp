@@ -1,4 +1,4 @@
-import { AccDefaultAccounts } from "src/constants/accounting-constants";
+import { AccDefaultAccounts, AccTypeList } from "src/constants/accounting-constants";
 import { Collection, RecordType } from "src/constants/constants";
 import { AccAccount } from "src/models/accounting/acc-account";
 import { AccDebitOrCredit, AccJournalEntry } from "src/models/accounting/acc-journal-entry";
@@ -13,6 +13,7 @@ import { pouchdbService } from "./pouchdb-service";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { AccLedgerEntry } from "src/models/accounting/acc-ledger-entry";
 import { AccLedger } from "src/models/accounting/acc-ledger";
+import { AccTrialBalance, AccTrialBalanceWithCurrency } from "src/models/accounting/acc-trial-balance";
 
 export type AccAccountingReturnable = {
   accountMap: Record<string, AccAccount>;
@@ -1139,6 +1140,113 @@ class AccountingService {
     await this.injectCurencyAndOtherMetaDataToLedgerEntries(ledger);
 
     return ledger;
+  }
+
+  async generateTrialBalanceFromJournal(journalEntryList: AccJournalEntry[], accountMap: Record<string, AccAccount>) {
+    const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+    const currencyMap: Record<string, Currency> = {};
+
+    type Interim = {
+      accountVsDebitBalanceMap: Record<string, number>;
+    };
+    const currencyVsInterimMap: Record<string, Interim> = {};
+    currencyList.forEach((currency) => {
+      currencyMap[currency._id!] = currency;
+      const interim: Interim = {
+        accountVsDebitBalanceMap: {},
+      };
+      currencyVsInterimMap[currency._id!] = interim;
+    });
+
+    for (const journalEntry of journalEntryList) {
+      for (const debit of journalEntry.debitList) {
+        const map = currencyVsInterimMap[debit.currencyId].accountVsDebitBalanceMap;
+        if (!(debit.account.code in map)) {
+          map[debit.account.code] = 0;
+        }
+        map[debit.account.code] += debit.amount;
+      }
+
+      for (const credit of journalEntry.creditList) {
+        const map = currencyVsInterimMap[credit.currencyId].accountVsDebitBalanceMap;
+        if (!(credit.account.code in map)) {
+          map[credit.account.code] = 0;
+        }
+        map[credit.account.code] -= credit.amount;
+      }
+    }
+
+    const trialBalance: AccTrialBalance = {
+      trialBalanceWithCurrencyList: [],
+    };
+
+    for (const currency of currencyList) {
+      const currencyId = currency._id!;
+      const trialBalanceWithCurrency: AccTrialBalanceWithCurrency = {
+        currencyId,
+        _currency: currency,
+        trialBalanceOfTypeMap: {},
+      };
+      AccTypeList.forEach((type) => {
+        trialBalanceWithCurrency.trialBalanceOfTypeMap[type] = {
+          isBalanceDebit: true,
+          balanceList: [],
+          totalBalance: 0,
+        };
+      });
+
+      const map = currencyVsInterimMap[currencyId].accountVsDebitBalanceMap;
+      for (const accountCode of Object.keys(map)) {
+        const account = accountMap[accountCode];
+        const debitBalance = map[accountCode];
+
+        if (account.type === "Asset") {
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Asset"].isBalanceDebit = true;
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Asset"].totalBalance += asFinancialAmount(debitBalance);
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Asset"].balanceList.push({
+            account,
+            balance: asFinancialAmount(debitBalance),
+            isBalanceDebit: true,
+          });
+        } else if (account.type === "Expense") {
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Expense"].isBalanceDebit = true;
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Expense"].totalBalance += asFinancialAmount(debitBalance);
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Expense"].balanceList.push({
+            account,
+            balance: asFinancialAmount(debitBalance),
+            isBalanceDebit: true,
+          });
+        } else if (account.type === "Income") {
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Income"].isBalanceDebit = false;
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Income"].totalBalance -= asFinancialAmount(debitBalance);
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Income"].balanceList.push({
+            account,
+            balance: asFinancialAmount(debitBalance) * -1,
+            isBalanceDebit: false,
+          });
+        } else if (account.type === "Liability") {
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].isBalanceDebit = false;
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].totalBalance -= asFinancialAmount(debitBalance);
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].balanceList.push({
+            account,
+            balance: asFinancialAmount(debitBalance) * -1,
+            isBalanceDebit: false,
+          });
+        } else if (account.type === "Equity") {
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].isBalanceDebit = false;
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].totalBalance -= asFinancialAmount(debitBalance);
+          trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].balanceList.push({
+            account,
+            balance: asFinancialAmount(debitBalance) * -1,
+            isBalanceDebit: false,
+          });
+        }
+      }
+
+      trialBalance.trialBalanceWithCurrencyList.push(trialBalanceWithCurrency);
+    }
+
+    return trialBalance;
   }
 }
 

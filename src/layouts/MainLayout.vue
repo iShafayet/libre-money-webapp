@@ -185,6 +185,12 @@ const accountingList = [
     link: "#/accounting/journal",
   },
   {
+    title: "Trial Balance",
+    caption: "",
+    icon: "calculate",
+    link: "#/accounting/trial-balance",
+  },
+  {
     title: "Income Statement",
     caption: "",
     icon: "calculate",

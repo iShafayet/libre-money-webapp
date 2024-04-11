@@ -25,3 +25,5 @@ export const AccDefaultAccounts: Record<string, { type: string; code: string; na
   EXPENSE__MINOR_ADJUSTMENT: { type: "Expense", code: "EXPENSE__MINOR_ADJUSTMENT", name: "Minor Expense Adjustment" },
   EXPENSE__ASSET_DEPRECIATION: { type: "Expense", code: "EXPENSE__ASSET_DEPRECIATION", name: "Asset Depreciation" },
 };
+
+export const AccTypeList = ["Asset", "Liability", "Equity", "Income", "Expense"];
