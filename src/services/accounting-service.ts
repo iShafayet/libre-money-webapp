@@ -1034,15 +1034,19 @@ class AccountingService {
     return filteredEntryList;
   }
 
-  private async injectCurencyAndOtherMetaDataToLedgerEntries(ledgerEntryList: AccLedgerEntry[]) {
+  private async injectCurencyAndOtherMetaDataToLedgerEntries(ledger: AccLedger) {
     const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
     const currencyMap: Record<string, Currency> = {};
     currencyList.forEach((currency) => {
       currencyMap[currency._id!] = currency;
     });
 
-    for (const journalEntry of ledgerEntryList) {
+    for (const journalEntry of ledger.ledgerEntryList) {
       journalEntry._currencySign = currencyMap[journalEntry.currencyId].sign;
+    }
+
+    for (const balance of ledger.balanceList) {
+      balance._currency = currencyMap[balance.currencyId];
     }
   }
 
@@ -1121,13 +1125,18 @@ class AccountingService {
       }
     }
 
-    await this.injectCurencyAndOtherMetaDataToLedgerEntries(ledgerEntryList);
+    const balanceList = Object.keys(currencyIdVsBalanceMap).map((currencyId) => {
+      return { currencyId, balance: asFinancialAmount(currencyIdVsBalanceMap[currencyId]) };
+    });
 
     const ledger: AccLedger = {
       ledgerEntryList,
       account,
       isBalanceDebit,
+      balanceList,
     };
+
+    await this.injectCurencyAndOtherMetaDataToLedgerEntries(ledger);
 
     return ledger;
   }

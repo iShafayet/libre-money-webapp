@@ -55,6 +55,27 @@
     </q-card>
     <!-- Ledger - End -->
 
+    <!-- Summary - Start -->
+    <q-card class="std-card" v-if="!isLoading && ledger && ledger.balanceList.length > 0">
+      <div class="q-pa-md balance-presentation">
+        <div class="balance-head row">
+          <div class="currency-head">Currency</div>
+          <div class="balance-head">Total Balance</div>
+        </div>
+        <template v-for="balanceEntry in ledger.balanceList" v-bind:key="balanceEntry.currencyId">
+          <div class="balance-entry row">
+            <div class="currency">
+              {{ balanceEntry._currency!.name }}
+            </div>
+            <div class="balance">
+              {{ balanceEntry.balance }}&nbsp;{{ balanceEntry._currency?.sign }}
+            </div>
+          </div>
+        </template>
+      </div>
+    </q-card>
+    <!-- Summary - End -->
+
   </q-page>
 </template>
 
@@ -250,6 +271,50 @@ loadData();
 
     .multi-currency-note {
       color: #1976d2;
+    }
+  }
+}
+
+.balance-presentation {
+  .balance-head {
+    width: 100%;
+    align-items: stretch;
+    background-color: #37474f;
+    color: white;
+    flex-wrap: nowrap;
+
+    .currency-head {
+      flex: 1;
+      padding: 4px;
+      border: 1px solid rgb(220, 220, 220);
+      border-collapse: collapse;
+    }
+
+    .balance-head {
+      width: 100px;
+      padding: 4px;
+      border: 1px solid rgb(220, 220, 220);
+      border-collapse: collapse;
+    }
+  }
+
+  .balance-entry {
+    width: 100%;
+    align-items: stretch;
+    flex-wrap: nowrap;
+
+    .currency {
+      flex: 1;
+      padding: 4px;
+      border: 1px solid rgb(220, 220, 220);
+      border-collapse: collapse;
+    }
+
+    .balance {
+      width: 100px;
+      padding: 4px;
+      border: 1px solid rgb(220, 220, 220);
+      border-collapse: collapse;
     }
   }
 }
