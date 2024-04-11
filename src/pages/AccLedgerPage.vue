@@ -189,7 +189,6 @@ loadData();
     align-items: stretch;
     background-color: #37474f;
     color: white;
-    margin-bottom: 12px;
     flex-wrap: nowrap;
 
     .date-head {
@@ -237,7 +236,6 @@ loadData();
   .ledger-entry {
     width: 100%;
     align-items: stretch;
-    margin-bottom: 12px;
     flex-wrap: nowrap;
 
     .date {
