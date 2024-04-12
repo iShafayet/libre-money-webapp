@@ -82,10 +82,11 @@
 
 <script lang="ts" setup>
 import { useQuasar } from "quasar";
-import FilterAccLedgerDialog from "src/components/FilterAccLedgerDialog.vue";
+import FilterAccStatementDialog from "src/components/FilterAccStatementDialog.vue";
 import { AccTypeList } from "src/constants/accounting-constants";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { AccLedgerFilters } from "src/models/accounting/acc-ledger-filters";
+import { AccStatementFilters } from "src/models/accounting/acc-statement-filters";
 import { AccTrialBalance } from "src/models/accounting/acc-trial-balance";
 import { Record } from "src/models/record";
 import { accountingService } from "src/services/accounting-service";
@@ -108,7 +109,7 @@ const trialBalance: Ref<AccTrialBalance | null> = ref(null);
 // ----- Refs
 const isLoading = ref(false);
 
-const filters: Ref<AccLedgerFilters> = ref(getDefaultFilters());
+const filters: Ref<AccStatementFilters> = ref(getDefaultFilters());
 
 // ----- Functions
 async function loadData() {
@@ -139,7 +140,7 @@ async function loadData() {
 // ----- Event Handlers
 
 async function setFiltersClicked() {
-  $q.dialog({ component: FilterAccLedgerDialog, componentProps: { inputFilters: deepClone(filters.value) } }).onOk((res: AccLedgerFilters) => {
+  $q.dialog({ component: FilterAccStatementDialog, componentProps: { inputFilters: deepClone(filters.value) } }).onOk((res: AccLedgerFilters) => {
     filters.value = res;
     loadData();
   });
