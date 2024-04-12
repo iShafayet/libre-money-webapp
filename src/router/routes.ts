@@ -90,12 +90,49 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/CurrenciesPage.vue"),
         meta: { requiresAuthentication: true, title: "Currencies", rememberable: true },
       },
-      // --- Entities:
+      // --- Reports:
       {
         path: "combined-report",
         name: "combined-report",
         component: () => import("pages/CombinedReportPage.vue"),
         meta: { requiresAuthentication: true, title: "Combined Report", rememberable: true },
+      },
+      // --- Accounting:
+      {
+        path: "accounting/journal",
+        name: "acc-journal",
+        component: () => import("pages/AccJournalPage.vue"),
+        meta: { requiresAuthentication: true, title: "Journal", rememberable: true },
+      },
+      {
+        path: "accounting/accounts",
+        name: "acc-accounts",
+        component: () => import("pages/AccAccountsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Accounts", rememberable: true },
+      },
+      {
+        path: "accounting/ledger/:accountCode",
+        name: "acc-ledger",
+        component: () => import("pages/AccLedgerPage.vue"),
+        meta: { requiresAuthentication: true, title: "Ledger", rememberable: false },
+      },
+      {
+        path: "accounting/trial-balance",
+        name: "acc-trial-balance",
+        component: () => import("pages/AccTrialBalancePage.vue"),
+        meta: { requiresAuthentication: true, title: "Trial Balance", rememberable: true },
+      },
+      {
+        path: "accounting/income-statement",
+        name: "acc-income-statement",
+        component: () => import("pages/AccIncomeStatementPage.vue"),
+        meta: { requiresAuthentication: true, title: "Income Statement", rememberable: true },
+      },
+      {
+        path: "accounting/balance-sheet",
+        name: "acc-balance-sheet",
+        component: () => import("pages/AccBalanceSheetPage.vue"),
+        meta: { requiresAuthentication: true, title: "Balance Sheet", rememberable: true },
       },
       // --- Misc:
       {

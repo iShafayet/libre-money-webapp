@@ -60,6 +60,7 @@ export const Collection = {
 export const RecordType = {
   INCOME: "income",
   EXPENSE: "expense",
+  MONEY_TRANSFER: "money-transfer",
   ASSET_PURCHASE: "asset-purchase",
   ASSET_SALE: "asset-sale",
   ASSET_APPRECIATION_DEPRECIATION: "asset-appreciation-depreciation",
@@ -67,7 +68,6 @@ export const RecordType = {
   BORROWING: "borrowing", // incoming loan (payable)
   REPAYMENT_GIVEN: "repayment-given",
   REPAYMENT_RECEIVED: "repayment-received",
-  MONEY_TRANSFER: "money-transfer",
 };
 
 export const defaultTagColor = "#444444";

@@ -32,6 +32,8 @@ function stripKnownTemporaryFields(doc: any) {
   });
 }
 
+const upserListenerList: (() => void)[] = [];
+
 const INTENTIONAL_DELAY_MS = 1;
 const INTENTIONAL_DELAY_THRESHOLD = 500;
 let undelayedRequestCount = 0;
@@ -51,6 +53,10 @@ export const pouchdbService = {
     return pouchdb;
   },
 
+  registerUpsertListener(listenerFn: () => void) {
+    upserListenerList.push(listenerFn);
+  },
+
   async upsertDoc(doc: PouchDB.Core.PostDocument<any>) {
     await delayIntentionally();
 
@@ -59,9 +65,17 @@ export const pouchdbService = {
     doc.modifiedEpoch = Date.now();
     stripKnownTemporaryFields(doc);
     if (doc._id) {
-      return pouchdb.put(doc);
+      pouchdb.put(doc);
+      upserListenerList.forEach((listener) => {
+        listener();
+      });
+      return;
     } else {
-      return pouchdb.post(doc);
+      pouchdb.post(doc);
+      upserListenerList.forEach((listener) => {
+        listener();
+      });
+      return;
     }
   },
 
