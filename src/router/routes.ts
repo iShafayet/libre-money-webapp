@@ -122,6 +122,18 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/AccTrialBalancePage.vue"),
         meta: { requiresAuthentication: true, title: "Trial Balance", rememberable: true },
       },
+      {
+        path: "accounting/income-statement",
+        name: "acc-income-statement",
+        component: () => import("pages/AccIncomeStatementPage.vue"),
+        meta: { requiresAuthentication: true, title: "Income Statement", rememberable: true },
+      },
+      {
+        path: "accounting/balance-sheet",
+        name: "acc-balance-sheet",
+        component: () => import("pages/AccBalanceSheetPage.vue"),
+        meta: { requiresAuthentication: true, title: "Balance Sheet", rememberable: true },
+      },
       // --- Misc:
       {
         path: "memos",
