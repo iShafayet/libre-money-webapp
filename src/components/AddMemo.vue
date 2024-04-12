@@ -7,7 +7,8 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="memoForm">
           <q-input filled v-model="memoName" label="Name" lazy-rules :rules="validators.name" />
-          <q-input type="textarea" filled v-model="memoContent" label="Content" lazy-rules :rules="validators.document" input-style="min-height: 50vh" />
+          <q-input type="textarea" filled v-model="memoContent" label="Content" lazy-rules :rules="validators.document"
+            input-style="min-height: 50vh" />
         </q-form>
       </q-card-section>
 
@@ -94,4 +95,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

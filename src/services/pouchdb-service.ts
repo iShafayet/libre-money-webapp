@@ -24,7 +24,7 @@ async function createCollectionIndexIfNeeded() {
   collectionIndexCreated = true;
 }
 
-const knownTemporaryFields = ["_currencySign"];
+const knownTemporaryFields = ["_currencySign", "_usedAmount"];
 
 function stripKnownTemporaryFields(doc: any) {
   knownTemporaryFields.forEach((field) => {

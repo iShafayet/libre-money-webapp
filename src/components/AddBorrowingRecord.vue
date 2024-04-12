@@ -10,7 +10,8 @@
 
           <select-wallet v-model="recordWalletId"></select-wallet>
 
-          <q-input type="number" filled v-model="recordAmount" label="Borrowed Amount" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Borrowed Amount" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordCurrencySign }}</div>
             </template>
@@ -173,4 +174,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

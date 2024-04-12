@@ -2,10 +2,12 @@
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
     <q-card class="q-dialog-plugin">
       <q-card-section>
-        <div class="std-dialog-title q-pa-md">{{ existingCurrencyId ? "Editing a Currency" : "Adding a Currency" }}</div>
+        <div class="std-dialog-title q-pa-md">{{ existingCurrencyId ? "Editing a Currency" : "Adding a Currency" }}
+        </div>
         <q-form class="q-gutter-md q-pa-md" ref="currencyForm">
           <q-input filled v-model="currencyName" label="Name of the Currency" lazy-rules :rules="validators.name" />
-          <q-input filled v-model="currencySign" label="Currency Sign (i.e. USD)" lazy-rules :rules="validators.currencySign" />
+          <q-input filled v-model="currencySign" label="Currency Sign (i.e. USD)" lazy-rules
+            :rules="validators.currencySign" />
         </q-form>
       </q-card-section>
 
@@ -92,4 +94,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

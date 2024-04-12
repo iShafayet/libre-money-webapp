@@ -8,7 +8,9 @@
           {{ $route.meta.title || "Cash Keeper" }}
         </q-toolbar-title>
 
-        <div v-if="$route.meta.title">Cash Keeper</div>
+        <div v-if="$route.meta.title && !isDevDatabase && !isDevMachine">Cash Keeper</div>
+        <div class="dev-mode-notification" v-if="isDevDatabase">DEV DB</div>
+        <div class="dev-mode-warning" v-if="!isDevDatabase && isDevMachine">PROD DB in DEV ENV</div>
 
         <q-btn flat dense round icon="perm_identity">
           <q-menu>
@@ -26,7 +28,8 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer class="std-column main-left-sidebar-drawer" v-model="leftDrawerOpen" show-if-above bordered v-if="userStore.isUserLoggedIn">
+    <q-drawer class="std-column main-left-sidebar-drawer" v-model="leftDrawerOpen" show-if-above bordered
+      v-if="userStore.isUserLoggedIn">
       <q-list>
         <q-item-label header> CORE </q-item-label>
         <EssentialLink v-for="link in operationList" :key="link.title" v-bind="link" />
@@ -88,6 +91,12 @@ const operationList = [
     caption: "Income, Expenses and more",
     icon: "format_list_bulleted",
     link: "#/records",
+  },
+  {
+    title: "Templates",
+    caption: "Quickly add records",
+    icon: "bookmarks",
+    link: "#/templates",
   },
   {
     title: "Wallets",
@@ -189,10 +198,26 @@ export default defineComponent({
     const $q = useQuasar();
 
     const isLeftDrawerOpen = ref(false);
+    const isDevDatabase = ref(false);
+    const isDevMachine = ref(false);
 
     const userStore = useUserStore();
 
-    const appVersion = "0.1.4";
+    function checkIfInDevMode() {
+      isDevDatabase.value = false;
+      isDevMachine.value = false;
+      if (userStore.user && userStore.user.domain.indexOf("test") > -1) {
+        isDevDatabase.value = true;
+      }
+
+      if (window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1) {
+        isDevMachine.value = true;
+      }
+    }
+    userStore.$subscribe(checkIfInDevMode);
+    checkIfInDevMode();
+
+    const appVersion = "0.2.1";
     const internalBuild = "DEV_BUILD";
     const buildDate = "NOT_APPLICABLE";
 
@@ -233,6 +258,9 @@ export default defineComponent({
       logoutClicked,
       syncClicked,
       verionClicked,
+
+      isDevDatabase,
+      isDevMachine
     };
   },
 });
@@ -246,14 +274,30 @@ export default defineComponent({
   font-size: 12px;
   color: whitesmoke;
 }
+
 .app-version {
   display: flex;
   align-items: start;
 }
+
 .logo {
   margin-right: 8px;
   margin-bottom: 4px;
   width: 40px;
   height: 40px;
+}
+
+.dev-mode-notification {
+  background-color: yellow;
+  color: black;
+  padding: 0px 8px;
+  font-weight: bold;
+}
+
+.dev-mode-warning {
+  background-color: red;
+  color: black;
+  padding: 0px 8px;
+  font-weight: bold;
 }
 </style>

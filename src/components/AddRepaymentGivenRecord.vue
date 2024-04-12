@@ -12,7 +12,8 @@
 
           <div v-if="suggestedAmount">Total Owed to Party: {{ suggestedAmount }}</div>
 
-          <q-input type="number" filled v-model="recordAmount" label="Given Amount" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Given Amount" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">
                 {{ recordCurrencySign }}
@@ -197,4 +198,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

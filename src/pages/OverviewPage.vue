@@ -1,23 +1,25 @@
 <template>
   <q-page class="items-center page">
-    <div class="q-pa-md row justify-end std-card" style="margin-right: 0; margin-bottom: -56px; width: 100%">
+    <div class="q-pa-md row justify-end std-card"
+      style="margin-right: 0; margin-bottom: -36px; width: 100%; align-items: center;">
       <select-currency v-model="recordCurrencyId"></select-currency>
+      <q-btn icon="refresh" flat round size="lg" @click="reloadClicked" style="margin-top: -32px;" />
     </div>
 
-    <q-card class="std-card">
-      <div class="q-pa-md" v-if="isLoading">
-        <div class="loading-notifier">
-          <q-spinner color="primary" size="32px"></q-spinner>
-        </div>
+    <div class="q-pa-md" v-if="isLoading">
+      <div class="loading-notifier">
+        <q-spinner color="primary" size="64px" style="margin-top: 100px;"></q-spinner>
       </div>
-    </q-card>
+    </div>
 
     <q-card class="std-card" v-if="!isLoading && !overview">
       <div class="q-pa-md q-gutter-sm">
         <div>
           Welcome to Cash Keeper!<br /><br />
-          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started guide.<br /><br />
-          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your data to this device.<br /><br />
+          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started
+          guide.<br /><br />
+          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your
+          data to this device.<br /><br />
           Enjoy!
         </div>
       </div>
@@ -25,7 +27,7 @@
 
     <q-card class="std-card" v-if="!isLoading && budgetList.length > 0">
       <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Budgets (Active)</div>
+        <div class="title">Budgets</div>
       </div>
 
       <div class="q-pa-md">
@@ -39,32 +41,7 @@
             <tr v-for="row in budgetList" v-bind:key="row._id">
               <td>{{ row.name }}</td>
               <td>{{ printUsedPercentage(row) }}</td>
-              <td>{{ printAmount(row._usedAmount) }} / {{ printAmount(row.overflowLimit) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Expenses (Current Month)</div>
-      </div>
-
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Expense Avenue</th>
-              <th>Sum</th>
-            </tr>
-            <tr v-for="row in overview.expense.list" v-bind:key="row.expenseAvenueId">
-              <td>{{ row.expenseAvenue.name }}</td>
-              <td>{{ printAmount(row.sum) }}</td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.expense.grandSum) }}</th>
+              <td>{{ printAmount(row._usedAmount || 0) }} / {{ printAmount(row.overflowLimit) }}</td>
             </tr>
           </tbody>
         </table>
@@ -104,7 +81,6 @@
 <script lang="ts" setup>
 import { useQuasar } from "quasar";
 import SelectCurrency from "src/components/SelectCurrency.vue";
-import DateInput from "src/components/lib/DateInput.vue";
 import { Collection } from "src/constants/constants";
 import { Budget } from "src/models/budget";
 import { Overview } from "src/models/inferred/overview";
@@ -113,10 +89,10 @@ import { computationService } from "src/services/computation-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
-import { asAmount, prettifyAmount } from "src/utils/misc-utils";
+import { prettifyAmount } from "src/utils/misc-utils";
 
-import { Ref, ref, watch } from "vue";
 import debounceAsync from "src/utils/debounce";
+import { Ref, ref, watch } from "vue";
 
 const $q = useQuasar();
 const settingsStore = useSettingsStore();
@@ -138,25 +114,38 @@ async function loadOverview() {
   let newOverview = await computationService.computeOverview(startEpoch.value, endEpoch.value, recordCurrencyId.value!);
   overview.value = newOverview;
 }
-const loadOverviewDebounced = debounceAsync(loadOverview, 100, { leading: false });
+
+async function loadBudgets() {
+  let res = await pouchdbService.listByCollection(Collection.BUDGET);
+  let newBudgetList = res.docs as Budget[];
+  newBudgetList = newBudgetList.filter((budget) => budget.currencyId === recordCurrencyId.value!)
+    .filter(budget => budget.startEpoch <= Date.now() && budget.endEpoch >= Date.now());
+  await computationService.computeUsedAmountForBudgetListInPlace(newBudgetList);
+  newBudgetList.sort((a, b) => a.name.localeCompare(b.name));
+  budgetList.value = newBudgetList;
+}
+
+const loadOverviewDebounced = debounceAsync(loadOverview, 1000, { leading: false });
 
 async function loadData() {
   isLoading.value = true;
 
-  await loadOverviewDebounced();
-
-  let res = await pouchdbService.listByCollection(Collection.BUDGET);
-  let newBudgetList = res.docs as Budget[];
-  newBudgetList = newBudgetList.filter((budget) => budget.currencyId === recordCurrencyId.value!);
-  await computationService.computeUsedAmountForBudgetListInPlace(newBudgetList);
-  budgetList.value = newBudgetList;
+  try {
+    await loadOverviewDebounced();
+  } catch (ex) {
+    if (ex && (ex as Error).message.indexOf("Debounced") > -1) {
+      return;
+    }
+    throw ex;
+  }
+  await loadBudgets();
 
   isLoading.value = false;
 }
 
 // ----- Event Handlers
 
-async function submitClicked() {
+async function reloadClicked() {
   loadData();
 }
 
@@ -170,7 +159,7 @@ function printUsedPercentage(budget: Budget) {
   if (budget.overflowLimit <= 0) {
     return "-";
   }
-  return `${Math.round((budget._usedAmount / budget.overflowLimit) * 10000) / 100}%`;
+  return `${Math.round(((budget._usedAmount || 0) / budget.overflowLimit) * 10000) / 100}%`;
 }
 
 // ----- Watchers
@@ -184,6 +173,7 @@ watch(recordCurrencyId, (newValue, __) => {
 // ----- Execution
 
 loadData();
+
 </script>
 
 <style scoped lang="scss">
@@ -197,5 +187,9 @@ loadData();
 .page {
   display: flex;
   flex-direction: column;
+}
+
+.title-row {
+  padding-bottom: 0px;
 }
 </style>

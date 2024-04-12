@@ -3,10 +3,13 @@
     <q-card class="q-dialog-plugin">
       <q-card-section v-if="recordFilters">
         <div class="std-dialog-title q-pa-md">Record Filters</div>
-        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value map-options />
+        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value
+          map-options />
         <div class="row no-wrap" style="margin-top: 8px">
-          <date-input v-model="recordFilters.startEpoch" label="Start Date" @update:model-value="startEpochChanged"></date-input>
-          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged" style="margin-left: 4px"></date-input>
+          <date-input v-model="recordFilters.startEpoch" label="Start Date"
+            @update:model-value="startEpochChanged"></date-input>
+          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged"
+            style="margin-left: 4px"></date-input>
         </div>
         <br />
         <select-record-type v-model="recordFilters.recordTypeList" />
@@ -14,7 +17,10 @@
           <select-party v-model="recordFilters.partyId" :mandatory="false"></select-party>
         </div>
         <div style="margin-top: -12px">
-          <select-tag v-model="recordFilters.tagList"></select-tag>
+          <select-tag v-model="recordFilters.tagIdWhiteList" label="Only include records with these tags"></select-tag>
+        </div>
+        <div style="margin-top: -12px">
+          <select-tag v-model="recordFilters.tagIdBlackList" label="Exclude records with these tags"></select-tag>
         </div>
         <div style="margin-top: -12px">
           <select-wallet v-model="recordFilters.walletId"></select-wallet>
@@ -85,7 +91,8 @@ export default {
         startEpoch: Date.now(),
         endEpoch: Date.now(),
         recordTypeList: [],
-        tagList: [],
+        tagIdWhiteList: [],
+        tagIdBlackList: [],
         partyId: null,
         walletId: null,
         searchString: "",
@@ -136,4 +143,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

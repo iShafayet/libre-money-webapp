@@ -7,22 +7,13 @@
       </div>
 
       <div class="q-pa-md">
-        <q-table
-          :loading="isLoading"
-          title="Budgets"
-          :rows="rows"
-          :columns="columns"
-          row-key="_id"
-          flat
-          bordered
-          :rows-per-page-options="rowsPerPageOptions"
-          binary-state-sort
-          v-model:pagination="pagination"
-          @request="dataForTableRequested"
-          class="std-table-non-morphing"
-        >
+        <!-- @vue-expect-error -->
+        <q-table :loading="isLoading" title="Budgets" :rows="rows" :columns="columns" row-key="_id" flat bordered
+          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
+          @request="dataForTableRequested" class="std-table-non-morphing">
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
+              placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -31,8 +22,19 @@
 
           <template v-slot:body-cell-actions="rowWrapper">
             <q-td :props="rowWrapper">
-              <q-btn-dropdown size="sm" color="primary" label="Edit" split @click="editClicked(rowWrapper.row)">
+              <q-btn-dropdown size="sm" color="primary" label="Records" split
+                @click="viewRecordsClicked(rowWrapper.row)">
                 <q-list>
+                  <q-item clickable v-close-popup @click="editClicked(rowWrapper.row)">
+                    <q-item-section>
+                      <q-item-label>Edit</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="duplicateClicked(rowWrapper.row)">
+                    <q-item-section>
+                      <q-item-label>Duplicate</q-item-label>
+                    </q-item-section>
+                  </q-item>
                   <q-item clickable v-close-popup @click="deleteClicked(rowWrapper.row)">
                     <q-item-section>
                       <q-item-label>Delete</q-item-label>
@@ -50,7 +52,7 @@
 
 <script lang="ts">
 import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, rowsPerPageOptions } from "./../constants/constants";
+import { Collection, RecordType, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
 import AddBudget from "./../components/AddBudget.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
@@ -60,12 +62,17 @@ import { prettifyAmount, sleep } from "src/utils/misc-utils";
 import { Currency } from "src/models/currency";
 import { computationService } from "src/services/computation-service";
 import { usePaginationSizeStore } from "src/stores/pagination";
+import { RecordFilters } from "src/models/inferred/record-filters";
+import { useRecordFiltersStore } from "src/stores/record-filters-store";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "BudgetsPage",
   components: {},
   setup() {
     const $q = useQuasar();
+    const recordFiltersStore = useRecordFiltersStore();
+    const router = useRouter();
 
     // -----
 
@@ -99,7 +106,7 @@ export default defineComponent({
         label: "Used",
         sortable: true,
         field: (budget: Budget) => {
-          return `${budget._currencySign!} ${prettifyAmount(budget._usedAmount)}`;
+          return `${budget._currencySign!} ${prettifyAmount(budget._usedAmount)} (${printUsedPercentage(budget)})`;
         },
       },
       {
@@ -216,6 +223,40 @@ export default defineComponent({
       loadData();
     });
 
+    function printUsedPercentage(budget: Budget) {
+      if (budget.overflowLimit <= 0) {
+        return "-";
+      }
+      return `${Math.round(((budget._usedAmount || 0) / budget.overflowLimit) * 10000) / 100}%`;
+    }
+
+    function duplicateClicked(budget: Budget) {
+      $q.dialog({ component: AddBudget, componentProps: { prefill: budget } }).onOk((res) => {
+        loadData();
+      });
+    }
+
+    function viewRecordsClicked(budget: Budget) {
+      let recordTypeList: string[] = [];
+      if (budget.includeExpenses) {
+        recordTypeList.push(RecordType.EXPENSE);
+      }
+      if (budget.includeAssetPurchases) {
+        recordTypeList.push(RecordType.ASSET_PURCHASE);
+      }
+
+      let recordFilter: RecordFilters = {
+        startEpoch: budget.startEpoch,
+        endEpoch: budget.endEpoch,
+        recordTypeList,
+        tagIdWhiteList: budget.tagIdWhiteList,
+        tagIdBlackList: budget.tagIdBlackList,
+        searchString: "",
+      };
+      recordFiltersStore.setRecordFilters(recordFilter);
+      router.push({ name: "records" });
+    }
+
     return {
       addBudgetClicked,
       searchFilter,
@@ -227,6 +268,9 @@ export default defineComponent({
       deleteClicked,
       pagination,
       dataForTableRequested,
+      printUsedPercentage,
+      viewRecordsClicked,
+      duplicateClicked
     };
   },
 });

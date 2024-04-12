@@ -5,6 +5,7 @@ import { Tag } from "../tag";
 import { Wallet } from "../wallet";
 import { IncomeSource } from "../income-source";
 import { Asset } from "../asset";
+import { User } from "../user";
 
 export type InferredRecord = Record & {
   expense?: {

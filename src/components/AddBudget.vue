@@ -8,18 +8,22 @@
           <date-time-input v-model="budgetStartEpoch" label="Start Date"></date-time-input>
           <date-time-input v-model="budgetEndEpoch" label="Start Date"></date-time-input>
           <select-currency v-model="budgetCurrencyId"></select-currency>
-          <q-input type="number" filled v-model="budgetOverflowLimit" label="Limit" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="budgetOverflowLimit" label="Limit" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ budgetCurrencySign }}</div>
             </template>
           </q-input>
-          <q-input type="number" filled v-model="budgetWarningLimit" label="Warning Limit" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="budgetWarningLimit" label="Warning Limit" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ budgetCurrencySign }}</div>
             </template>
           </q-input>
-          <q-checkbox v-model="budgetIncludeExpenses" label="Apply to Expenses" @update:model-value="optionChanged('expenses')" />
-          <q-checkbox v-model="budgetIncludeAssetPurchases" label="Apply to Asset Purchases" @update:model-value="optionChanged('assetPurchases')" />
+          <q-checkbox v-model="budgetIncludeExpenses" label="Apply to Expenses"
+            @update:model-value="optionChanged('expenses')" />
+          <q-checkbox v-model="budgetIncludeAssetPurchases" label="Apply to Asset Purchases"
+            @update:model-value="optionChanged('assetPurchases')" />
           <select-tag v-model="budgetTagIdWhiteList" label="Only include records with these tags"></select-tag>
           <select-tag v-model="budgetTagIdBlackList" label="Exclude records with these tags"></select-tag>
         </q-form>
@@ -50,6 +54,11 @@ export default {
   props: {
     existingBudgetId: {
       type: String,
+      required: false,
+      default: null,
+    },
+    prefill: {
+      type: Object,
       required: false,
       default: null,
     },
@@ -85,25 +94,38 @@ export default {
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
+    function prefillBudget(res: Budget) {
+      budgetName.value = res.name;
+      budgetStartEpoch.value = res.startEpoch;
+      budgetEndEpoch.value = res.endEpoch;
+      budgetOverflowLimit.value = res.overflowLimit;
+      budgetWarningLimit.value = res.warningLimit;
+      budgetIncludeExpenses.value = res.includeExpenses;
+      budgetIncludeAssetPurchases.value = res.includeAssetPurchases;
+      budgetTagIdWhiteList.value = res.tagIdWhiteList;
+      budgetTagIdBlackList.value = res.tagIdBlackList;
+      budgetCurrencyId.value = res.currencyId;
+    }
+
     if (props.existingBudgetId) {
       isLoading.value = true;
       (async function () {
         let res = (await pouchdbService.getDocById(props.existingBudgetId)) as Budget;
         initialDoc = res;
-        budgetName.value = res.name;
-        budgetStartEpoch.value = res.startEpoch;
-        budgetEndEpoch.value = res.endEpoch;
-        budgetOverflowLimit.value = res.overflowLimit;
-        budgetWarningLimit.value = res.warningLimit;
-        budgetIncludeExpenses.value = res.includeExpenses;
-        budgetIncludeAssetPurchases.value = res.includeAssetPurchases;
-        budgetTagIdWhiteList.value = res.tagIdWhiteList;
-        budgetTagIdBlackList.value = res.tagIdBlackList;
-        budgetCurrencyId.value = res.currencyId;
-
+        prefillBudget(res);
         isLoading.value = false;
       })();
     }
+
+    if (props.prefill) {
+      isLoading.value = true;
+      (async function () {
+        let res = props.prefill as Budget;
+        prefillBudget(res);
+        isLoading.value = false;
+      })();
+    }
+
     async function okClicked() {
       if (!(await budgetForm.value?.validate())) {
         return;
@@ -173,4 +195,4 @@ export default {
   },
 };
 </script>
-<style scoped lang="ts"></style>
+<style scoped lang="scss"></style>

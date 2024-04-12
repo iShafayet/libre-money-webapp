@@ -7,23 +7,14 @@
       </div>
 
       <div class="q-pa-md">
-        <q-table
-          :loading="isLoading"
-          title="Documents"
-          :rows="rows"
-          :columns="columns"
-          row-key="_id"
-          flat
-          bordered
-          :rows-per-page-options="rowsPerPageOptions"
-          binary-state-sort
-          v-model:pagination="pagination"
-          @request="dataForTableRequested"
-          class="std-table-non-morphing"
-          style="font-family: 'Courier New', Courier, monospace"
-        >
+        <!-- @vue-expect-error -->
+        <q-table :loading="isLoading" title="Documents" :rows="rows" :columns="columns" row-key="_id" flat bordered
+          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
+          @request="dataForTableRequested" class="std-table-non-morphing"
+          style="font-family: 'Courier New', Courier, monospace">
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by content" placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by content"
+              placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -55,17 +46,15 @@
 </template>
 
 <script lang="ts">
-import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, walletTypeList, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddDocument from "./../components/AddDocument.vue";
-import { pouchdbService } from "src/services/pouchdb-service";
-import { dialogService } from "src/services/dialog-service";
-import { sleep } from "src/utils/misc-utils";
-import { Currency } from "src/models/currency";
-import { loginService } from "src/services/login-service";
-import { usePaginationSizeStore } from "src/stores/pagination";
 import { dataBackupService } from "src/services/data-backup-service";
+import { dialogService } from "src/services/dialog-service";
+import { localDataService } from "src/services/local-data-service";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { usePaginationSizeStore } from "src/stores/pagination";
+import { Ref, defineComponent, ref, watch } from "vue";
+import AddDocument from "./../components/AddDocument.vue";
+import { rowsPerPageOptions } from "./../constants/constants";
 
 type EditableDocument = {
   _id: string;
@@ -148,7 +137,7 @@ export default defineComponent({
         let collection = "ERROR";
         try {
           collection = (row.doc as any).$collection || "NOT_FOUND";
-        } catch (ex) {}
+        } catch (ex) { }
         return {
           _id: row.id,
           collection,
@@ -205,17 +194,7 @@ export default defineComponent({
     }
 
     async function removeLocalDataClicked() {
-      let answer = await dialogService.confirm("Remove Local Data", "Are you sure you want to remove all local data? Any un-synced data will be lost forever.");
-      if (!answer) return;
-
-      await pouchdbService.getDb().destroy();
-      await loginService.logout();
-
-      localStorage.clear();
-      sessionStorage.clear();
-
-      // @ts-ignore
-      window.location.reload(true);
+      localDataService.removeLocalData();
     }
 
     async function downloadLocalDataClicked() {

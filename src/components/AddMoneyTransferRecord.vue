@@ -7,14 +7,16 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-wallet v-model="recordFromWalletId" label="From Wallet (Source)"> </select-wallet>
-          <q-input type="number" filled v-model="recordFromAmount" label="Source Amount" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="recordFromAmount" label="Source Amount" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordFromCurrencySign }}</div>
             </template>
           </q-input>
 
           <select-wallet v-model="recordToWalletId" label="To Wallet (Destination)"> </select-wallet>
-          <q-input type="number" filled v-model="recordToAmount" label="Destination Amount" lazy-rules :rules="validators.balance">
+          <q-input type="number" filled v-model="recordToAmount" label="Destination Amount" lazy-rules
+            :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordToCurrencySign }}</div>
             </template>
@@ -26,9 +28,18 @@
         </q-form>
       </q-card-section>
 
-      <q-card-actions class="row justify-end">
+      <q-card-actions class="row justify-start std-bottom-action-row">
         <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
-        <q-btn color="primary" label="OK" @click="okClicked" />
+        <div class="spacer"></div>
+        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px;">
+          <q-list>
+            <q-item clickable v-close-popup @click="saveAsTemplateClicked">
+              <q-item-section>
+                <q-item-label>Save as Template</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -43,9 +54,10 @@ import { Record } from "src/models/record";
 import { pouchdbService } from "src/services/pouchdb-service";
 import SelectWallet from "./SelectWallet.vue";
 import SelectTag from "./SelectTag.vue";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount, deepClone } from "src/utils/misc-utils";
 import { dataInferenceService } from "src/services/data-inference-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
+import { NotificationType, dialogService } from "src/services/dialog-service";
 
 export default {
   props: {
@@ -54,6 +66,11 @@ export default {
       required: false,
       default: null,
       DateTimeInput,
+    },
+    useTemplateId: {
+      type: String,
+      required: false,
+      default: null,
     },
   },
 
@@ -90,28 +107,44 @@ export default {
 
     const transactionEpoch: Ref<number> = ref(Date.now());
 
+    async function prefillRecord(prefilledRecord: Record): Promise<boolean> {
+      console.debug("Applying prefilled record: ", prefilledRecord);
+      if (!prefilledRecord || !prefilledRecord.moneyTransfer) {
+        await dialogService.alert("Error", "Invalid Record");
+        onDialogCancel();
+        return false;
+      }
+
+      recordFromAmount.value = asAmount(prefilledRecord.moneyTransfer.fromAmount);
+      recordFromCurrencyId.value = prefilledRecord.moneyTransfer.fromCurrencyId;
+      recordFromWalletId.value = prefilledRecord.moneyTransfer.fromWalletId;
+
+      recordToAmount.value = asAmount(prefilledRecord.moneyTransfer.toAmount);
+      recordToCurrencyId.value = prefilledRecord.moneyTransfer.toCurrencyId;
+      recordToWalletId.value = prefilledRecord.moneyTransfer.toWalletId;
+
+      recordTagIdList.value = prefilledRecord.tagIdList;
+      recordNotes.value = prefilledRecord.notes;
+
+      return true;
+    }
+
     if (props.existingRecordId) {
       isLoading.value = true;
       (async function () {
         isLoading.value = true;
-        let res = (await pouchdbService.getDocById(props.existingRecordId)) as Record;
-        initialDoc = res;
-        if (!initialDoc.moneyTransfer) {
-          // TODO show error message
-          return;
-        }
-
-        recordFromAmount.value = asAmount(initialDoc.moneyTransfer.fromAmount);
-        recordFromCurrencyId.value = initialDoc.moneyTransfer.fromCurrencyId;
-        recordFromWalletId.value = initialDoc.moneyTransfer.fromWalletId;
-
-        recordToAmount.value = asAmount(initialDoc.moneyTransfer.toAmount);
-        recordToCurrencyId.value = initialDoc.moneyTransfer.toCurrencyId;
-        recordToWalletId.value = initialDoc.moneyTransfer.toWalletId;
-
-        recordTagIdList.value = initialDoc.tagIdList;
-        recordNotes.value = initialDoc.notes;
-
+        initialDoc = (await pouchdbService.getDocById(props.existingRecordId)) as Record;
+        if (!await prefillRecord(initialDoc)) return;
+        transactionEpoch.value = initialDoc.transactionEpoch || Date.now();
+        isLoading.value = false;
+      })();
+    } else if (props.useTemplateId) {
+      isLoading.value = true;
+      (async function () {
+        isLoading.value = true;
+        let templateDoc = (await pouchdbService.getDocById(props.useTemplateId)) as Record;
+        if (!await prefillRecord(templateDoc)) return;
+        transactionEpoch.value = Date.now();
         isLoading.value = false;
       })();
     }
@@ -120,17 +153,10 @@ export default {
       return true;
     }
 
-    async function okClicked() {
-      if (!(await recordForm.value?.validate())) {
-        return;
-      }
 
-      if (!(await performManualValidation())) {
-        return;
-      }
-
+    function populatePartialRecord() {
       let record: Record = {
-        $collection: Collection.RECORD,
+        $collection: "INVALID",
         notes: recordNotes.value!,
         type: recordType,
         tagIdList: recordTagIdList.value,
@@ -145,15 +171,39 @@ export default {
         },
       };
 
+      return record;
+    }
+
+    async function okClicked() {
+      if (!(await recordForm.value?.validate())) return;
+      if (!(await performManualValidation())) return;
+
+      let record: Record = populatePartialRecord();
+      record.$collection = Collection.RECORD;
+
       if (initialDoc) {
         record = Object.assign({}, initialDoc, record);
       }
 
-      console.debug("Saving record: ", JSON.stringify(record, null, 2));
-
+      console.debug("Saving record: ", deepClone(record));
       pouchdbService.upsertDoc(record);
-
       onDialogOK();
+    }
+
+    async function saveAsTemplateClicked() {
+      if (!(await performManualValidation())) return;
+
+      let templateName = await dialogService.prompt("Saving as template", "Provide a unique name for the template", "");
+      if (!templateName) return;
+
+      let partialRecord: Record = populatePartialRecord();
+      partialRecord.$collection = Collection.RECORD_TEMPLATE;
+      partialRecord.templateName = templateName;
+
+      console.debug("Saving record as template: ", deepClone(partialRecord));
+      pouchdbService.upsertDoc(partialRecord);
+      dialogService.notify(NotificationType.SUCCESS, "Template saved.");
+      onDialogCancel();
     }
 
     watch(recordFromWalletId, async (newWalletId: any) => {
@@ -188,9 +238,9 @@ export default {
       recordToCurrencyId,
       recordToWalletId,
       recordToCurrencySign,
-
       recordTagIdList,
       recordNotes,
+      saveAsTemplateClicked,
     };
   },
 };

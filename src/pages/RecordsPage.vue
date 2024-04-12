@@ -6,16 +6,12 @@
         <q-btn color="warning" label="Clear Filters" @click="clearFiltersClicked" v-if="recordFilters" />
         <div class="title">
           <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
-            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
+            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
+              @selection="monthAndYearSelected()"></month-and-year-input>
           </div>
         </div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
           <q-list>
-            <q-item clickable v-close-popup @click="addExpenseFromTemplateClicked">
-              <q-item-section>
-                <q-item-label>Add Expense from Templates</q-item-label>
-              </q-item-section>
-            </q-item>
             <q-item clickable v-close-popup @click="addIncomeClicked">
               <q-item-section>
                 <q-item-label>Add Income</q-item-label>
@@ -26,6 +22,12 @@
                 <q-item-label>Transfer Money</q-item-label>
               </q-item-section>
             </q-item>
+            <q-separator inset />
+            <q-item clickable v-close-popup @click="applyTemplateClicked">
+              <q-item-section>
+                <q-item-label>Use Template</q-item-label>
+              </q-item-section>
+            </q-item>
           </q-list>
         </q-btn-dropdown>
       </div>
@@ -33,7 +35,8 @@
       <div class="q-pa-md" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
         <div class="sub-heading" v-if="recordFilters">Filtered Records</div>
         <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.lt.sm">
-          <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
+          <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
+            @selection="monthAndYearSelected()"></month-and-year-input>
         </div>
 
         <div class="loading-notifier" v-if="isLoading">
@@ -56,8 +59,7 @@
 
                 <div class="row secondary-line">
                   <div class="party" v-if="getParty(record)">
-                    <span class="party-type">{{ getParty(record)?.type }}</span
-                    >: {{ getParty(record)?.name }}
+                    <span class="party-type">{{ getParty(record)?.type }}</span>: {{ getParty(record)?.name }}
                   </div>
                 </div>
 
@@ -67,40 +69,47 @@
                   <div class="record-type" :data-record-type="record.type">
                     {{ record.typePrettified }}
                   </div>
-                  <div
-                    class="tag"
-                    v-for="tag in record.tagList"
-                    v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
-                  >
+                  <div class="tag" v-for="tag in record.tagList" v-bind:key="tag._id"
+                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`">
                     {{ tag.name }}
                   </div>
                 </div>
               </div>
 
               <div class="amounts-section">
-                <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
-                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
+                <div class="amount"
+                  :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
+                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amount")!, getString(record,
+          "currencyId")!) }}
                 </div>
                 <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
                 <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
                   Unpaid:
-                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
+                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amountUnpaid")!, getString(record,
+          "currencyId")!) }}
                 </div>
                 <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px"
+                    @click="editSingleAmountRecordClicked(record)" />
+                  <q-btn class="control-button" round color="negative" icon="delete" size="8px"
+                    @click="deleteClicked(record)" />
+                  <div class="username" v-if="record.modifiedByUsername">
+                    <q-icon name="account_circle"></q-icon>
+                    {{ record.modifiedByUsername }}
+                  </div>
                 </div>
               </div>
             </div>
             <!-- Unified Single Amount Record -->
 
             <!-- Money Transfer - start -->
-            <div class="money-transfer-row row" v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
+            <div class="money-transfer-row row"
+              v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
               <div class="details-section">
                 <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
 
-                <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{ record.moneyTransfer.toWallet.name }}</div>
+                <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{
+          record.moneyTransfer.toWallet.name }}</div>
 
                 <div class="notes" v-if="record.notes">{{ record.notes }}</div>
 
@@ -108,12 +117,8 @@
                   <div class="record-type" :data-record-type="record.type">
                     {{ record.typePrettified }}
                   </div>
-                  <div
-                    class="tag"
-                    v-for="tag in record.tagList"
-                    v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
-                  >
+                  <div class="tag" v-for="tag in record.tagList" v-bind:key="tag._id"
+                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`">
                     {{ tag.name }}
                   </div>
                 </div>
@@ -123,21 +128,29 @@
                 <div class="row amounts-section-row">
                   <div class="amount-col amount-left-col">
                     <div class="amount amount-out">
-                      Out {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
+                      Out {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.fromAmount,
+          record.moneyTransfer.fromCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.fromWallet.name }})</div>
                   </div>
                   <div class="amount-col amount-right-col">
                     <div class="amount amount-in">
-                      In {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
+                      In {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.toAmount,
+          record.moneyTransfer.toCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.toWallet.name }})</div>
                   </div>
                 </div>
 
                 <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editMoneyTransferClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px"
+                    @click="editMoneyTransferClicked(record)" />
+                  <q-btn class="control-button" round color="negative" icon="delete" size="8px"
+                    @click="deleteClicked(record)" />
+                  <div class="username" v-if="record.modifiedByUsername">
+                    <q-icon name="account_circle"></q-icon>
+                    {{ record.modifiedByUsername }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -157,7 +170,8 @@
     <q-card class="std-card" v-if="!isLoading && quickSummaryList.length > 0">
       <div class="q-pa-md">
         <div class="quick-summary-title">Summary</div>
-        <div v-for="quickSummary in quickSummaryList" v-bind:key="quickSummary.currency._id!" style="padding-bottom: 12px">
+        <div v-for="quickSummary in quickSummaryList" v-bind:key="quickSummary.currency._id!"
+          style="padding-bottom: 12px">
           <table class="overview-table quick-summary-table">
             <tbody>
               <tr>
@@ -165,15 +179,19 @@
               </tr>
               <tr>
                 <td>Total Income</td>
-                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalIncome) }}</td>
+                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalIncome) }}
+                </td>
                 <td>Total In-flow</td>
-                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalInFlow) }}</td>
+                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalInFlow) }}
+                </td>
               </tr>
               <tr>
                 <td>Total Expense</td>
-                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalExpense) }}</td>
+                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalExpense) }}
+                </td>
                 <td>Total Out-flow</td>
-                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalOutFlow) }}</td>
+                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalOutFlow) }}
+                </td>
               </tr>
               <tr>
                 <td></td>
@@ -199,7 +217,7 @@ import { dialogService } from "src/services/dialog-service";
 import { Collection, RecordType } from "src/constants/constants";
 import { InferredRecord } from "src/models/inferred/inferred-record";
 import { dataInferenceService } from "src/services/data-inference-service";
-import { guessFontColorCode, prettifyAmount, prettifyDate } from "src/utils/misc-utils";
+import { deepClone, guessFontColorCode, prettifyAmount, prettifyDate } from "src/utils/misc-utils";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import AddIncomeRecord from "src/components/AddIncomeRecord.vue";
 import AddMoneyTransferRecord from "src/components/AddMoneyTransferRecord.vue";
@@ -256,17 +274,23 @@ async function loadData() {
   let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
   if (recordFilters.value) {
-    let { recordTypeList, partyId, tagList, walletId, searchString } = recordFilters.value;
-    recordTypeList = recordTypeList.map((type) => (RecordType as any)[type]);
+    let { recordTypeList, partyId, tagIdWhiteList, tagIdBlackList, walletId, searchString } = recordFilters.value;
+
     let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
 
     if (recordTypeList.length) {
       dataRows = dataRows.filter((record) => recordTypeList.indexOf(record.type) > -1);
     }
 
-    if (tagList.length) {
+    if (tagIdWhiteList.length) {
       dataRows = dataRows.filter((record) => {
-        return record.tagIdList.some((tagId) => tagList.includes(tagId));
+        return record.tagIdList.some((tagId) => tagIdWhiteList.includes(tagId));
+      });
+    }
+
+    if (tagIdBlackList.length > 0) {
+      dataRows = dataRows.filter((record) => {
+        return !record.tagIdList.some((tagId) => tagIdBlackList.includes(tagId));
       });
     }
 
@@ -340,30 +364,51 @@ async function monthAndYearSelected() {
 }
 
 async function addExpenseClicked() {
-  $q.dialog({ component: AddExpenseRecord }).onOk((res) => {
+  $q.dialog({ component: AddExpenseRecord }).onOk(() => {
     paginationCurrentPage.value = 1;
     loadData();
   });
 }
 
-async function addExpenseFromTemplateClicked() {
-  $q.dialog({ component: SelectTemplateDialog, componentProps: { templateType: "expense" } }).onOk((selectedTemplate: Record) => {
-    $q.dialog({ component: AddExpenseRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk((res) => {
-      paginationCurrentPage.value = 1;
-      loadData();
-    });
+async function applyTemplateClicked() {
+  $q.dialog({ component: SelectTemplateDialog, componentProps: { templateType: "all" } }).onOk((selectedTemplate: Record) => {
+    selectedTemplate = deepClone(selectedTemplate);
+    console.debug({ selectedTemplate });
+
+    if (selectedTemplate.type === RecordType.EXPENSE) {
+      $q.dialog({ component: AddExpenseRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk(() => {
+        paginationCurrentPage.value = 1;
+        loadData();
+      });
+    } else if (selectedTemplate.type === RecordType.INCOME) {
+      $q.dialog({ component: AddIncomeRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk(() => {
+        paginationCurrentPage.value = 1;
+        loadData();
+      });
+    } else if (selectedTemplate.type === RecordType.MONEY_TRANSFER) {
+      $q.dialog({ component: AddMoneyTransferRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk(() => {
+        paginationCurrentPage.value = 1;
+        loadData();
+      });
+    } else if (selectedTemplate.type === RecordType.ASSET_PURCHASE) {
+      $q.dialog({ component: AddAssetPurchaseRecord, componentProps: { useTemplateId: selectedTemplate._id } }).onOk(() => {
+        paginationCurrentPage.value = 1;
+        loadData();
+      });
+    }
+
   });
 }
 
 async function addIncomeClicked() {
-  $q.dialog({ component: AddIncomeRecord }).onOk((res) => {
+  $q.dialog({ component: AddIncomeRecord }).onOk(() => {
     paginationCurrentPage.value = 1;
     loadData();
   });
 }
 
 async function addMoneyTransferClicked() {
-  $q.dialog({ component: AddMoneyTransferRecord }).onOk((res) => {
+  $q.dialog({ component: AddMoneyTransferRecord }).onOk(() => {
     paginationCurrentPage.value = 1;
     loadData();
   });
@@ -391,13 +436,13 @@ async function editSingleAmountRecordClicked(record: InferredRecord) {
     component = AddAssetAppreciationDepreciationRecord;
   }
 
-  $q.dialog({ component, componentProps: { existingRecordId: record._id } }).onOk((res) => {
+  $q.dialog({ component, componentProps: { existingRecordId: record._id } }).onOk(() => {
     loadData();
   });
 }
 
 async function editMoneyTransferClicked(record: InferredRecord) {
-  $q.dialog({ component: AddMoneyTransferRecord, componentProps: { existingRecordId: record._id } }).onOk((res) => {
+  $q.dialog({ component: AddMoneyTransferRecord, componentProps: { existingRecordId: record._id } }).onOk(() => {
     loadData();
   });
 }
@@ -599,9 +644,11 @@ loadData();
     .amount-left-col {
       margin-right: 0px;
     }
+
     .amounts-section-row {
       flex-direction: column;
     }
+
     .amount-col {
       margin-bottom: 8px;
     }
@@ -634,5 +681,10 @@ loadData();
 .quick-summary-table {
   font-size: 12px;
   margin-bottom: 0px;
+}
+
+.username {
+  font-size: 8px;
+  text-transform: capitalize;
 }
 </style>
