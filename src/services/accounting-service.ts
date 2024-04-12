@@ -14,6 +14,7 @@ import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { AccLedgerEntry } from "src/models/accounting/acc-ledger-entry";
 import { AccLedger } from "src/models/accounting/acc-ledger";
 import { AccTrialBalance, AccTrialBalanceWithCurrency } from "src/models/accounting/acc-trial-balance";
+import { dialogService } from "./dialog-service";
 
 type TrialBalanceInterimContainer = {
   accountVsDebitBalanceMap: Record<string, number>;
@@ -1146,6 +1147,37 @@ class AccountingService {
     return ledger;
   }
 
+  private async closeTrialBalanceWithCurrency(
+    currency: Currency,
+    trialBalanceWithCurrency: AccTrialBalanceWithCurrency,
+    accountMap: Record<string, AccAccount>
+  ) {
+    const retainedEarnings = asFinancialAmount(
+      trialBalanceWithCurrency.trialBalanceOfTypeMap["Income"].totalBalance - trialBalanceWithCurrency.trialBalanceOfTypeMap["Expense"].totalBalance
+    );
+
+    const gapInPermanentBalance = asFinancialAmount(
+      trialBalanceWithCurrency.trialBalanceOfTypeMap["Asset"].totalBalance -
+        (trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].totalBalance + trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].totalBalance)
+    );
+
+    console.log(retainedEarnings, gapInPermanentBalance);
+
+    if (retainedEarnings !== gapInPermanentBalance) {
+      const message = `The Trial Balance has been generated. However, a mismatch was found regarding Retained Earnings.`;
+      await dialogService.alert("Error", message);
+      return;
+    }
+
+    const equity = trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"];
+    equity.balanceList.push({
+      account: accountMap[AccDefaultAccounts.EQUITY__RETAINED_EARNINGS.code],
+      balance: retainedEarnings,
+      isBalanceDebit: false,
+    });
+    equity.totalBalance += retainedEarnings;
+  }
+
   private async prepareTrialBalanceWithCurrency(
     currency: Currency,
     currencyVsInterimMap: Record<string, TrialBalanceInterimContainer>,
@@ -1212,6 +1244,8 @@ class AccountingService {
         });
       }
     }
+
+    await this.closeTrialBalanceWithCurrency(currency, trialBalanceWithCurrency, accountMap);
 
     return trialBalanceWithCurrency;
   }
