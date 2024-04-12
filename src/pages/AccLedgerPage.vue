@@ -19,6 +19,9 @@
               {{ prettifyDate(filters.startEpoch) }} to {{ prettifyDate(filters.endEpoch) }}
             </span>
           </div>
+          <div class="sub-title" v-if="filters && filters._currency">
+            Currency: {{ filters._currency.name }}
+          </div>
         </div>
       </div>
 
@@ -99,11 +102,13 @@ import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { dialogService } from "src/services/dialog-service";
 import { AccAccount } from "src/models/accounting/acc-account";
 import { AccLedger } from "src/models/accounting/acc-ledger";
+import { dataInferenceService } from "src/services/data-inference-service";
 
-const getDefaultFilters = () => {
+const getDefaultFilters = (): AccLedgerFilters => {
   return {
     startEpoch: 0,
-    endEpoch: Date.now()
+    endEpoch: Date.now(),
+    filterByCurrencyId: null
   };
 };
 
@@ -148,6 +153,10 @@ async function loadData() {
   }
 
   const _ledger = await accountingService.generateLedgerFromJournal(filteredJournalEntryList, accountMap, accountCode);
+  if (filters.value.filterByCurrencyId) {
+    _ledger.ledgerEntryList = _ledger.ledgerEntryList.filter(entry => entry.currencyId === filters.value.filterByCurrencyId);
+    _ledger.balanceList = _ledger.balanceList.filter(entry => entry.currencyId === filters.value.filterByCurrencyId);
+  }
 
   console.debug({ ..._ledger });
 
@@ -161,8 +170,12 @@ async function loadData() {
 
 
 async function setFiltersClicked() {
-  $q.dialog({ component: FilterAccLedgerDialog, componentProps: { inputFilters: deepClone(filters.value) } }).onOk((res: AccLedgerFilters) => {
+  $q.dialog({ component: FilterAccLedgerDialog, componentProps: { inputFilters: deepClone(filters.value) } }).onOk(async (res: AccLedgerFilters) => {
     filters.value = res;
+    filters.value._currency = undefined;
+    if (filters.value.filterByCurrencyId) {
+      filters.value._currency = await dataInferenceService.getCurrency(filters.value.filterByCurrencyId);
+    }
     loadData();
   });
 }

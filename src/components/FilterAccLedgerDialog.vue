@@ -5,12 +5,14 @@
         <div class="std-dialog-title q-pa-md">Filters</div>
         <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value
           map-options />
-        <div class="row no-wrap" style="margin-top: 8px">
+        <div class="row no-wrap" style="margin-top: 8px; margin-bottom: 8px;">
           <date-input v-model="filters.startEpoch" label="Start Date"
             @update:model-value="startEpochChanged"></date-input>
           <date-input v-model="filters.endEpoch" label="End Date" @update:model-value="endEpochChanged"
             style="margin-left: 4px"></date-input>
         </div>
+        <select-currency v-model="filters.filterByCurrencyId" label="Currency (Optional)"
+          :mandatory="false"></select-currency>
       </q-card-section>
 
       <q-card-actions class="row justify-end">
@@ -29,6 +31,7 @@ import { AccLedgerFilters } from "src/models/accounting/acc-ledger-filters";
 import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
 import { validators } from "src/utils/validators";
 import { Ref, ref, watch } from "vue";
+import SelectCurrency from "./SelectCurrency.vue";
 
 export default {
   props: {
@@ -39,7 +42,7 @@ export default {
     },
   },
 
-  components: { DateInput },
+  components: { DateInput, SelectCurrency },
 
   emits: [...useDialogPluginComponent.emits],
 
@@ -59,6 +62,7 @@ export default {
       filters.value = {
         startEpoch: Date.now(),
         endEpoch: Date.now(),
+        filterByCurrencyId: null
       };
     }
     isLoading.value = false;

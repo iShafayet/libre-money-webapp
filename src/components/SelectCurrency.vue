@@ -5,7 +5,15 @@ import { Party } from "src/models/party";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Ref, computed, ref } from "vue";
 
-const props = defineProps(["modelValue", "label"]);
+const props = defineProps({
+  modelValue: {},
+  label: String,
+  mandatory: {
+    type: Boolean,
+    default: true,
+  },
+});
+
 const emit = defineEmits(["update:modelValue"]);
 
 const value = computed({
@@ -39,7 +47,9 @@ async function loadData() {
   isLoading.value = false;
   setTimeout(() => {
     if (fullWalletCurrencyList.value.length && !value.value) {
-      value.value = fullWalletCurrencyList.value[0]._id;
+      if (props.mandatory) {
+        value.value = fullWalletCurrencyList.value[0]._id;
+      }
     }
   }, 10);
 }
@@ -61,21 +71,7 @@ function filterCurrencyFn(val: string, update: any, abort: any) {
     <q-spinner color="primary" size="40px" :thickness="4" />
   </div>
 
-  <q-select
-    filled
-    v-model="value"
-    :options="walletCurrencyList"
-    :label="label || 'Currency'"
-    emit-value
-    map-options
-    fill-input
-    use-input
-    input-debounce="0"
-    @filter="filterCurrencyFn"
-    class="std-margin-bottom-32"
-    option-value="_id"
-    option-label="name"
-    hide-selected
-    v-if="!isLoading"
-  />
+  <q-select filled v-model="value" :options="walletCurrencyList" :label="label || 'Currency'" emit-value map-options
+    fill-input use-input input-debounce="0" @filter="filterCurrencyFn" class="std-margin-bottom-32" option-value="_id"
+    option-label="name" hide-selected v-if="!isLoading" :clearable="!mandatory" />
 </template>
