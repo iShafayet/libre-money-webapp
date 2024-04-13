@@ -31,7 +31,6 @@ const currentPhaseProgressPercentage: Ref<number> = ref(0);
 const currentLabel: Ref<string> = ref("");
 
 const startPhase = (params: { phase: number, label: string, weight: number; }) => {
-  console.log("PHASE: ", params.phase);
   if (params.phase === 1) {
     totalPercentage.value = 0;
     startEpoch = Date.now();
@@ -48,7 +47,6 @@ const startPhase = (params: { phase: number, label: string, weight: number; }) =
 const setProgress = (progressFraction: number) => {
   currentPhaseProgressPercentage.value = Math.round(progressFraction * 100);
   const currentPhasePercentageConsideringWeight = (currentWeight / 100) * currentPhaseProgressPercentage.value;
-  console.log({ pastWeights, currentPhasePercentageConsideringWeight });
   totalPercentage.value = pastWeights + currentPhasePercentageConsideringWeight;
 };
 

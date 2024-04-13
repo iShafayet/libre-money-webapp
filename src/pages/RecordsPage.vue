@@ -367,7 +367,6 @@ async function loadData() {
     const result = await dataInferenceService.inferRecord(rawData);
     completedCount += 1;
     if (completedCount % Math.floor(dataRows.length / 10) === 0) {
-      console.log(completedCount / dataRows.length);
       loadingIndicator.value?.setProgress(completedCount / dataRows.length);
     }
     return result;
