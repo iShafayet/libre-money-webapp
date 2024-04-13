@@ -240,7 +240,7 @@ import { useRecordPaginationSizeStore } from "src/stores/record-pagination";
 import { QuickSummary } from "src/models/inferred/quick-summary";
 import { computationService } from "src/services/computation-service";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
-
+import PromisePool from "src/utils/promise-pool";
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
@@ -275,7 +275,7 @@ async function loadData() {
   loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
   await dataInferenceService.updateCurrencyCache();
 
-  loadingIndicator.value?.startPhase({ phase: 2, weight: 30, label: "Filtering records" });
+  loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Filtering records" });
   let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
   if (recordFilters.value) {
@@ -360,7 +360,16 @@ async function loadData() {
   let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
 
   loadingIndicator.value?.startPhase({ phase: 5, weight: 50, label: "Preparing view" });
-  let inferredDataRows = await Promise.all(dataRows.map((rawData) => dataInferenceService.inferRecord(rawData)));
+
+  let completedCount = 0;
+  let inferredDataRows = await PromisePool.mapList(dataRows, 10, (async (rawData: Record) => {
+    const result = await dataInferenceService.inferRecord(rawData);
+    completedCount += 1;
+    if (completedCount % 50 === 0) {
+      loadingIndicator.value?.setProgress(completedCount / dataRows.length);
+    }
+    return result;
+  }));
   rows.value = inferredDataRows.slice(startIndex, startIndex + recordCountPerPage);
 
   loadingIndicator.value?.setProgress(100);
@@ -702,3 +711,4 @@ onMounted(() => {
   text-transform: capitalize;
 }
 </style>
+src/utils/promise-pool.js
