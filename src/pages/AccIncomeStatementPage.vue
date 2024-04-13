@@ -49,9 +49,9 @@
                 <template v-for="trialBalanceWithCurrency in trialBalance.trialBalanceWithCurrencyList"
                   v-bind:key="trialBalanceWithCurrency.currencyId">
                   <div class="fin-presentation-item-numeric debit-sum">{{
-      trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].balanceList[balanceEntryIndex]?.balance || 0
-    }}&nbsp;{{
-        trialBalanceWithCurrency._currency!.sign }}
+                    trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].balanceList[balanceEntryIndex]?.balance || 0
+                  }}&nbsp;{{
+                      trialBalanceWithCurrency._currency!.sign }}
                   </div>
                 </template>
               </div>
@@ -62,7 +62,7 @@
                 v-bind:key="trialBalanceWithCurrency.currencyId">
                 <div class="fin-presentation-head-numeric debit-total">
                   {{ trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].totalBalance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                    trialBalanceWithCurrency._currency!.sign }}
                 </div>
               </template>
             </div>
@@ -74,9 +74,9 @@
             v-bind:key="trialBalanceWithCurrency.currencyId">
             <div class="fin-presentation-head-numeric debit-total">
               {{ trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"]
-      .balanceList.find(balance => balance.account.code ===
-        AccDefaultAccounts.EQUITY__RETAINED_EARNINGS.code)?.balance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                .balanceList.find(balance => balance.account.code ===
+                  AccDefaultAccounts.EQUITY__RETAINED_EARNINGS.code)?.balance }}&nbsp;{{
+                trialBalanceWithCurrency._currency!.sign }}
             </div>
           </template>
         </div>
@@ -123,11 +123,14 @@ async function loadData() {
   isLoading.value = true;
 
   loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
+  const progressNotifierFn = (progressFraction: number) => {
+    loadingIndicator.value?.setProgress(progressFraction);
+  };
   const {
     accountMap,
     accountList,
     journalEntryList,
-  } = await accountingService.initiateAccounting();
+  } = await accountingService.initiateAccounting(progressNotifierFn);
 
   const { startEpoch, endEpoch } = filters.value;
   const journalFilters: AccJournalFilters = {

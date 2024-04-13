@@ -127,12 +127,15 @@ async function loadData() {
   isLoading.value = true;
 
   loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
+  const progressNotifierFn = (progressFraction: number) => {
+    loadingIndicator.value?.setProgress(progressFraction);
+  };
   if (fullJournalEntryList.length === 0) {
     const {
       accountMap,
       accountList,
       journalEntryList,
-    } = await accountingService.initiateAccounting();
+    } = await accountingService.initiateAccounting(progressNotifierFn);
 
     fullJournalEntryList = journalEntryList;
     console.debug({ fullJournalEntryList });

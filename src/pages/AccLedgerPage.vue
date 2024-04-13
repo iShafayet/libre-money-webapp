@@ -54,11 +54,11 @@
               <div v-if="ledgerEntry.notes">{{ ledgerEntry.notes }}</div>
             </div>
             <div class="fin-presentation-item-numeric debit-sum">{{ ledgerEntry.debitAmount }}&nbsp;{{
-      ledgerEntry._currencySign }}</div>
+              ledgerEntry._currencySign }}</div>
             <div class="fin-presentation-item-numeric credit-sum">{{ ledgerEntry.creditAmount }}&nbsp;{{
-      ledgerEntry._currencySign }}</div>
+              ledgerEntry._currencySign }}</div>
             <div class="fin-presentation-item-numeric balance-sum">{{ ledgerEntry.balance }}&nbsp;{{
-      ledgerEntry._currencySign }}</div>
+              ledgerEntry._currencySign }}</div>
           </div>
         </template>
       </div>
@@ -133,11 +133,14 @@ async function loadData() {
   isLoading.value = true;
 
   loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
+  const progressNotifierFn = (progressFraction: number) => {
+    loadingIndicator.value?.setProgress(progressFraction);
+  };
   const {
     accountMap,
     accountList,
     journalEntryList,
-  } = await accountingService.initiateAccounting();
+  } = await accountingService.initiateAccounting(progressNotifierFn);
 
   const { startEpoch, endEpoch } = filters.value;
   const journalFilters: AccJournalFilters = {

@@ -46,14 +46,14 @@
                   {{ balanceEntry.account.name }}
                 </div>
                 <div class="fin-presentation-item-numeric debit-sum" v-if="balanceEntry.isBalanceDebit">{{
-      balanceEntry.balance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                  balanceEntry.balance }}&nbsp;{{
+                    trialBalanceWithCurrency._currency!.sign }}
                 </div>
                 <div class="fin-presentation-item-numeric credit-sum" v-if="balanceEntry.isBalanceDebit"></div>
                 <div class="fin-presentation-item-numeric debit-sum" v-if="!balanceEntry.isBalanceDebit"></div>
                 <div class="fin-presentation-item-numeric credit-sum" v-if="!balanceEntry.isBalanceDebit">{{
-      balanceEntry.balance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                  balanceEntry.balance }}&nbsp;{{
+                    trialBalanceWithCurrency._currency!.sign }}
                 </div>
               </div>
             </template>
@@ -62,7 +62,7 @@
               <div class="fin-presentation-head-numeric debit-total"
                 v-if="trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
                 {{ trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].totalBalance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                  trialBalanceWithCurrency._currency!.sign }}
               </div>
               <div class="fin-presentation-head-numeric credit-total"
                 v-if="trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
@@ -73,7 +73,7 @@
               <div class="fin-presentation-head-numeric credit-total"
                 v-if="!trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
                 {{ trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].totalBalance }}&nbsp;{{
-      trialBalanceWithCurrency._currency!.sign }}
+                  trialBalanceWithCurrency._currency!.sign }}
               </div>
             </div>
           </div>
@@ -121,11 +121,14 @@ async function loadData() {
   isLoading.value = true;
 
   loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
+  const progressNotifierFn = (progressFraction: number) => {
+    loadingIndicator.value?.setProgress(progressFraction);
+  };
   const {
     accountMap,
     accountList,
     journalEntryList,
-  } = await accountingService.initiateAccounting();
+  } = await accountingService.initiateAccounting(progressNotifierFn);
 
   const { startEpoch, endEpoch } = filters.value;
   const journalFilters: AccJournalFilters = {
