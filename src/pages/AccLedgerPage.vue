@@ -28,6 +28,10 @@
     </q-card>
     <!-- Filter - End -->
 
+    <q-card class="std-card q-pa-md" :hidden="!isLoading">
+      <loading-indicator :is-loading="isLoading" :phases="3" ref="loadingIndicator"></loading-indicator>
+    </q-card>
+
     <!-- Ledger - Start -->
     <q-card class="std-card" v-if="!isLoading && ledger && ledger.ledgerEntryList.length > 0">
       <div class="q-pa-md ledger-presentation">
@@ -50,11 +54,11 @@
               <div v-if="ledgerEntry.notes">{{ ledgerEntry.notes }}</div>
             </div>
             <div class="fin-presentation-item-numeric debit-sum">{{ ledgerEntry.debitAmount }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
+      ledgerEntry._currencySign }}</div>
             <div class="fin-presentation-item-numeric credit-sum">{{ ledgerEntry.creditAmount }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
+      ledgerEntry._currencySign }}</div>
             <div class="fin-presentation-item-numeric balance-sum">{{ ledgerEntry.balance }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
+      ledgerEntry._currencySign }}</div>
           </div>
         </template>
       </div>
@@ -90,7 +94,7 @@ import { useQuasar } from "quasar";
 import { AccLedgerEntry } from "src/models/accounting/acc-ledger-entry";
 import { Record } from "src/models/record";
 import { accountingService } from "src/services/accounting-service";
-import { Ref, ref, watch } from "vue";
+import { Ref, onMounted, ref, watch } from "vue";
 import { deepClone, prettifyDate, prettifyDateTime, sleep } from "src/utils/misc-utils";
 import { Collection, dateRangePresetList, defaultPartyType, partyTypeList } from "src/constants/constants";
 import DateInput from "src/components/lib/DateInput.vue";
@@ -103,6 +107,7 @@ import { dialogService } from "src/services/dialog-service";
 import { AccAccount } from "src/models/accounting/acc-account";
 import { AccLedger } from "src/models/accounting/acc-ledger";
 import { dataInferenceService } from "src/services/data-inference-service";
+import LoadingIndicator from "src/components/LoadingIndicator.vue";
 
 const getDefaultFilters = (): AccLedgerFilters => {
   return {
@@ -116,17 +121,18 @@ const $q = useQuasar();
 const route = useRoute();
 const router = useRouter();
 
-const ledger: Ref<AccLedger | null> = ref(null);
-
 // ----- Refs
 const isLoading = ref(false);
+const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 
+const ledger: Ref<AccLedger | null> = ref(null);
 const filters: Ref<AccLedgerFilters> = ref(getDefaultFilters());
 
 // ----- Functions
 async function loadData() {
   isLoading.value = true;
 
+  loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
   const {
     accountMap,
     accountList,
@@ -138,6 +144,8 @@ async function loadData() {
     startEpoch,
     endEpoch
   };
+
+  loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Applying filters" });
   const filteredJournalEntryList = await accountingService.applyJournalFilters(journalEntryList, journalFilters);
 
   const accountCode = route.params.accountCode || null;
@@ -152,6 +160,9 @@ async function loadData() {
     return;
   }
 
+  await loadingIndicator.value?.waitMinimalDuration(400);
+
+  loadingIndicator.value?.startPhase({ phase: 3, weight: 20, label: "Preparing ledger" });
   const _ledger = await accountingService.generateLedgerFromJournal(filteredJournalEntryList, accountMap, accountCode);
   if (filters.value.filterByCurrencyId) {
     _ledger.ledgerEntryList = _ledger.ledgerEntryList.filter(entry => entry.currencyId === filters.value.filterByCurrencyId);
@@ -189,7 +200,9 @@ async function setFiltersClicked() {
 
 // ----- Execution
 
-loadData();
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style scoped lang="scss">

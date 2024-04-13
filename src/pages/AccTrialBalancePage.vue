@@ -22,6 +22,10 @@
     </q-card>
     <!-- Filter - End -->
 
+    <q-card class="std-card q-pa-md" :hidden="!isLoading">
+      <loading-indicator :is-loading="isLoading" :phases="3" ref="loadingIndicator"></loading-indicator>
+    </q-card>
+
     <!-- Ledger - Start -->
     <template v-if="!isLoading && trialBalance">
       <q-card class="std-card" v-for="trialBalanceWithCurrency in trialBalance.trialBalanceWithCurrencyList"
@@ -42,14 +46,14 @@
                   {{ balanceEntry.account.name }}
                 </div>
                 <div class="fin-presentation-item-numeric debit-sum" v-if="balanceEntry.isBalanceDebit">{{
-                  balanceEntry.balance }}&nbsp;{{
-                    trialBalanceWithCurrency._currency!.sign }}
+      balanceEntry.balance }}&nbsp;{{
+      trialBalanceWithCurrency._currency!.sign }}
                 </div>
                 <div class="fin-presentation-item-numeric credit-sum" v-if="balanceEntry.isBalanceDebit"></div>
                 <div class="fin-presentation-item-numeric debit-sum" v-if="!balanceEntry.isBalanceDebit"></div>
                 <div class="fin-presentation-item-numeric credit-sum" v-if="!balanceEntry.isBalanceDebit">{{
-                  balanceEntry.balance }}&nbsp;{{
-                    trialBalanceWithCurrency._currency!.sign }}
+      balanceEntry.balance }}&nbsp;{{
+      trialBalanceWithCurrency._currency!.sign }}
                 </div>
               </div>
             </template>
@@ -58,7 +62,7 @@
               <div class="fin-presentation-head-numeric debit-total"
                 v-if="trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
                 {{ trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].totalBalance }}&nbsp;{{
-                  trialBalanceWithCurrency._currency!.sign }}
+      trialBalanceWithCurrency._currency!.sign }}
               </div>
               <div class="fin-presentation-head-numeric credit-total"
                 v-if="trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
@@ -69,7 +73,7 @@
               <div class="fin-presentation-head-numeric credit-total"
                 v-if="!trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].isBalanceDebit">
                 {{ trialBalanceWithCurrency.trialBalanceOfTypeMap[aType].totalBalance }}&nbsp;{{
-                  trialBalanceWithCurrency._currency!.sign }}
+      trialBalanceWithCurrency._currency!.sign }}
               </div>
             </div>
           </div>
@@ -91,8 +95,9 @@ import { AccTrialBalance } from "src/models/accounting/acc-trial-balance";
 import { Record } from "src/models/record";
 import { accountingService } from "src/services/accounting-service";
 import { deepClone, prettifyDate } from "src/utils/misc-utils";
-import { Ref, ref } from "vue";
+import { Ref, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import LoadingIndicator from "src/components/LoadingIndicator.vue";
 
 const getDefaultFilters = () => {
   return {
@@ -104,17 +109,18 @@ const getDefaultFilters = () => {
 const $q = useQuasar();
 const router = useRouter();
 
-const trialBalance: Ref<AccTrialBalance | null> = ref(null);
-
 // ----- Refs
 const isLoading = ref(false);
+const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 
+const trialBalance: Ref<AccTrialBalance | null> = ref(null);
 const filters: Ref<AccStatementFilters> = ref(getDefaultFilters());
 
 // ----- Functions
 async function loadData() {
   isLoading.value = true;
 
+  loadingIndicator.value?.startPhase({ phase: 1, weight: 60, label: "Preparing accounting data" });
   const {
     accountMap,
     accountList,
@@ -126,8 +132,12 @@ async function loadData() {
     startEpoch,
     endEpoch
   };
+
+  await loadingIndicator.value?.waitMinimalDuration(400);
+  loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Applying filters" });
   const filteredJournalEntryList = await accountingService.applyJournalFilters(journalEntryList, journalFilters);
 
+  loadingIndicator.value?.startPhase({ phase: 3, weight: 20, label: "Preparing trial balance" });
   const _trialBalance = await accountingService.generateTrialBalanceFromJournal(filteredJournalEntryList, accountMap);
 
   console.debug({ ..._trialBalance });
@@ -153,7 +163,9 @@ async function setFiltersClicked() {
 
 // ----- Execution
 
-loadData();
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style scoped lang="scss">
