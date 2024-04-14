@@ -8,4 +8,5 @@ export type Wallet = {
   currencyId: string;
   _currencySign?: string;
   _balance?: number;
+  minimumBalance?: number;
 };

@@ -60,7 +60,19 @@
             </tr>
             <tr v-for="row in overview.wallets.list" v-bind:key="row.walletId">
               <td>{{ row.wallet.name }}</td>
-              <td>{{ printAmount(row.balance) }}</td>
+              <td>{{ printAmount(row.balance) }}
+                <span class="wallet-limit" v-if="row.minimumBalanceState !== 'not-set'">
+                  <span class="wallet-limit-warning" v-if="row.minimumBalanceState === 'warning'">
+                    (Approaching limit {{ printAmount(row.wallet.minimumBalance!) }})
+                  </span>
+                  <span class="wallet-limit-exceeded" v-else-if="row.minimumBalanceState === 'exceeded'">
+                    (Exceeded limit {{ printAmount(row.wallet.minimumBalance!) }})
+                  </span>
+                  <span class="wallet-limit-normal" v-else-if="row.minimumBalanceState === 'normal'">
+                    (Limit {{ printAmount(row.wallet.minimumBalance!) }})
+                  </span>
+                </span>
+              </td>
             </tr>
             <tr>
               <th>Grand Total</th>
@@ -195,5 +207,24 @@ onMounted(() => {
 
 .title-row {
   padding-bottom: 0px;
+}
+
+.wallet-limit-normal {
+  color: #546e7a
+}
+
+.wallet-limit-warning {
+  color: #546e7a;
+  border-bottom: 4px solid #ffd740;
+}
+
+.wallet-limit-exceeded {
+  color: #bf360c;
+}
+
+@media (max-width: $breakpoint-xs-max) {
+  .wallet-limit {
+    display: block;
+  }
 }
 </style>

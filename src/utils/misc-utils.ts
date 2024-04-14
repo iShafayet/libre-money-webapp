@@ -76,3 +76,7 @@ export function prettifyDate(timestamp: number) {
 export function prettifyDateTime(timestamp: number) {
   return date.formatDate(timestamp, "YYYY MMM DD hh:mm:ss a");
 }
+
+export function isNullOrUndefined(value: any) {
+  return value == null;
+}
