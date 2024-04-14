@@ -210,7 +210,7 @@ onMounted(() => {
 }
 
 .wallet-limit-normal {
-  color: #546e7a
+  color: #546e7a;
 }
 
 .wallet-limit-warning {
