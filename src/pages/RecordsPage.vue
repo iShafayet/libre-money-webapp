@@ -3,7 +3,9 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
-        <q-btn color="blue-8" icon="bar_chart" flat round @click="showQuickSummaryClicked" />
+        <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickSummaryClicked" />
+        <q-btn color="green-6" icon="wallet" flat round @click="showQuickBalanceClicked" />
+
 
         <div class="title">
           <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
@@ -214,6 +216,7 @@ import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import PromisePool from "src/utils/promise-pool";
 import { PROMISE_POOL_CONCURRENCY_LIMT } from "src/constants/config-constants";
 import QuickSummaryDialog from "src/components/QuickSummaryDialog.vue";
+import QuickBalanceDialog from "src/components/QuickBalanceDialog.vue";
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
@@ -466,6 +469,12 @@ async function deleteClicked(record: InferredRecord) {
   }
 
   loadData();
+}
+
+async function showQuickBalanceClicked() {
+  $q.dialog({ component: QuickBalanceDialog, componentProps: {} }).onOk((res: RecordFilters) => {
+    "pass";
+  });
 }
 
 async function showQuickSummaryClicked() {
