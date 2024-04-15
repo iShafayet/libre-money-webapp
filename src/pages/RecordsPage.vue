@@ -268,120 +268,143 @@ const filterYear: Ref<number> = ref(new Date().getFullYear());
 
 const quickSummaryList: Ref<QuickSummary[]> = ref([]);
 
+let cachedInferredRecordList: InferredRecord[] = [];
+
 // ----- Functions
 
-async function loadData() {
+async function applyFilters(recordList: Record[]) {
+  if (!recordFilters.value) {
+    return recordList;
+  }
+
+  let { recordTypeList, partyId, tagIdWhiteList, tagIdBlackList, walletId, searchString, deepSearchString } = recordFilters.value;
+
+  let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
+
+  if (recordTypeList.length) {
+    recordList = recordList.filter((record) => recordTypeList.indexOf(record.type) > -1);
+  }
+
+  if (tagIdWhiteList.length) {
+    recordList = recordList.filter((record) => {
+      return record.tagIdList.some((tagId) => tagIdWhiteList.includes(tagId));
+    });
+  }
+
+  if (tagIdBlackList.length > 0) {
+    recordList = recordList.filter((record) => {
+      return !record.tagIdList.some((tagId) => tagIdBlackList.includes(tagId));
+    });
+  }
+
+  if (partyId) {
+    recordList = recordList.filter(
+      (record) =>
+        record.income?.partyId === partyId ||
+        record.expense?.partyId === partyId ||
+        record.assetPurchase?.partyId === partyId ||
+        record.assetSale?.partyId === partyId ||
+        record.lending?.partyId === partyId ||
+        record.borrowing?.partyId === partyId ||
+        record.repaymentGiven?.partyId === partyId ||
+        record.repaymentReceived?.partyId === partyId
+    );
+  }
+  if (walletId) {
+    recordList = recordList.filter(
+      (record) =>
+        record.income?.walletId === walletId ||
+        record.expense?.walletId === walletId ||
+        record.assetPurchase?.walletId === walletId ||
+        record.assetSale?.walletId === walletId ||
+        record.lending?.walletId === walletId ||
+        record.borrowing?.walletId === walletId ||
+        record.repaymentGiven?.walletId === walletId ||
+        record.repaymentReceived?.walletId === walletId ||
+        record.moneyTransfer?.fromWalletId === walletId ||
+        record.moneyTransfer?.toWalletId === walletId
+    );
+  }
+
+  if (searchString && searchString.length > 0) {
+    recordList = recordList.filter((record) => record.notes && String(record.notes).toLocaleLowerCase().indexOf(searchString.toLocaleLowerCase()) > -1);
+  }
+
+  if (deepSearchString && deepSearchString.length > 0) {
+    recordList = recordList.filter((record) => JSON.stringify(record).toLocaleLowerCase().indexOf(deepSearchString.toLocaleLowerCase()) > -1);
+  }
+
+  recordList = recordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+
+  return recordList;
+}
+
+async function loadData(origin = "unspecified") {
+  console.log("loadData()", { origin });
   isLoading.value = true;
 
-  loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
-  await dataInferenceService.updateCurrencyCache();
+  if (!(cachedInferredRecordList.length > 0 && origin === "pagination")) {
+    loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
+    await dataInferenceService.updateCurrencyCache();
 
-  loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Filtering records" });
-  let dataRows = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
+    loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Filtering records" });
+    let recordList = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
 
-  if (recordFilters.value) {
-    let { recordTypeList, partyId, tagIdWhiteList, tagIdBlackList, walletId, searchString, deepSearchString } = recordFilters.value;
+    if (recordFilters.value) {
+      recordList = await applyFilters(recordList);
 
-    let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
+      loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
+      let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
+      quickSummaryList.value = await computationService.computeQuickSummary(startEpoch, endEpoch, recordList);
+    } else {
+      let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
+      let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
+      rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+      rangeEnd.setDate(rangeEnd.getDate() - 1);
 
-    if (recordTypeList.length) {
-      dataRows = dataRows.filter((record) => recordTypeList.indexOf(record.type) > -1);
+      let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
+      recordList = recordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+
+      loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
+      quickSummaryList.value = await computationService.computeQuickSummary(rangeStart.getTime(), rangeEnd.getTime(), recordList);
     }
 
-    if (tagIdWhiteList.length) {
-      dataRows = dataRows.filter((record) => {
-        return record.tagIdList.some((tagId) => tagIdWhiteList.includes(tagId));
-      });
+    loadingIndicator.value?.startPhase({ phase: 4, weight: 10, label: "Sorting" });
+    if (!recordFilters.value || recordFilters.value.sortBy === "transactionEpochDesc") {
+      recordList.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
+    } else {
+      recordList.sort((a, b) => (b.modifiedEpoch || 0) - (a.modifiedEpoch || 0));
     }
 
-    if (tagIdBlackList.length > 0) {
-      dataRows = dataRows.filter((record) => {
-        return !record.tagIdList.some((tagId) => tagIdBlackList.includes(tagId));
-      });
+    paginationMaxPage.value = Math.ceil(recordList.length / recordCountPerPage);
+    if (paginationCurrentPage.value > paginationMaxPage.value) {
+      paginationCurrentPage.value = paginationMaxPage.value;
     }
 
-    if (partyId) {
-      dataRows = dataRows.filter(
-        (record) =>
-          record.income?.partyId === partyId ||
-          record.expense?.partyId === partyId ||
-          record.assetPurchase?.partyId === partyId ||
-          record.assetSale?.partyId === partyId ||
-          record.lending?.partyId === partyId ||
-          record.borrowing?.partyId === partyId ||
-          record.repaymentGiven?.partyId === partyId ||
-          record.repaymentReceived?.partyId === partyId
-      );
-    }
-    if (walletId) {
-      dataRows = dataRows.filter(
-        (record) =>
-          record.income?.walletId === walletId ||
-          record.expense?.walletId === walletId ||
-          record.assetPurchase?.walletId === walletId ||
-          record.assetSale?.walletId === walletId ||
-          record.lending?.walletId === walletId ||
-          record.borrowing?.walletId === walletId ||
-          record.repaymentGiven?.walletId === walletId ||
-          record.repaymentReceived?.walletId === walletId ||
-          record.moneyTransfer?.fromWalletId === walletId ||
-          record.moneyTransfer?.toWalletId === walletId
-      );
-    }
+    loadingIndicator.value?.startPhase({ phase: 5, weight: 50, label: "Preparing view" });
 
-    if (searchString && searchString.length > 0) {
-      dataRows = dataRows.filter((record) => record.notes && String(record.notes).toLocaleLowerCase().indexOf(searchString.toLocaleLowerCase()) > -1);
-    }
+    let completedCount = 0;
+    let inferredRecordList = await PromisePool.mapList(recordList, PROMISE_POOL_CONCURRENCY_LIMT, (async (rawData: Record) => {
+      const result = await dataInferenceService.inferRecord(rawData);
+      completedCount += 1;
+      if (completedCount % Math.floor(recordList.length / 10) === 0) {
+        loadingIndicator.value?.setProgress(completedCount / recordList.length);
+      }
+      return result;
+    }));
+    loadingIndicator.value?.setProgress(1);
 
-    if (deepSearchString && deepSearchString.length > 0) {
-      dataRows = dataRows.filter((record) => JSON.stringify(record).toLocaleLowerCase().indexOf(deepSearchString.toLocaleLowerCase()) > -1);
-    }
+    let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
 
-    dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+    rows.value = inferredRecordList.slice(startIndex, startIndex + recordCountPerPage);
 
-    loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
-    quickSummaryList.value = await computationService.computeQuickSummary(startEpoch, endEpoch, dataRows);
+    cachedInferredRecordList = inferredRecordList;
   } else {
-    let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
-    let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
-    rangeEnd.setMonth(rangeEnd.getMonth() + 1);
-    rangeEnd.setDate(rangeEnd.getDate() - 1);
-
-    let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
-    dataRows = dataRows.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
-
-    loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
-    quickSummaryList.value = await computationService.computeQuickSummary(rangeStart.getTime(), rangeEnd.getTime(), dataRows);
+    let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
+    rows.value = cachedInferredRecordList.slice(startIndex, startIndex + recordCountPerPage);
   }
 
-  loadingIndicator.value?.startPhase({ phase: 4, weight: 10, label: "Sorting" });
-  if (!recordFilters.value || recordFilters.value.sortBy === "transactionEpochDesc") {
-    dataRows.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
-  } else {
-    dataRows.sort((a, b) => (b.modifiedEpoch || 0) - (a.modifiedEpoch || 0));
-  }
 
-  paginationMaxPage.value = Math.ceil(dataRows.length / recordCountPerPage);
-  if (paginationCurrentPage.value > paginationMaxPage.value) {
-    paginationCurrentPage.value = paginationMaxPage.value;
-  }
-
-  let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
-
-  loadingIndicator.value?.startPhase({ phase: 5, weight: 50, label: "Preparing view" });
-
-  let completedCount = 0;
-  let inferredDataRows = await PromisePool.mapList(dataRows, PROMISE_POOL_CONCURRENCY_LIMT, (async (rawData: Record) => {
-    const result = await dataInferenceService.inferRecord(rawData);
-    completedCount += 1;
-    if (completedCount % Math.floor(dataRows.length / 10) === 0) {
-      loadingIndicator.value?.setProgress(completedCount / dataRows.length);
-    }
-    return result;
-  }));
-  loadingIndicator.value?.setProgress(1);
-
-  rows.value = inferredDataRows.slice(startIndex, startIndex + recordCountPerPage);
 
   isLoading.value = false;
 }
@@ -573,7 +596,8 @@ watch(searchFilter, (_, __) => {
 });
 
 watch(paginationCurrentPage, (currentPage, previousPage) => {
-  loadData();
+  console.log("paginationCurrentPage CHANGED", paginationCurrentPage);
+  loadData("pagination");
 });
 
 // ----- Execution
