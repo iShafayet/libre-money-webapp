@@ -317,7 +317,7 @@ async function applyFilters(recordList: Record[]) {
 async function loadData(origin = "unspecified") {
   isLoading.value = true;
 
-  if (!(cachedInferredRecordList.length > 0 && origin === "pagination")) {
+  if (cachedInferredRecordList.length === 0 || origin !== "pagination") {
     loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
     await dataInferenceService.updateCurrencyCache();
 
@@ -326,6 +326,13 @@ async function loadData(origin = "unspecified") {
 
     if (recordFilters.value) {
       recordList = await applyFilters(recordList);
+    } else {
+      let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
+      let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
+      rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+      rangeEnd.setDate(rangeEnd.getDate() - 1);
+      let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
+      recordList = recordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
     }
 
     loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Sorting" });
@@ -480,7 +487,6 @@ async function showQuickSummaryClicked() {
   let startEpoch, endEpoch = 0;
   if (recordFilters.value) {
     [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
-
   } else {
     let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
     let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
