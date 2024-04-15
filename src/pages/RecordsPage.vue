@@ -3,7 +3,8 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
-        <q-btn color="warning" label="Clear Filters" @click="clearFiltersClicked" v-if="recordFilters" />
+        <q-btn color="blue-8" icon="bar_chart" flat round @click="showQuickSummaryClicked" />
+
         <div class="title">
           <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
             <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
@@ -33,13 +34,17 @@
       </div>
 
       <div class="q-pa-md" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
-        <div class="sub-heading" v-if="recordFilters">Filtered Records</div>
+        <div class="filters-activated-area" v-if="recordFilters">
+          <div style="flex: 1">These results are filtered.</div>
+          <q-btn size="sm" color="secondary" outline rounded label="Clear" @click="clearFiltersClicked" />
+        </div>
+
         <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.lt.sm">
           <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
             @selection="monthAndYearSelected()"></month-and-year-input>
         </div>
 
-        <loading-indicator :is-loading="isLoading" :phases="5" ref="loadingIndicator"></loading-indicator>
+        <loading-indicator :is-loading="isLoading" :phases="4" ref="loadingIndicator"></loading-indicator>
 
         <template v-if="!isLoading">
           <div v-for="(record, index) in rows" class="record-row" v-bind:key="record._id">
@@ -167,41 +172,7 @@
 
     <!-- Quick Summary - Start -->
     <q-card class="std-card" v-if="!isLoading && quickSummaryList.length > 0">
-      <div class="q-pa-md">
-        <div class="quick-summary-title">Summary</div>
-        <div v-for="quickSummary in quickSummaryList" v-bind:key="quickSummary.currency._id!"
-          style="padding-bottom: 12px">
-          <table class="overview-table quick-summary-table">
-            <tbody>
-              <tr>
-                <th colspan="4">{{ quickSummary.currency.name }}</th>
-              </tr>
-              <tr>
-                <td>Total Income</td>
-                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalIncome) }}
-                </td>
-                <td>Total In-flow</td>
-                <td class="amount-in">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalInFlow) }}
-                </td>
-              </tr>
-              <tr>
-                <td>Total Expense</td>
-                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalExpense) }}
-                </td>
-                <td>Total Out-flow</td>
-                <td class="amount-out">{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalOutFlow) }}
-                </td>
-              </tr>
-              <tr>
-                <td></td>
-                <td></td>
-                <td>Cash Flow Balance</td>
-                <td>{{ quickSummary.currency.sign }} {{ prettifyAmount(quickSummary.totalFlowBalance) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+
     </q-card>
     <!-- Quick Summary - End -->
   </q-page>
@@ -242,6 +213,7 @@ import { computationService } from "src/services/computation-service";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import PromisePool from "src/utils/promise-pool";
 import { PROMISE_POOL_CONCURRENCY_LIMT } from "src/constants/config-constants";
+import QuickSummaryDialog from "src/components/QuickSummaryDialog.vue";
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
@@ -352,24 +324,9 @@ async function loadData(origin = "unspecified") {
 
     if (recordFilters.value) {
       recordList = await applyFilters(recordList);
-
-      loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
-      let [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
-      quickSummaryList.value = await computationService.computeQuickSummary(startEpoch, endEpoch, recordList);
-    } else {
-      let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
-      let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
-      rangeEnd.setMonth(rangeEnd.getMonth() + 1);
-      rangeEnd.setDate(rangeEnd.getDate() - 1);
-
-      let [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
-      recordList = recordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
-
-      loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Generating summary" });
-      quickSummaryList.value = await computationService.computeQuickSummary(rangeStart.getTime(), rangeEnd.getTime(), recordList);
     }
 
-    loadingIndicator.value?.startPhase({ phase: 4, weight: 10, label: "Sorting" });
+    loadingIndicator.value?.startPhase({ phase: 3, weight: 10, label: "Sorting" });
     if (!recordFilters.value || recordFilters.value.sortBy === "transactionEpochDesc") {
       recordList.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
     } else {
@@ -381,7 +338,7 @@ async function loadData(origin = "unspecified") {
       paginationCurrentPage.value = paginationMaxPage.value;
     }
 
-    loadingIndicator.value?.startPhase({ phase: 5, weight: 50, label: "Preparing view" });
+    loadingIndicator.value?.startPhase({ phase: 4, weight: 60, label: "Preparing view" });
 
     let completedCount = 0;
     let inferredRecordList = await PromisePool.mapList(recordList, PROMISE_POOL_CONCURRENCY_LIMT, (async (rawData: Record) => {
@@ -511,6 +468,25 @@ async function deleteClicked(record: InferredRecord) {
   loadData();
 }
 
+async function showQuickSummaryClicked() {
+  let startEpoch, endEpoch = 0;
+  if (recordFilters.value) {
+    [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
+
+  } else {
+    let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
+    let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
+    rangeEnd.setMonth(rangeEnd.getMonth() + 1);
+    rangeEnd.setDate(rangeEnd.getDate() - 1);
+    [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
+  }
+
+  const quickSummaryList = await computationService.computeQuickSummary(startEpoch, endEpoch, cachedInferredRecordList);
+  $q.dialog({ component: QuickSummaryDialog, componentProps: { quickSummaryList } }).onOk((res: RecordFilters) => {
+    "pass";
+  });
+}
+
 async function setFiltersClicked() {
   $q.dialog({ component: FilterRecordsDialog, componentProps: { inputFilters: recordFilters.value } }).onOk((res: RecordFilters) => {
     recordFilters.value = res;
@@ -596,7 +572,7 @@ watch(searchFilter, (_, __) => {
 });
 
 watch(paginationCurrentPage, (currentPage, previousPage) => {
-  console.log("paginationCurrentPage CHANGED", paginationCurrentPage);
+  console.debug("paginationCurrentPage", paginationCurrentPage);
   loadData("pagination");
 });
 
@@ -609,11 +585,15 @@ onMounted(() => {
 </script>
 
 <style scoped lang="scss">
-@import url(./../css/table.scss);
-
-.sub-heading {
-  font-size: 20px;
+.filters-activated-area {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
   margin-bottom: 12px;
+  color: #3d3d3d;
+  background-color: #f3f3f3;
+  padding: 8px;
+  border-radius: 4px;
 }
 
 .record-row {
