@@ -47,7 +47,8 @@ const startPhase = (params: { phase: number, label: string, weight: number; }) =
 const setProgress = (progressFraction: number) => {
   currentPhaseProgressPercentage.value = Math.round(progressFraction * 100);
   const currentPhasePercentageConsideringWeight = (currentWeight / 100) * currentPhaseProgressPercentage.value;
-  totalPercentage.value = pastWeights + currentPhasePercentageConsideringWeight;
+  const totalPercentageTemp = pastWeights + currentPhasePercentageConsideringWeight;
+  totalPercentage.value = Math.round(totalPercentageTemp * 100) / 100;
 };
 
 const waitMinimalDuration = async (minimumDelayMillis: number) => {

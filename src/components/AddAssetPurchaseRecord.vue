@@ -316,9 +316,9 @@ export default {
       recordAmountUnpaid.value = asAmount(recordAmount.value) - asAmount(recordAmountPaid.value);
 
       if (selectedWallet.value) {
-        selectedWallet.value.potentialBalance = asAmount(selectedWallet.value._balance) + asAmount(recordAmountPaid.value);
+        selectedWallet.value.potentialBalance = asAmount(selectedWallet.value._balance) - asAmount(recordAmountPaid.value);
         if (initialDoc && initialDoc.expense?.walletId === selectedWallet.value._id) {
-          selectedWallet.value.potentialBalance -= asAmount(initialDoc.assetPurchase?.amountPaid || 0);
+          selectedWallet.value.potentialBalance += asAmount(initialDoc.assetPurchase?.amountPaid || 0);
         }
 
         selectedWallet.value._minimumBalanceState = "not-set";
