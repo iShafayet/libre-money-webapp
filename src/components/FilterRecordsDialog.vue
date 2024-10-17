@@ -2,17 +2,17 @@
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
     <q-card class="q-dialog-plugin">
       <q-card-section v-if="recordFilters">
-        <div class="std-dialog-title" style="padding-bottom: 8px;">Filters</div>
-        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value
-          map-options />
+        <div class="std-dialog-title" style="padding-bottom: 8px">Filters</div>
+        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value map-options />
         <div class="row no-wrap" style="margin-top: 8px">
-          <date-input v-model="recordFilters.startEpoch" label="Start Date"
-            @update:model-value="startEpochChanged"></date-input>
-          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged"
-            style="margin-left: 4px"></date-input>
+          <date-input v-model="recordFilters.startEpoch" label="Start Date" @update:model-value="startEpochChanged"></date-input>
+          <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged" style="margin-left: 4px"></date-input>
         </div>
         <br />
         <div style="margin-top: -12px">
+          <select-wallet v-model="recordFilters.walletId"></select-wallet>
+        </div>
+        <div style="margin-top: -20px">
           <select-record-type v-model="recordFilters.recordTypeList" />
         </div>
         <div style="margin-top: -20px">
@@ -25,17 +25,13 @@
           <select-tag v-model="recordFilters.tagIdBlackList" label="Exclude if contains tags"></select-tag>
         </div>
         <div style="margin-top: -20px">
-          <select-wallet v-model="recordFilters.walletId"></select-wallet>
-        </div>
-        <div style="margin-top: -20px">
           <q-input filled v-model="recordFilters.searchString" label="Search in notes" />
         </div>
         <div style="margin-top: 12px">
           <q-input filled v-model="recordFilters.deepSearchString" label="Deep search (advanced)" />
         </div>
         <div style="margin-top: 12px; margin-bottom: 12px">
-          <q-select filled v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value
-            map-options />
+          <q-select filled v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value map-options />
         </div>
       </q-card-section>
 
@@ -97,7 +93,7 @@ export default {
         walletId: null,
         searchString: "",
         deepSearchString: "",
-        sortBy: "transactionEpochDesc"
+        sortBy: "transactionEpochDesc",
       };
     }
     isLoading.value = false;
@@ -141,7 +137,7 @@ export default {
       selectedPreset,
       startEpochChanged,
       endEpochChanged,
-      sortByTypeList
+      sortByTypeList,
     };
   },
 };
