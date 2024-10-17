@@ -1,4 +1,7 @@
+import { sleep } from "src/utils/misc-utils";
+
 const lockMap: Record<string, number> = {};
+const delayedMutexLockMap: Record<string, (a0: boolean) => void> = {};
 
 class MutexService {
   acquireLock(lockName: string, autoReleaseAfterMillis: number): boolean {
@@ -17,6 +20,22 @@ class MutexService {
     if (Object.hasOwn(lockMap, lockName)) {
       delete lockMap[lockName];
     }
+  }
+
+  acquireDalyedMutexLock(lockName: string, timeWindowMillis: number): Promise<boolean> {
+    const promise = new Promise<boolean>((accept) => {
+      if (!Object.hasOwn(delayedMutexLockMap, lockName)) {
+        delayedMutexLockMap[lockName] = accept;
+        sleep(timeWindowMillis).then(() => {
+          delayedMutexLockMap[lockName](true);
+          delete delayedMutexLockMap[lockName];
+        });
+      } else {
+        delayedMutexLockMap[lockName](false);
+        delayedMutexLockMap[lockName] = accept;
+      }
+    });
+    return promise;
   }
 }
 
