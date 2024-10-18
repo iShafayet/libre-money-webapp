@@ -37,6 +37,20 @@ class MutexService {
     });
     return promise;
   }
+
+  async awaitTillTruthy<T>(timeoutMillis: number, fn: () => T): Promise<T> {
+    const endTime = Date.now() + timeoutMillis;
+    while (true) {
+      const result = await fn();
+      if (result) {
+        return result;
+      }
+      if (Date.now() > endTime) {
+        throw new Error("Timeout");
+      }
+      await sleep(20);
+    }
+  }
 }
 
 /*

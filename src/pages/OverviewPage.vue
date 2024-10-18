@@ -1,9 +1,8 @@
 <template>
   <q-page class="items-center page">
-    <div class="q-pa-md row justify-end std-card"
-      style="margin-right: 0; margin-bottom: -36px; width: 100%; align-items: center;">
+    <div class="q-pa-md row justify-end std-card" style="margin-right: 0; margin-bottom: -36px; width: 100%; align-items: center">
       <select-currency v-model="recordCurrencyId"></select-currency>
-      <q-btn icon="refresh" flat round size="lg" @click="reloadClicked" style="margin-top: -32px;" />
+      <q-btn icon="refresh" flat round size="lg" @click="reloadClicked" style="margin-top: -32px" />
     </div>
 
     <q-card class="std-card q-pa-md" :hidden="!isLoading">
@@ -14,10 +13,8 @@
       <div class="q-pa-md q-gutter-sm">
         <div>
           Welcome to Cash Keeper!<br /><br />
-          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started
-          guide.<br /><br />
-          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your
-          data to this device.<br /><br />
+          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started guide.<br /><br />
+          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your data to this device.<br /><br />
           Enjoy!
         </div>
       </div>
@@ -60,7 +57,8 @@
             </tr>
             <tr v-for="row in overview.wallets.list" v-bind:key="row.walletId">
               <td>{{ row.wallet.name }}</td>
-              <td>{{ printAmount(row.balance) }}
+              <td>
+                {{ printAmount(row.balance) }}
                 <span class="wallet-limit" v-if="row.minimumBalanceState !== 'not-set'">
                   <span class="wallet-limit-warning" v-if="row.minimumBalanceState === 'warning'">
                     (Approaching limit {{ printAmount(row.wallet.minimumBalance!) }})
@@ -97,11 +95,12 @@ import { Budget } from "src/models/budget";
 import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
+import { errorService } from "src/services/error-service";
 import { mutexService } from "src/services/mutex-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
-import { prettifyAmount } from "src/utils/misc-utils";
+import { prettifyAmount, sleep } from "src/utils/misc-utils";
 import { Ref, onMounted, ref, watch } from "vue";
 
 const $q = useQuasar();
@@ -130,28 +129,33 @@ async function loadOverview() {
 async function loadBudgets() {
   let res = await pouchdbService.listByCollection(Collection.BUDGET);
   let newBudgetList = res.docs as Budget[];
-  newBudgetList = newBudgetList.filter((budget) => budget.currencyId === recordCurrencyId.value!)
-    .filter(budget => budget.startEpoch <= Date.now() && budget.endEpoch >= Date.now());
+  newBudgetList = newBudgetList
+    .filter((budget) => budget.currencyId === recordCurrencyId.value!)
+    .filter((budget) => budget.startEpoch <= Date.now() && budget.endEpoch >= Date.now());
   await computationService.computeUsedAmountForBudgetListInPlace(newBudgetList);
   newBudgetList.sort((a, b) => a.name.localeCompare(b.name));
   budgetList.value = newBudgetList;
 }
 
 async function loadData() {
-  if (!mutexService.acquireLock("OverviewPage/loadData", 2_000)) return;
+  return await errorService.handleUnexpectedError(async () => {
+    if (!mutexService.acquireLock("OverviewPage/loadData", 2_000)) return;
 
-  isLoading.value = true;
+    isLoading.value = true;
 
-  loadingIndicator.value?.startPhase({ phase: 1, weight: 40, label: "Loading budgets" });
-  await loadBudgets();
+    await mutexService.awaitTillTruthy(400, () => recordCurrencyId.value);
 
-  loadingIndicator.value?.startPhase({ phase: 2, weight: 60, label: "Preparing overview" });
-  await loadOverview();
+    loadingIndicator.value?.startPhase({ phase: 1, weight: 40, label: "Loading budgets" });
+    await loadBudgets();
 
-  await loadingIndicator.value?.waitMinimalDuration(400);
+    loadingIndicator.value?.startPhase({ phase: 2, weight: 60, label: "Preparing overview" });
+    await loadOverview();
 
-  isLoading.value = false;
-  mutexService.releaseLock("OverviewPage/loadData");
+    await loadingIndicator.value?.waitMinimalDuration(400);
+
+    isLoading.value = false;
+    mutexService.releaseLock("OverviewPage/loadData");
+  });
 }
 
 // ----- Event Handlers
@@ -189,7 +193,6 @@ onMounted(() => {
   isMounted.value = true;
   loadData();
 });
-
 </script>
 
 <style scoped lang="scss">
