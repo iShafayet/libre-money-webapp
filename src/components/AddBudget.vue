@@ -8,22 +8,18 @@
           <date-time-input v-model="budgetStartEpoch" label="Start Date"></date-time-input>
           <date-time-input v-model="budgetEndEpoch" label="Start Date"></date-time-input>
           <select-currency v-model="budgetCurrencyId"></select-currency>
-          <q-input type="number" filled v-model="budgetOverflowLimit" label="Limit" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="budgetOverflowLimit" label="Limit" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ budgetCurrencySign }}</div>
             </template>
           </q-input>
-          <q-input type="number" filled v-model="budgetWarningLimit" label="Warning Limit" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="budgetWarningLimit" label="Warning Limit" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ budgetCurrencySign }}</div>
             </template>
           </q-input>
-          <q-checkbox v-model="budgetIncludeExpenses" label="Apply to Expenses"
-            @update:model-value="optionChanged('expenses')" />
-          <q-checkbox v-model="budgetIncludeAssetPurchases" label="Apply to Asset Purchases"
-            @update:model-value="optionChanged('assetPurchases')" />
+          <q-checkbox v-model="budgetIncludeExpenses" label="Apply to Expenses" @update:model-value="optionChanged('expenses')" />
+          <q-checkbox v-model="budgetIncludeAssetPurchases" label="Apply to Asset Purchases" @update:model-value="optionChanged('assetPurchases')" />
           <select-tag v-model="budgetTagIdWhiteList" label="Only include records with these tags"></select-tag>
           <select-tag v-model="budgetTagIdBlackList" label="Exclude records with these tags"></select-tag>
         </q-form>
@@ -46,7 +42,7 @@ import { Budget } from "src/models/budget";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Party } from "src/models/party";
 import SelectCurrency from "./SelectCurrency.vue";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import SelectTag from "./SelectTag.vue";
 
@@ -165,7 +161,7 @@ export default {
     }
 
     watch(budgetCurrencyId, async (newCurrencyId: any) => {
-      let currency = await dataInferenceService.getCurrency(newCurrencyId);
+      let currency = await entityService.getCurrency(newCurrencyId);
       budgetCurrencySign.value = currency.sign;
     });
 

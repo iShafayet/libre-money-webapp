@@ -11,20 +11,13 @@
               <span v-if="ledger.ledgerEntryList.length > 0">
                 {{ prettifyDate(ledger.ledgerEntryList[0].entryEpoch) }} to {{ prettifyDate(filters.endEpoch) }}
               </span>
-              <span v-else>
-                Up to {{ prettifyDate(filters.endEpoch) }}
-              </span>
+              <span v-else> Up to {{ prettifyDate(filters.endEpoch) }} </span>
             </span>
-            <span v-else>
-              {{ prettifyDate(filters.startEpoch) }} to {{ prettifyDate(filters.endEpoch) }}
-            </span>
+            <span v-else> {{ prettifyDate(filters.startEpoch) }} to {{ prettifyDate(filters.endEpoch) }} </span>
           </div>
-          <div class="sub-title" v-if="filters && filters._currency">
-            Currency: {{ filters._currency.name }}
-          </div>
+          <div class="sub-title" v-if="filters && filters._currency">Currency: {{ filters._currency.name }}</div>
         </div>
       </div>
-
     </q-card>
     <!-- Filter - End -->
 
@@ -40,9 +33,7 @@
           <div class="fin-presentation-head-textual particulars-head">Particulars</div>
           <div class="fin-presentation-head-numeric debit-head">Debit</div>
           <div class="fin-presentation-head-numeric credit-head">Credit</div>
-          <div class="fin-presentation-head-numeric balance-head">
-            Balance ({{ ledger.isBalanceDebit ? "Debit" : "Credit" }})
-          </div>
+          <div class="fin-presentation-head-numeric balance-head">Balance ({{ ledger.isBalanceDebit ? "Debit" : "Credit" }})</div>
         </div>
         <template v-for="ledgerEntry in ledger.ledgerEntryList" v-bind:key="ledgerEntry.serial">
           <div class="fin-presentation-row ledger-entry row">
@@ -53,12 +44,9 @@
               {{ ledgerEntry.description }}
               <div v-if="ledgerEntry.notes">{{ ledgerEntry.notes }}</div>
             </div>
-            <div class="fin-presentation-item-numeric debit-sum">{{ ledgerEntry.debitAmount }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
-            <div class="fin-presentation-item-numeric credit-sum">{{ ledgerEntry.creditAmount }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
-            <div class="fin-presentation-item-numeric balance-sum">{{ ledgerEntry.balance }}&nbsp;{{
-              ledgerEntry._currencySign }}</div>
+            <div class="fin-presentation-item-numeric debit-sum">{{ ledgerEntry.debitAmount }}&nbsp;{{ ledgerEntry._currencySign }}</div>
+            <div class="fin-presentation-item-numeric credit-sum">{{ ledgerEntry.creditAmount }}&nbsp;{{ ledgerEntry._currencySign }}</div>
+            <div class="fin-presentation-item-numeric balance-sum">{{ ledgerEntry.balance }}&nbsp;{{ ledgerEntry._currencySign }}</div>
           </div>
         </template>
       </div>
@@ -77,15 +65,12 @@
             <div class="fin-presentation-item-textual currency">
               {{ balanceEntry._currency!.name }}
             </div>
-            <div class="fin-presentation-item-numeric balance">
-              {{ balanceEntry.balance }}&nbsp;{{ balanceEntry._currency?.sign }}
-            </div>
+            <div class="fin-presentation-item-numeric balance">{{ balanceEntry.balance }}&nbsp;{{ balanceEntry._currency?.sign }}</div>
           </div>
         </template>
       </div>
     </q-card>
     <!-- Summary - End -->
-
   </q-page>
 </template>
 
@@ -106,14 +91,14 @@ import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { dialogService } from "src/services/dialog-service";
 import { AccAccount } from "src/models/accounting/acc-account";
 import { AccLedger } from "src/models/accounting/acc-ledger";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 
 const getDefaultFilters = (): AccLedgerFilters => {
   return {
     startEpoch: 0,
     endEpoch: Date.now(),
-    filterByCurrencyId: null
+    filterByCurrencyId: null,
   };
 };
 
@@ -136,16 +121,12 @@ async function loadData() {
   const progressNotifierFn = (progressFraction: number) => {
     loadingIndicator.value?.setProgress(progressFraction);
   };
-  const {
-    accountMap,
-    accountList,
-    journalEntryList,
-  } = await accountingService.initiateAccounting(progressNotifierFn);
+  const { accountMap, accountList, journalEntryList } = await accountingService.initiateAccounting(progressNotifierFn);
 
   const { startEpoch, endEpoch } = filters.value;
   const journalFilters: AccJournalFilters = {
     startEpoch,
-    endEpoch
+    endEpoch,
   };
 
   loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Applying filters" });
@@ -168,8 +149,8 @@ async function loadData() {
   loadingIndicator.value?.startPhase({ phase: 3, weight: 20, label: "Preparing ledger" });
   const _ledger = await accountingService.generateLedgerFromJournal(filteredJournalEntryList, accountMap, accountCode);
   if (filters.value.filterByCurrencyId) {
-    _ledger.ledgerEntryList = _ledger.ledgerEntryList.filter(entry => entry.currencyId === filters.value.filterByCurrencyId);
-    _ledger.balanceList = _ledger.balanceList.filter(entry => entry.currencyId === filters.value.filterByCurrencyId);
+    _ledger.ledgerEntryList = _ledger.ledgerEntryList.filter((entry) => entry.currencyId === filters.value.filterByCurrencyId);
+    _ledger.balanceList = _ledger.balanceList.filter((entry) => entry.currencyId === filters.value.filterByCurrencyId);
   }
 
   console.debug({ ..._ledger });
@@ -179,27 +160,22 @@ async function loadData() {
   isLoading.value = false;
 }
 
-
 // ----- Event Handlers
-
 
 async function setFiltersClicked() {
   $q.dialog({ component: FilterAccLedgerDialog, componentProps: { inputFilters: deepClone(filters.value) } }).onOk(async (res: AccLedgerFilters) => {
     filters.value = res;
     filters.value._currency = undefined;
     if (filters.value.filterByCurrencyId) {
-      filters.value._currency = await dataInferenceService.getCurrency(filters.value.filterByCurrencyId);
+      filters.value._currency = await entityService.getCurrency(filters.value.filterByCurrencyId);
     }
     loadData();
   });
 }
 
-
-
 // ----- Computed and Embedded
 
 // ----- Watchers
-
 
 // ----- Execution
 

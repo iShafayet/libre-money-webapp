@@ -8,12 +8,22 @@
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Assets" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing">
+        <q-table
+          :loading="isLoading"
+          title="Assets"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+          class="std-table-non-morphing"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -34,8 +44,7 @@
                       <q-item-label>Add Sales Record</q-item-label>
                     </q-item-section>
                   </q-item>
-                  <q-item clickable v-close-popup
-                    @click="addAssetAppreciationDepreciationRecordClicked(rowWrapper.row)">
+                  <q-item clickable v-close-popup @click="addAssetAppreciationDepreciationRecordClicked(rowWrapper.row)">
                     <q-item-section>
                       <q-item-label>Add Appreciation/Depreciation Record</q-item-label>
                     </q-item-section>
@@ -71,7 +80,7 @@ import { dialogService } from "src/services/dialog-service";
 import { prettifyAmount, sleep } from "src/utils/misc-utils";
 import { Currency } from "src/models/currency";
 import { computationService } from "src/services/computation-service";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import { usePaginationSizeStore } from "src/stores/pagination";
 
 export default defineComponent({
@@ -100,14 +109,14 @@ export default defineComponent({
         align: "left",
         label: "Type",
         sortable: true,
-        field: dataInferenceService.toProperAssetType,
+        field: entityService.toProperAssetType,
       },
       {
         name: "liquidity",
         align: "left",
         label: "Liquidity",
         sortable: true,
-        field: dataInferenceService.toProperAssetLiquidity,
+        field: entityService.toProperAssetLiquidity,
       },
       {
         name: "balance",

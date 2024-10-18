@@ -131,7 +131,7 @@
             <tr v-for="row in overview.assets.list" v-bind:key="row.assetId">
               <td>{{ row.asset.name }}</td>
               <td>{{ printAmount(row.balance) }}</td>
-              <td>{{ dataInferenceService.toProperAssetLiquidity(row.asset) }}</td>
+              <td>{{ entityService.toProperAssetLiquidity(row.asset) }}</td>
             </tr>
             <tr>
               <th>Grand Total</th>
@@ -335,7 +335,7 @@ import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
 import { asAmount, prettifyAmount, prettifyCount } from "src/utils/misc-utils";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { Ref, onMounted, ref, watch } from "vue";
 import { useSettingsStore } from "src/stores/settings";

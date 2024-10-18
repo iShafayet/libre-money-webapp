@@ -10,7 +10,7 @@ import { pouchdbService } from "./pouchdb-service";
 
 const currencyCacheList: Currency[] = [];
 
-class DataInferenceService {
+class EntityService {
   async getExpenseAvenue(expenseAvenueId: string) {
     const doc = (await pouchdbService.getDocById(expenseAvenueId)) as ExpenseAvenue;
     return doc;
@@ -55,4 +55,4 @@ class DataInferenceService {
   }
 }
 
-export const dataInferenceService = new DataInferenceService();
+export const entityService = new EntityService();

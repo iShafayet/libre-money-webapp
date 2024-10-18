@@ -7,16 +7,14 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-wallet v-model="recordFromWalletId" label="From Wallet (Source)"> </select-wallet>
-          <q-input type="number" filled v-model="recordFromAmount" label="Source Amount" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordFromAmount" label="Source Amount" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordFromCurrencySign }}</div>
             </template>
           </q-input>
 
           <select-wallet v-model="recordToWalletId" label="To Wallet (Destination)"> </select-wallet>
-          <q-input type="number" filled v-model="recordToAmount" label="Destination Amount" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordToAmount" label="Destination Amount" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordToCurrencySign }}</div>
             </template>
@@ -31,7 +29,7 @@
       <q-card-actions class="row justify-start std-bottom-action-row">
         <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
         <div class="spacer"></div>
-        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px;">
+        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px">
           <q-list>
             <q-item clickable v-close-popup @click="saveAsTemplateClicked">
               <q-item-section>
@@ -55,7 +53,7 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import SelectWallet from "./SelectWallet.vue";
 import SelectTag from "./SelectTag.vue";
 import { asAmount, deepClone } from "src/utils/misc-utils";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import { NotificationType, dialogService } from "src/services/dialog-service";
 
@@ -134,7 +132,7 @@ export default {
       (async function () {
         isLoading.value = true;
         initialDoc = (await pouchdbService.getDocById(props.existingRecordId)) as Record;
-        if (!await prefillRecord(initialDoc)) return;
+        if (!(await prefillRecord(initialDoc))) return;
         transactionEpoch.value = initialDoc.transactionEpoch || Date.now();
         isLoading.value = false;
       })();
@@ -143,7 +141,7 @@ export default {
       (async function () {
         isLoading.value = true;
         let templateDoc = (await pouchdbService.getDocById(props.useTemplateId)) as Record;
-        if (!await prefillRecord(templateDoc)) return;
+        if (!(await prefillRecord(templateDoc))) return;
         transactionEpoch.value = Date.now();
         isLoading.value = false;
       })();
@@ -152,7 +150,6 @@ export default {
     async function performManualValidation() {
       return true;
     }
-
 
     function populatePartialRecord() {
       let record: Record = {
@@ -207,15 +204,15 @@ export default {
     }
 
     watch(recordFromWalletId, async (newWalletId: any) => {
-      let wallet = await dataInferenceService.getWallet(newWalletId as string);
-      let currency = await dataInferenceService.getCurrency(wallet.currencyId);
+      let wallet = await entityService.getWallet(newWalletId as string);
+      let currency = await entityService.getCurrency(wallet.currencyId);
       recordFromCurrencyId.value = currency._id!;
       recordFromCurrencySign.value = currency.sign;
     });
 
     watch(recordToWalletId, async (newWalletId: any) => {
-      let wallet = await dataInferenceService.getWallet(newWalletId as string);
-      let currency = await dataInferenceService.getCurrency(wallet.currencyId);
+      let wallet = await entityService.getWallet(newWalletId as string);
+      let currency = await entityService.getCurrency(wallet.currencyId);
       recordToCurrencyId.value = currency._id!;
       recordToCurrencySign.value = currency.sign;
     });

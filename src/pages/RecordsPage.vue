@@ -181,7 +181,7 @@ import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
 import { Collection, RecordType } from "src/constants/constants";
 import { InferredRecord } from "src/models/inferred/inferred-record";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import { deepClone, guessFontColorCode, prettifyAmount, prettifyDate, sleep } from "src/utils/misc-utils";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import AddIncomeRecord from "src/components/AddIncomeRecord.vue";

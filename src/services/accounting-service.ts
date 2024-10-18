@@ -8,7 +8,7 @@ import { InferredRecord } from "src/models/inferred/inferred-record";
 import { Record as SourceRecord } from "src/models/record";
 import { Wallet } from "src/models/wallet";
 import { asFinancialAmount } from "src/utils/misc-utils";
-import { dataInferenceService } from "./data-inference-service";
+import { entityService } from "./entity-service";
 import { pouchdbService } from "./pouchdb-service";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { AccLedgerEntry } from "src/models/accounting/acc-ledger-entry";

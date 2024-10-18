@@ -12,7 +12,7 @@ import { IncomeSource } from "src/models/income-source";
 import { Asset } from "src/models/asset";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
 import { Overview } from "src/models/inferred/overview";
-import { dataInferenceService } from "./data-inference-service";
+import { entityService } from "./entity-service";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import { Budget } from "src/models/budget";
 import { QuickSummary } from "src/models/inferred/quick-summary";
