@@ -6,17 +6,14 @@
       <q-form ref="loginForm" @submit="onSubmit" class="q-gutter-md q-pa-md">
         <q-input filled v-model="domain" label="Domain" hint="Your domain" lazy-rules :rules="validators.domain" />
 
-        <q-input filled v-model="username" label="Username" hint="Your username" lazy-rules
-          :rules="validators.username" />
+        <q-input filled v-model="username" label="Username" hint="Your username" lazy-rules :rules="validators.username" />
 
-        <q-input type="password" filled v-model="password" label="Password" hint="Your password" lazy-rules
-          :rules="validators.password" />
+        <q-input type="password" filled v-model="password" label="Password" hint="Your password" lazy-rules :rules="validators.password" />
 
         <q-checkbox v-model="shouldRememberPassword" label="Store password on this device" />
 
         <div class="row">
-          <q-btn label="Reset Local Data" type="button" color="grey" flat class="q-ml-sm"
-            @click="removeLocalDataClicked" />
+          <q-btn label="Reset Local Data" type="button" color="grey" flat class="q-ml-sm" @click="removeLocalDataClicked" />
           <div class="spacer"></div>
           <q-btn label="Login" type="submit" color="primary" />
         </div>
@@ -31,7 +28,7 @@ import { configService } from "src/services/config-service";
 import { NotificationType, dialogService } from "src/services/dialog-service";
 import { localDataService } from "src/services/local-data-service";
 import { loginService } from "src/services/login-service";
-import { mutexService } from "src/services/mutex-service";
+import { lockService } from "src/services/lock-service";
 import { validators } from "src/utils/validators";
 import { Ref, defineComponent, ref } from "vue";
 import { RouteLocationRaw, useRoute, useRouter } from "vue-router";
@@ -65,17 +62,17 @@ export default defineComponent({
       shouldRememberPassword,
 
       async onSubmit() {
-        if (!mutexService.acquireLock("LoginPage/Login", 1000)) return;
+        if (!lockService.acquireLock("LoginPage/Login", 1000)) return;
 
         const isValid = await loginForm.value!.validate();
         if (!isValid) return;
 
         if (previousDomainName && previousDomainName !== domain.value) {
-          const message = `Your new domain ${domain.value} is different from ${previousDomainName}. 
+          const message = `Your new domain ${domain.value} is different from ${previousDomainName}.
           If you continue with this login, your data from ${previousDomainName} will be copied over to ${domain.value} once you sync. Continue?`;
           const answerContinue = await dialogService.confirm("Please confirm", message);
           if (!answerContinue) {
-            const message = "Hint: to clear local data on this device use the \"Reset Local Data\" button after dismissing this message.";
+            const message = 'Hint: to clear local data on this device use the "Reset Local Data" button after dismissing this message.';
             await dialogService.alert("Login aborted", message);
             return;
           }
@@ -106,7 +103,7 @@ export default defineComponent({
         username.value = null;
         password.value = null;
         localDataService.removeLocalData();
-      }
+      },
     };
   },
 });

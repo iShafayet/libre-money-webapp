@@ -3,7 +3,7 @@ import { sleep } from "src/utils/misc-utils";
 const lockMap: Record<string, number> = {};
 const delayedMutexLockMap: Record<string, (a0: boolean) => void> = {};
 
-class MutexService {
+class LockService {
   acquireLock(lockName: string, autoReleaseAfterMillis: number): boolean {
     if (Object.hasOwn(lockMap, lockName)) {
       if (lockMap[lockName] > Date.now()) {
@@ -58,4 +58,4 @@ Note: According to the current requirements, there will never be a non-trivial
 number of locks. Hence, there is no need to implement a cleanup mechanism.
 */
 
-export const mutexService = new MutexService();
+export const lockService = new LockService();

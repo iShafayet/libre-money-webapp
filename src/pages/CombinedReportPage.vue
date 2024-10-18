@@ -10,8 +10,7 @@
           <date-input v-model="endEpoch" label="End Date"></date-input>
         </div>
         <div class="action-row">
-          <q-btn-dropdown class="preset-selector" size="md" color="secondary" label="Use Preset: Current Month" split
-            @click="presetClicked('current-month')">
+          <q-btn-dropdown class="preset-selector" size="md" color="secondary" label="Use Preset: Current Month" split @click="presetClicked('current-month')">
             <q-list>
               <q-item clickable v-close-popup @click="presetClicked('last-month')">
                 <q-item-section>
@@ -340,7 +339,7 @@ import { dataInferenceService } from "src/services/data-inference-service";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { Ref, onMounted, ref, watch } from "vue";
 import { useSettingsStore } from "src/stores/settings";
-import { mutexService } from "src/services/mutex-service";
+import { lockService } from "src/services/lock-service";
 
 const $q = useQuasar();
 const settingsStore = useSettingsStore();
@@ -367,7 +366,7 @@ const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 // ----- Functions
 
 async function loadData() {
-  if (!mutexService.acquireLock("CombinedReportPage/loadData", 1_000)) return;
+  if (!lockService.acquireLock("CombinedReportPage/loadData", 1_000)) return;
 
   isLoading.value = true;
 
@@ -376,7 +375,7 @@ async function loadData() {
 
   isLoading.value = false;
 
-  mutexService.releaseLock("CombinedReportPage/loadData");
+  lockService.releaseLock("CombinedReportPage/loadData");
 }
 
 // ----- Event Handlers

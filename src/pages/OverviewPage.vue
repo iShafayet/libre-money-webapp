@@ -96,7 +96,7 @@ import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
 import { errorService } from "src/services/error-service";
-import { mutexService } from "src/services/mutex-service";
+import { lockService } from "src/services/lock-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
@@ -139,11 +139,11 @@ async function loadBudgets() {
 
 async function loadData() {
   return await errorService.handleUnexpectedError(async () => {
-    if (!mutexService.acquireLock("OverviewPage/loadData", 2_000)) return;
+    if (!lockService.acquireLock("OverviewPage/loadData", 2_000)) return;
 
     isLoading.value = true;
 
-    await mutexService.awaitTillTruthy(400, () => recordCurrencyId.value);
+    await lockService.awaitTillTruthy(400, () => recordCurrencyId.value);
 
     loadingIndicator.value?.startPhase({ phase: 1, weight: 40, label: "Loading budgets" });
     await loadBudgets();
@@ -154,7 +154,7 @@ async function loadData() {
     await loadingIndicator.value?.waitMinimalDuration(400);
 
     isLoading.value = false;
-    mutexService.releaseLock("OverviewPage/loadData");
+    lockService.releaseLock("OverviewPage/loadData");
   });
 }
 
