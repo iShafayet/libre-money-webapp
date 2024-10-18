@@ -16,6 +16,7 @@ import { dataInferenceService } from "./data-inference-service";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import { Budget } from "src/models/budget";
 import { QuickSummary } from "src/models/inferred/quick-summary";
+import { recordService } from "./record-service";
 
 let currencyCacheList: Currency[] = [];
 
@@ -198,7 +199,7 @@ class ComputationService {
   }
 
   async computeOverview(startEpoch: number, endEpoch: number, currencyId: string): Promise<Overview | null> {
-    await dataInferenceService.updateCurrencyCache();
+    await recordService.updateCurrencyCache();
 
     [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
 

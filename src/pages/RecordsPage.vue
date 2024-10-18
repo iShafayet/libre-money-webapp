@@ -6,11 +6,9 @@
         <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickSummaryClicked" />
         <q-btn color="green-6" icon="wallet" flat round @click="showQuickBalanceClicked" />
 
-
         <div class="title">
           <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
-            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
-              @selection="monthAndYearSelected()"></month-and-year-input>
+            <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
           </div>
         </div>
         <q-btn-dropdown size="md" color="primary" label="Add Expenses" split @click="addExpenseClicked">
@@ -42,8 +40,7 @@
         </div>
 
         <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.lt.sm">
-          <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear"
-            @selection="monthAndYearSelected()"></month-and-year-input>
+          <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
         </div>
 
         <loading-indicator :is-loading="isLoading" :phases="4" ref="loadingIndicator"></loading-indicator>
@@ -65,7 +62,8 @@
 
                 <div class="row secondary-line">
                   <div class="party" v-if="getParty(record)">
-                    <span class="party-type">{{ getParty(record)?.type }}</span>: {{ getParty(record)?.name }}
+                    <span class="party-type">{{ getParty(record)?.type }}</span
+                    >: {{ getParty(record)?.name }}
                   </div>
                 </div>
 
@@ -75,30 +73,29 @@
                   <div class="record-type" :data-record-type="record.type">
                     {{ record.typePrettified }}
                   </div>
-                  <div class="tag" v-for="tag in record.tagList" v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`">
+                  <div
+                    class="tag"
+                    v-for="tag in record.tagList"
+                    v-bind:key="tag._id"
+                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
+                  >
                     {{ tag.name }}
                   </div>
                 </div>
               </div>
 
               <div class="amounts-section">
-                <div class="amount"
-                  :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
-                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amount")!, getString(record,
-          "currencyId")!) }}
+                <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
+                  {{ recordService.getPrintableAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
                 <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
                   Unpaid:
-                  {{ dataInferenceService.getPrintableAmount(getNumber(record, "amountUnpaid")!, getString(record,
-          "currencyId")!) }}
+                  {{ recordService.getPrintableAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px"
-                    @click="editSingleAmountRecordClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px"
-                    @click="deleteClicked(record)" />
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
+                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
                   <div class="username" v-if="record.modifiedByUsername">
                     <q-icon name="account_circle"></q-icon>
                     {{ record.modifiedByUsername }}
@@ -109,13 +106,11 @@
             <!-- Unified Single Amount Record -->
 
             <!-- Money Transfer - start -->
-            <div class="money-transfer-row row"
-              v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
+            <div class="money-transfer-row row" v-else-if="record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer" :data-index="index">
               <div class="details-section">
                 <div class="record-date">{{ prettifyDate(record.transactionEpoch) }}</div>
 
-                <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{
-          record.moneyTransfer.toWallet.name }}</div>
+                <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{ record.moneyTransfer.toWallet.name }}</div>
 
                 <div class="notes" v-if="record.notes">{{ record.notes }}</div>
 
@@ -123,8 +118,12 @@
                   <div class="record-type" :data-record-type="record.type">
                     {{ record.typePrettified }}
                   </div>
-                  <div class="tag" v-for="tag in record.tagList" v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`">
+                  <div
+                    class="tag"
+                    v-for="tag in record.tagList"
+                    v-bind:key="tag._id"
+                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
+                  >
                     {{ tag.name }}
                   </div>
                 </div>
@@ -134,25 +133,21 @@
                 <div class="row amounts-section-row">
                   <div class="amount-col amount-left-col">
                     <div class="amount amount-out">
-                      Out {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.fromAmount,
-          record.moneyTransfer.fromCurrencyId) }}
+                      Out {{ recordService.getPrintableAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.fromWallet.name }})</div>
                   </div>
                   <div class="amount-col amount-right-col">
                     <div class="amount amount-in">
-                      In {{ dataInferenceService.getPrintableAmount(record.moneyTransfer.toAmount,
-          record.moneyTransfer.toCurrencyId) }}
+                      In {{ recordService.getPrintableAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
                     </div>
                     <div class="wallet">({{ record.moneyTransfer.toWallet.name }})</div>
                   </div>
                 </div>
 
                 <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px"
-                    @click="editMoneyTransferClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px"
-                    @click="deleteClicked(record)" />
+                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editMoneyTransferClicked(record)" />
+                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
                   <div class="username" v-if="record.modifiedByUsername">
                     <q-icon name="account_circle"></q-icon>
                     {{ record.modifiedByUsername }}
@@ -173,9 +168,7 @@
     </q-card>
 
     <!-- Quick Summary - Start -->
-    <q-card class="std-card" v-if="!isLoading && quickSummaryList.length > 0">
-
-    </q-card>
+    <q-card class="std-card" v-if="!isLoading && quickSummaryList.length > 0"> </q-card>
     <!-- Quick Summary - End -->
   </q-page>
 </template>
@@ -217,6 +210,7 @@ import PromisePool from "src/utils/promise-pool";
 import { PROMISE_POOL_CONCURRENCY_LIMT } from "src/constants/config-constants";
 import QuickSummaryDialog from "src/components/QuickSummaryDialog.vue";
 import QuickBalanceDialog from "src/components/QuickBalanceDialog.vue";
+import { recordService } from "src/services/record-service";
 const recordFiltersStore = useRecordFiltersStore();
 
 const $q = useQuasar();
@@ -319,7 +313,7 @@ async function loadData(origin = "unspecified") {
 
   if (cachedInferredRecordList.length === 0 || origin !== "pagination") {
     loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
-    await dataInferenceService.updateCurrencyCache();
+    await recordService.updateCurrencyCache();
 
     loadingIndicator.value?.startPhase({ phase: 2, weight: 20, label: "Filtering records" });
     let recordList = (await pouchdbService.listByCollection(Collection.RECORD)).docs as Record[];
@@ -350,14 +344,14 @@ async function loadData(origin = "unspecified") {
     loadingIndicator.value?.startPhase({ phase: 4, weight: 60, label: "Preparing view" });
 
     let completedCount = 0;
-    let inferredRecordList = await PromisePool.mapList(recordList, PROMISE_POOL_CONCURRENCY_LIMT, (async (rawData: Record) => {
-      const result = await dataInferenceService.inferRecord(rawData);
+    let inferredRecordList = await PromisePool.mapList(recordList, PROMISE_POOL_CONCURRENCY_LIMT, async (rawData: Record) => {
+      const result = await recordService.inferRecord(rawData);
       completedCount += 1;
       if (completedCount % Math.floor(recordList.length / 10) === 0) {
         loadingIndicator.value?.setProgress(completedCount / recordList.length);
       }
       return result;
-    }));
+    });
     loadingIndicator.value?.setProgress(1);
 
     let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
@@ -369,8 +363,6 @@ async function loadData(origin = "unspecified") {
     let startIndex = (paginationCurrentPage.value - 1) * recordCountPerPage;
     rows.value = cachedInferredRecordList.slice(startIndex, startIndex + recordCountPerPage);
   }
-
-
 
   isLoading.value = false;
 }
@@ -414,7 +406,6 @@ async function applyTemplateClicked() {
         loadData();
       });
     }
-
   });
 }
 
@@ -484,7 +475,8 @@ async function showQuickBalanceClicked() {
 }
 
 async function showQuickSummaryClicked() {
-  let startEpoch, endEpoch = 0;
+  let startEpoch,
+    endEpoch = 0;
   if (recordFilters.value) {
     [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
   } else {
@@ -595,7 +587,6 @@ watch(paginationCurrentPage, (currentPage, previousPage) => {
 onMounted(() => {
   loadData();
 });
-
 </script>
 
 <style scoped lang="scss">
