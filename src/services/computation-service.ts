@@ -13,6 +13,8 @@ import { Wallet } from "src/models/wallet";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import { asAmount, isNullOrUndefined } from "src/utils/misc-utils";
 import { pouchdbService } from "./pouchdb-service";
+import { QuickExpenseSummary } from "src/models/inferred/quick-expense-summary";
+import { entityService } from "./entity-service";
 
 class ComputationService {
 
@@ -686,6 +688,83 @@ class ComputationService {
         return computationService.computeQuickSummaryForCurrency(startEpoch, endEpoch, currency, recordList);
       })
     );
+  }
+
+  async computeQuickExpenseSummary(recordList: Record[]): Promise<{ currency: Currency, sum: number, summary: QuickExpenseSummary[]; }[]> {
+    const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+
+    const result: { currency: Currency, sum: number, summary: QuickExpenseSummary[]; }[] = [];
+
+    for (const currency of currencyList) {
+      const summary: QuickExpenseSummary[] = [];
+
+      // sum expenses by expense avenue
+      const expenseRecordList = recordList.filter((record) => record.expense && record.expense.currencyId === currency._id);
+      const expenseMap: globalThis.Record<string, number> = {};
+      for (const record of expenseRecordList) {
+        const expense = record.expense!;
+        const amount = asAmount(expense.amountPaid);
+        const expenseAvenueId = expense.expenseAvenueId;
+        if (!expenseMap[expenseAvenueId]) {
+          expenseMap[expenseAvenueId] = 0;
+        }
+        expenseMap[expenseAvenueId] += amount;
+      }
+
+      // sum asset purchases by asset
+      const assetPurchaseRecordList = recordList.filter((record) => record.assetPurchase && record.assetPurchase.currencyId === currency._id);
+      const assetPurchaseMap: globalThis.Record<string, number> = {};
+      for (const record of assetPurchaseRecordList) {
+        const assetPurchase = record.assetPurchase!;
+        const amount = asAmount(assetPurchase.amountPaid);
+        const assetId = assetPurchase.assetId;
+        if (!assetPurchaseMap[assetId]) {
+          assetPurchaseMap[assetId] = 0;
+        }
+        assetPurchaseMap[assetId] += amount;
+      }
+
+      // create summary for expenses
+      for (const expenseAvenueId in expenseMap) {
+        const amount = expenseMap[expenseAvenueId];
+        const expenseAvenue = await entityService.getExpenseAvenue(expenseAvenueId);
+        summary.push({
+          currency,
+          type: "Expense",
+          description: expenseAvenue.name,
+          amount,
+          count: 1,
+        });
+      }
+
+      // create summary for asset purchases
+      for (const assetId in assetPurchaseMap) {
+        const amount = assetPurchaseMap[assetId];
+        const asset = await entityService.getAsset(assetId);
+        summary.push({
+          currency,
+          type: "Purchase",
+          description: asset.name,
+          amount,
+          count: 1,
+        });
+      }
+
+      summary.sort((a, b) => b.amount - a.amount);
+      const sum = summary.reduce((sum, item) => sum + item.amount, 0);
+
+      if (sum === 0) {
+        continue;
+      }
+
+      result.push({
+        currency,
+        summary,
+        sum,
+      });
+    }
+
+    return result;
   }
 }
 

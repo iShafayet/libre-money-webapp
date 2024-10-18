@@ -3,7 +3,7 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
-        <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickSummaryClicked" />
+        <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickExpenseSummaryClicked" />
         <q-btn color="green-6" icon="wallet" flat round @click="showQuickBalanceClicked" />
 
         <div class="title">
@@ -27,6 +27,12 @@
             <q-item clickable v-close-popup @click="applyTemplateClicked">
               <q-item-section>
                 <q-item-label>Use Template</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+            <q-item clickable v-close-popup @click="showQuickSummaryClicked">
+              <q-item-section>
+                <q-item-label>View Quick Summary</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
@@ -198,6 +204,7 @@ import FilterRecordsDialog from "src/components/FilterRecordsDialog.vue";
 import MonthAndYearInput from "src/components/lib/MonthAndYearInput.vue";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import QuickBalanceDialog from "src/components/QuickBalanceDialog.vue";
+import QuickExpenseSummaryDialog from "src/components/QuickExpenseSummaryDialog.vue";
 import QuickSummaryDialog from "src/components/QuickSummaryDialog.vue";
 import SelectTemplateDialog from "src/components/SelectTemplateDialog.vue";
 import { PROMISE_POOL_CONCURRENCY_LIMT, RECORD_BATCH_PROCESSING_OPTIMIZATION_THRESHOLD } from "src/constants/config-constants";
@@ -220,7 +227,6 @@ import { normalizeEpochRange } from "src/utils/date-utils";
 import { deepClone, guessFontColorCode, prettifyDate } from "src/utils/misc-utils";
 import PromisePool from "src/utils/promise-pool";
 import { Ref, onMounted, ref, watch } from "vue";
-
 const $q = useQuasar();
 
 const recordPaginationStore = useRecordPaginationSizeStore();
@@ -416,9 +422,12 @@ async function deleteClicked(record: InferredRecord) {
 }
 
 async function showQuickBalanceClicked() {
-  $q.dialog({ component: QuickBalanceDialog, componentProps: {} }).onOk((res: RecordFilters) => {
-    "pass";
-  });
+  $q.dialog({ component: QuickBalanceDialog, componentProps: {} });
+}
+
+async function showQuickExpenseSummaryClicked() {
+  if (!cachedInferredRecordList.length) return;
+  $q.dialog({ component: QuickExpenseSummaryDialog, componentProps: { recordList: cachedInferredRecordList } });
 }
 
 async function showQuickSummaryClicked() {
@@ -435,9 +444,7 @@ async function showQuickSummaryClicked() {
   }
 
   const quickSummaryList = await computationService.computeQuickSummary(startEpoch, endEpoch, cachedInferredRecordList);
-  $q.dialog({ component: QuickSummaryDialog, componentProps: { quickSummaryList } }).onOk((res: RecordFilters) => {
-    "pass";
-  });
+  $q.dialog({ component: QuickSummaryDialog, componentProps: { quickSummaryList } });
 }
 
 async function setFiltersClicked() {
