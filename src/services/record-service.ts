@@ -13,6 +13,9 @@ import { normalizeEpochRange } from "src/utils/date-utils";
 import { deepClone } from "src/utils/misc-utils";
 import { entityService } from "./entity-service";
 import { pouchdbService } from "./pouchdb-service";
+import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+import { Budget } from "src/models/budget";
+import { budgetService } from "./budget-service";
 
 class RecordService {
 
@@ -360,6 +363,22 @@ class RecordService {
     }
 
     recordList = recordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
+
+    if (recordFilters.type === "budget" && recordFilters._budgetName === UNBUDGETED_RECORDS_BUDGET_NAME) {
+      recordList = await this.filterUnbudgetedRecords(recordList);
+    }
+
+    return recordList;
+  }
+
+  private async filterUnbudgetedRecords(recordList: Record[]) {
+    const budgetList = (await pouchdbService.listByCollection(Collection.BUDGET)).docs as Budget[];
+
+    for (const budget of budgetList) {
+      const recordFilters = budgetService.createRecordFiltersForBudget(budget);
+      const filteredRecordList = await this.applyRecordFilters(recordList, recordFilters);
+      recordList = recordList.filter((record) => !filteredRecordList.includes(record));
+    }
 
     return recordList;
   }

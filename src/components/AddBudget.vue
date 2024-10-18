@@ -45,6 +45,8 @@ import SelectCurrency from "./SelectCurrency.vue";
 import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import SelectTag from "./SelectTag.vue";
+import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+import { dialogService } from "src/services/dialog-service";
 
 export default {
   props: {
@@ -124,6 +126,11 @@ export default {
 
     async function okClicked() {
       if (!(await budgetForm.value?.validate())) {
+        return;
+      }
+
+      if (budgetName.value === UNBUDGETED_RECORDS_BUDGET_NAME) {
+        dialogService.alert("Error", "Cannot create budget with name " + UNBUDGETED_RECORDS_BUDGET_NAME + ".");
         return;
       }
 

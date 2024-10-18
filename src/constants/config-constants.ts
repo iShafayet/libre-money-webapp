@@ -3,3 +3,4 @@ export const APP_VERSION = "0.2.1";
 export const APP_BUILD_VERSION = "DEV_BUILD";
 export const APP_BUILD_DATE = "NOT_APPLICABLE";
 export const RECORD_BATCH_PROCESSING_OPTIMIZATION_THRESHOLD = 200;
+export const UNBUDGETED_RECORDS_BUDGET_NAME = "Unbudgeted";

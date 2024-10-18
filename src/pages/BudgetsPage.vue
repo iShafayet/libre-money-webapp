@@ -3,6 +3,7 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
+        <q-btn color="secondary" text-color="white" label="View Unbudgeted" @click="viewUnbudgetedRecordsClicked" />
         <q-btn color="primary" text-color="white" label="Add Budget" @click="addBudgetClicked" />
       </div>
 
@@ -74,6 +75,8 @@ import { Ref, defineComponent, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AddBudget from "./../components/AddBudget.vue";
 import { Collection, RecordType, rowsPerPageOptions } from "./../constants/constants";
+import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+import { budgetService } from "src/services/budget-service";
 
 export default defineComponent({
   name: "BudgetsPage",
@@ -246,25 +249,22 @@ export default defineComponent({
     }
 
     function viewRecordsClicked(budget: Budget) {
-      let recordTypeList: string[] = [];
-      if (budget.includeExpenses) {
-        recordTypeList.push(RecordType.EXPENSE);
-      }
-      if (budget.includeAssetPurchases) {
-        recordTypeList.push(RecordType.ASSET_PURCHASE);
-      }
+      recordFiltersStore.setRecordFilters(budgetService.createRecordFiltersForBudget(budget));
+      router.push({ name: "records" });
+    }
 
+    function viewUnbudgetedRecordsClicked() {
       let recordFilter: RecordFilters = {
-        startEpoch: budget.startEpoch,
-        endEpoch: budget.endEpoch,
-        recordTypeList,
-        tagIdWhiteList: budget.tagIdWhiteList,
-        tagIdBlackList: budget.tagIdBlackList,
+        startEpoch: 0,
+        endEpoch: Date.now(),
+        recordTypeList: [RecordType.EXPENSE, RecordType.ASSET_PURCHASE],
+        tagIdWhiteList: [],
+        tagIdBlackList: [],
         searchString: "",
         deepSearchString: "",
         sortBy: "transactionEpochDesc",
         type: "budget",
-        _budgetName: budget.name,
+        _budgetName: UNBUDGETED_RECORDS_BUDGET_NAME,
         _preset: "custom",
       };
       recordFiltersStore.setRecordFilters(recordFilter);
@@ -284,6 +284,7 @@ export default defineComponent({
       dataForTableRequested,
       printUsedPercentage,
       viewRecordsClicked,
+      viewUnbudgetedRecordsClicked,
       duplicateClicked,
     };
   },
