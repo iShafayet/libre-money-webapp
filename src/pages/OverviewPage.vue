@@ -95,11 +95,13 @@ import { Budget } from "src/models/budget";
 import { Overview } from "src/models/inferred/overview";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
+import { dialogService } from "src/services/dialog-service";
 import { errorService } from "src/services/error-service";
 import { lockService } from "src/services/lock-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
+import { CodedError } from "src/utils/error-utils";
 import { prettifyAmount, sleep } from "src/utils/misc-utils";
 import { Ref, onMounted, ref, watch } from "vue";
 
@@ -143,7 +145,14 @@ async function loadData() {
 
     isLoading.value = true;
 
-    await lockService.awaitTillTruthy(400, () => recordCurrencyId.value);
+    try {
+      await lockService.awaitTillTruthy(1000, () => recordCurrencyId.value);
+    } catch (error) {
+      console.error("Error while waiting for record currency id", error);
+      if (error instanceof CodedError && error.code === "TIMED_OUT" && !recordCurrencyId.value) {
+        await dialogService.alert("Error", "Please set a default currency in settings.");
+      }
+    }
 
     loadingIndicator.value?.startPhase({ phase: 1, weight: 40, label: "Loading budgets" });
     await loadBudgets();

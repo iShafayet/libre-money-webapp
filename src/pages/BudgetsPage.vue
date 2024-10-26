@@ -88,6 +88,12 @@ export default defineComponent({
 
     // -----
 
+    function getStatus(budget: Budget) {
+      if (budget.startEpoch > Date.now()) return "Upcoming";
+      if (budget.endEpoch < Date.now()) return "Past";
+      return "Current";
+    }
+
     const searchFilter: Ref<string | null> = ref(null);
 
     const isLoading = ref(false);
@@ -107,9 +113,7 @@ export default defineComponent({
         label: "Status",
         sortable: true,
         field: (budget: Budget) => {
-          if (budget.startEpoch > Date.now()) return "Upcoming";
-          if (budget.endEpoch < Date.now()) return "Past";
-          return "Current";
+          return getStatus(budget);
         },
       },
       {
@@ -169,9 +173,16 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
+
       docList.sort((a, b) => {
-        if (sortBy === "name") {
+        if (sortBy === "name" || !sortBy) {
           return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        } else if (sortBy === "status") {
+          return getStatus(a).localeCompare(getStatus(b)) * (descending ? -1 : 1);
+        } else if (sortBy === "used") {
+          return (a._usedAmount || 0) - (b._usedAmount || 0);
+        } else if (sortBy === "limit") {
+          return (a.overflowLimit || 0) - (b.overflowLimit || 0);
         } else {
           return 0;
         }

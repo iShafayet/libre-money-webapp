@@ -58,6 +58,17 @@
 
         <template v-if="!isLoading">
           <div v-for="(record, index) in rows" class="record-row" v-bind:key="record._id">
+            <template v-if="index === 0 || prettifyDate(rows[index].transactionEpoch) !== prettifyDate(rows[index - 1].transactionEpoch)">
+              <div class="divider-line-different-day">
+                <div class="divider-line-date">
+                  <div class="divider-line-inner">{{ prettifyDate(rows[index].transactionEpoch) }}</div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="divider-line-same-day"></div>
+            </template>
+
             <!-- Unified Single Amount Record - start -->
             <div class="single-amount-row row" v-if="isSingleAmountType(record)" :data-index="index">
               <div class="details-section">
@@ -169,17 +180,6 @@
             <!-- Money Transfer -->
 
             <div class="misc-row" v-else :data-index="index">{{ record }}</div>
-
-            <template v-if="index > 0 && prettifyDate(rows[index - 1].transactionEpoch) !== prettifyDate(record.transactionEpoch)">
-              <div class="divider-line-different-day">
-                <div class="divider-line-date">
-                  <div class="divider-line-inner">{{ prettifyDate(record.transactionEpoch) }}</div>
-                </div>
-              </div>
-            </template>
-            <template v-else>
-              <div class="divider-line-same-day"></div>
-            </template>
           </div>
         </template>
 

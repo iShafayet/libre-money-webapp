@@ -96,6 +96,9 @@ export default {
       }
 
       let newOverview = await computationService.computeOverview(startEpoch.value, endEpoch.value, recordCurrencyId.value!);
+      if (newOverview) {
+        newOverview.wallets.list.sort((a, b) => a.wallet.name.localeCompare(b.wallet.name));
+      }
       overview.value = newOverview;
 
       isLoading.value = false;
