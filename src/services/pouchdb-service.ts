@@ -53,7 +53,7 @@ export const pouchdbService = {
     return pouchdb;
   },
 
-  registerChangeListener(listenerFn: (doc: PouchDB.Core.PostDocument<any> | undefined) => void) {
+  registerChangeListener(listenerFn: (action: "upsert" | "remove" | "sync", doc: PouchDB.Core.PostDocument<any> | undefined) => void) {
     changeListenerList.push(listenerFn);
   },
 

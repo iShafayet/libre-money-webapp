@@ -16,7 +16,7 @@ class FormatService {
     await this.updateCurrencyCache();
   }
 
-  async onUpsert(doc: PouchDB.Core.PostDocument<any> | undefined) {
+  async onUpsert(action: "upsert" | "remove" | "sync", doc: PouchDB.Core.PostDocument<any> | undefined) {
     if (!doc || (doc && doc.type === Collection.CURRENCY)) {
       await this.updateCurrencyCache();
     }

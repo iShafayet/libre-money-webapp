@@ -31,7 +31,7 @@ export type AccAccountingReturnable = {
 
 let accountingReturnCache: AccAccountingReturnable | null = null;
 
-pouchdbService.registerUpsertListener(() => {
+pouchdbService.registerChangeListener(() => {
   accountingReturnCache = null;
 });
 
