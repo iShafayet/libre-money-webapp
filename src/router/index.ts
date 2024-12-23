@@ -4,6 +4,7 @@ import { createMemoryHistory, createRouter, createWebHashHistory, createWebHisto
 import routes from "./routes";
 import { useUserStore } from "src/stores/user";
 import { useSettingsStore } from "src/stores/settings";
+import { dialogService } from "src/services/dialog-service";
 
 /*
  * If not building with SSR mode, you can
@@ -17,7 +18,7 @@ import { useSettingsStore } from "src/stores/settings";
 export default route(function (/* { store, ssrContext } */) {
   const createHistory = process.env.SERVER ? createMemoryHistory : process.env.VUE_ROUTER_MODE === "history" ? createWebHistory : createWebHashHistory;
 
-  const Router = createRouter({
+  const router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
 
@@ -27,12 +28,13 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
 
-  Router.beforeEach((to, from, next) => {
+  router.beforeEach((to, from, next) => {
     console.debug("Navigation", { to, from });
     const settingsStore = useSettingsStore();
 
     if (from.fullPath === "/" && to.fullPath === "/") {
-      if (settingsStore.rememberLastOpenedView) {
+      const noNavAway = to.query?.noNavAway === "true";
+      if (settingsStore.rememberLastOpenedView && !noNavAway) {
         return next({ path: settingsStore.lastOpenedView });
       } else {
         return next({ name: settingsStore.defaultView });
@@ -51,5 +53,14 @@ export default route(function (/* { store, ssrContext } */) {
     }
   });
 
-  return Router;
+  router.onError(async (error, to, from) => {
+    console.error(error);
+    if (to.fullPath === "/") {
+      return;
+    }
+    await dialogService.alert("Unexpected error", "We have encountered an unexpected error. Navigating to the home page.");
+    return router.push({ path: "/", query: { noNavAway: "true" } });
+  });
+
+  return router;
 });

@@ -12,5 +12,9 @@
   "typescript.format.semicolons": "insert",
   "search.exclude": {
     "**/public/": true
+  },
+  "prettier.proseWrap": "preserve",
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   }
 }
