@@ -243,8 +243,6 @@ const recordFiltersStore = useRecordFiltersStore();
 const isLoading = ref(false);
 const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 
-const searchFilter: Ref<string | null> = ref(null);
-
 const rows: Ref<InferredRecord[]> = ref([]);
 
 const recordCountPerPage = recordPaginationStore.recordPaginationSize;
@@ -252,7 +250,6 @@ const paginationCurrentPage: Ref<number> = ref(1);
 const paginationMaxPage: Ref<number> = ref(1);
 
 const recordFilters: Ref<RecordFilters | null> = ref(recordFiltersStore.recordFilters || null);
-recordFiltersStore.setRecordFilters(null);
 
 const filterMonth: Ref<number> = ref(new Date().getMonth());
 const filterYear: Ref<number> = ref(new Date().getFullYear());
@@ -457,6 +454,7 @@ async function showQuickSummaryClicked() {
 async function setFiltersClicked() {
   $q.dialog({ component: FilterRecordsDialog, componentProps: { inputFilters: recordFilters.value } }).onOk((res: RecordFilters) => {
     recordFilters.value = res;
+    recordFiltersStore.setRecordFilters(res);
     loadData();
   });
 }
@@ -533,10 +531,6 @@ function getString(record: InferredRecord, key: string): string | null {
 }
 
 // ----- Watchers
-
-watch(searchFilter, (_, __) => {
-  loadData();
-});
 
 watch(paginationCurrentPage, (currentPage, previousPage) => {
   console.debug("paginationCurrentPage", paginationCurrentPage);
