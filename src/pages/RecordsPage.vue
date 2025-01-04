@@ -461,6 +461,7 @@ async function setFiltersClicked() {
 
 async function clearFiltersClicked() {
   recordFilters.value = null;
+  recordFiltersStore.setRecordFilters(null);
   loadData();
 }
 
