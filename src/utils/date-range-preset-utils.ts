@@ -26,6 +26,10 @@ export const getStartAndEndEpochFromPreset = (newPreset: string) => {
     range.startEpoch = setDateToTheFirstDateOfPreviousMonth(Date.now());
     range.endEpoch = setDateToTheLastDateOfPreviousMonth(Date.now());
     return range;
+  } else if (newPreset === "current-and-previous-month") {
+    range.startEpoch = setDateToTheFirstDateOfPreviousMonth(Date.now());
+    range.endEpoch = (Date.now());
+    return range;
   } else if (newPreset === "all-time") {
     range.startEpoch = 0;
     range.endEpoch = Date.now();

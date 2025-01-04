@@ -82,6 +82,7 @@ export const dateRangePresetList = [
   { value: "previous-year", label: "Previous Year" },
   { value: "current-month", label: "Current Month" },
   { value: "previous-month", label: "Previous Month" },
+  { value: "current-and-previous-month", label: "Current and Previous Month" },
   { value: "all-time", label: "All time" },
   { value: "custom", label: "Custom" },
 ];
