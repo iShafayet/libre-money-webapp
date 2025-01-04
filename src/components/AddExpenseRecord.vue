@@ -105,6 +105,16 @@ export default {
       required: false,
       default: null,
     },
+    suggestedWalletId: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    suggestedCurrencyId: {
+      type: String,
+      required: false,
+      default: null,
+    },
   },
 
   components: {
@@ -204,7 +214,15 @@ export default {
       })();
     } else {
       setTimeout(() => {
-        recordCurrencyId.value = settingsStore.defaultCurrencyId;
+        if (props.suggestedCurrencyId) {
+          recordCurrencyId.value = props.suggestedCurrencyId;
+        } else {
+          recordCurrencyId.value = settingsStore.defaultCurrencyId;
+        }
+
+        if (props.suggestedWalletId) {
+          recordWalletId.value = props.suggestedWalletId;
+        }
       }, 0);
     }
 

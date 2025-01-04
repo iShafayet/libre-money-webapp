@@ -331,7 +331,13 @@ async function monthAndYearSelected() {
 }
 
 async function addExpenseClicked() {
-  $q.dialog({ component: AddExpenseRecord }).onOk(() => {
+  const componentProps = recordFilters.value?.walletId
+    ? {
+        suggestedWalletId: recordFilters.value.walletId,
+        suggestedCurrencyId: ((await pouchdbService.getDocById(recordFilters.value.walletId)) as Wallet)?.currencyId,
+      }
+    : {};
+  $q.dialog({ component: AddExpenseRecord, componentProps }).onOk(() => {
     paginationCurrentPage.value = 1;
     loadData();
   });
