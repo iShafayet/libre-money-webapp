@@ -53,6 +53,13 @@
                   rollingBudget.currencyId
                 )
               }}
+              <br />({{ rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount >= 0 ? "Remaining: " : "Over budget by: "
+              }}{{
+                formatService.getPrintableAmount(
+                  Math.abs(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount),
+                  rollingBudget.currencyId
+                )
+              }})
             </div>
           </div>
         </div>
