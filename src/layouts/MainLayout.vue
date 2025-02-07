@@ -128,6 +128,12 @@ const operationList = [
     icon: "energy_savings_leaf",
     link: "#/budgets",
   },
+  {
+    title: "Rolling Budgets",
+    caption: "Monthly recurring budgets",
+    icon: "calendar_month",
+    link: "#/rolling-budgets",
+  },
 ];
 
 const entityList = [
