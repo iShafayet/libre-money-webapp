@@ -13,6 +13,10 @@ const props = defineProps({
     type: String,
     default: "Date & Time",
   },
+  onlyIcon: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -31,17 +35,30 @@ const value = computed({
 </script>
 
 <template>
-  <q-input filled v-model="value" :label="props.label">
-    <template v-slot:prepend>
-      <q-icon name="event" class="cursor-pointer">
-        <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-          <q-date v-model="value" mask="YYYY MMM DD">
-            <div class="row items-center justify-end">
-              <q-btn v-close-popup label="Close" color="primary" flat />
-            </div>
-          </q-date>
-        </q-popup-proxy>
-      </q-icon>
-    </template>
-  </q-input>
+  <template v-if="!onlyIcon">
+    <q-input filled v-model="value" :label="props.label">
+      <template v-slot:prepend>
+        <q-icon name="event" class="cursor-pointer">
+          <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+            <q-date v-model="value" mask="YYYY MMM DD">
+              <div class="row items-center justify-end">
+                <q-btn v-close-popup label="Close" color="primary" flat />
+              </div>
+            </q-date>
+          </q-popup-proxy>
+        </q-icon>
+      </template>
+    </q-input>
+  </template>
+  <template v-else>
+    <q-icon name="event" class="cursor-pointer">
+      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+        <q-date v-model="value" mask="YYYY MMM DD">
+          <div class="row items-center justify-end">
+            <q-btn v-close-popup label="Close" color="primary" flat />
+          </div>
+        </q-date>
+      </q-popup-proxy>
+    </q-icon>
+  </template>
 </template>

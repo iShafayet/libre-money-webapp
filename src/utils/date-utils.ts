@@ -64,3 +64,11 @@ export function normalizeEpochRange(startEpoch: number, endEpoch: number) {
   endEpoch = date2.getTime();
   return [startEpoch, endEpoch];
 }
+export function normalizeEpochAsDate(epoch: number) {
+  const date1 = new Date(epoch);
+  date1.setHours(0);
+  date1.setMinutes(0);
+  date1.setSeconds(0);
+  date1.setMilliseconds(0);
+  return date1.getTime();
+}

@@ -46,6 +46,15 @@ export const defaultViewOptionList = [
   { value: "budgets", label: "Budgets" },
 ];
 
+export const rollOverRuleList = [
+  { value: "always", label: "Always" },
+  { value: "never", label: "Never" },
+  { value: "positive-only", label: "Positive Only" },
+  { value: "negative-only", label: "Negative Only" },
+];
+
+export const defaultRollOverRule = "positive-only";
+
 export const defaultWalletType = "cash";
 
 export const Collection = {

@@ -15,6 +15,7 @@ import { asAmount, isNullOrUndefined } from "src/utils/misc-utils";
 import { pouchdbService } from "./pouchdb-service";
 import { QuickExpenseSummary } from "src/models/inferred/quick-expense-summary";
 import { entityService } from "./entity-service";
+import { RollingBudget } from "src/models/rolling-budget";
 
 class ComputationService {
 
@@ -540,6 +541,61 @@ class ComputationService {
     overview.finalBalance.totalLiability = overview.loanAndDebts.userOwesTotalAmount;
 
     return overview;
+  }
+
+
+
+  async computeUsedAmountForRollingBudgetInPlace(rollingBudget: RollingBudget) {
+    const res = await pouchdbService.listByCollection(Collection.RECORD);
+    const fullRecordList = res.docs as Record[];
+
+    rollingBudget.budgetedPeriodList.sort((a, b) => a.startEpoch - b.startEpoch);
+
+    let toRollOverAmount = 0;
+
+    for (const budgetedPeriod of rollingBudget.budgetedPeriodList) {
+      let narrowedRecordList = fullRecordList.filter((record) => record.transactionEpoch >= budgetedPeriod.startEpoch && record.transactionEpoch <= budgetedPeriod.endEpoch);
+
+      if (rollingBudget.tagIdWhiteList.length > 0) {
+        narrowedRecordList = narrowedRecordList.filter((record) => {
+          return record.tagIdList.some((tagId) => rollingBudget.tagIdWhiteList.includes(tagId));
+        });
+      }
+
+      if (rollingBudget.tagIdBlackList.length > 0) {
+        narrowedRecordList = narrowedRecordList.filter((record) => {
+          return !record.tagIdList.some((tagId) => rollingBudget.tagIdBlackList.includes(tagId));
+        });
+      }
+
+      let usedAmount = 0;
+
+      if (rollingBudget.includeExpenses) {
+        const finerRecordList = narrowedRecordList.filter(
+          (record) => record.type === RecordType.EXPENSE && record.expense && record.expense.currencyId === rollingBudget.currencyId
+        );
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
+      }
+
+
+      if (rollingBudget.includeAssetPurchases) {
+        const finerRecordList = narrowedRecordList.filter(
+          (record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase && record.assetPurchase.currencyId === rollingBudget.currencyId
+        );
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
+      }
+
+      budgetedPeriod.usedAmount = usedAmount;
+      budgetedPeriod.rolledOverAmount = toRollOverAmount;
+      budgetedPeriod.totalAllocatedAmount = asAmount(budgetedPeriod.allocatedAmount) + asAmount(budgetedPeriod.rolledOverAmount);
+      budgetedPeriod.remainingAmount = asAmount(budgetedPeriod.totalAllocatedAmount) - usedAmount;
+
+      if (rollingBudget.rollOverRule === "always"
+        || (rollingBudget.rollOverRule === "positive-only" && budgetedPeriod.remainingAmount > 0)
+        || (rollingBudget.rollOverRule === "negative-only" && budgetedPeriod.remainingAmount < 0)) {
+        toRollOverAmount = budgetedPeriod.remainingAmount;
+      }
+    }
   }
 
   async computeUsedAmountForBudgetListInPlace(budgetList: Budget[]) {

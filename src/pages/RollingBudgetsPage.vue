@@ -3,15 +3,14 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
-        <q-btn color="secondary" text-color="white" label="View Unbudgeted" @click="viewUnbudgetedRecordsClicked" />
-        <q-btn color="primary" text-color="white" label="Add Budget" @click="addBudgetClicked" />
+        <q-btn color="primary" text-color="white" label="Add Rolling Budget" @click="addBudgetClicked" />
       </div>
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
         <q-table
           :loading="isLoading"
-          title="Budgets"
+          title="Rolling Budgets"
           :rows="rows"
           :columns="columns"
           row-key="_id"
@@ -70,7 +69,7 @@ import { dialogService } from "src/services/dialog-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { usePaginationSizeStore } from "src/stores/pagination";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
-import { prettifyAmount } from "src/utils/misc-utils";
+import { prettifyAmount, prettifyDate } from "src/utils/misc-utils";
 import { Ref, defineComponent, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AddRollingBudget from "./../components/AddRollingBudget.vue";
@@ -88,12 +87,6 @@ export default defineComponent({
 
     // -----
 
-    function getStatus(rollingBudget: RollingBudget) {
-      if (rollingBudget.startEpoch > Date.now()) return "Upcoming";
-      if (rollingBudget.endEpoch < Date.now()) return "Past";
-      return "Current";
-    }
-
     const searchFilter: Ref<string | null> = ref(null);
 
     const isLoading = ref(false);
@@ -108,12 +101,16 @@ export default defineComponent({
         sortable: true,
       },
       {
-        name: "status",
+        name: "currentPeriod",
         align: "left",
-        label: "Status",
+        label: "Current Period",
         sortable: true,
         field: (rollingBudget: RollingBudget) => {
-          return getStatus(rollingBudget);
+          const period = rollingBudget.budgetedPeriodList.find((period) => {
+            return period.startEpoch <= Date.now() && period.endEpoch >= Date.now();
+          });
+          if (!period) return "None";
+          return `${prettifyDate(period.startEpoch)} - ${prettifyDate(period.endEpoch)}`;
         },
       },
       {
@@ -122,7 +119,9 @@ export default defineComponent({
         label: "Used",
         sortable: true,
         field: (rollingBudget: RollingBudget) => {
-          return `${rollingBudget._currencySign!} ${prettifyAmount(rollingBudget._usedAmount)} (${printUsedPercentage(rollingBudget)})`;
+          const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
+          if (!period) return "N/A";
+          return `${rollingBudget._currencySign!} ${prettifyAmount(period.usedAmount)}`;
         },
       },
       {
@@ -131,7 +130,9 @@ export default defineComponent({
         label: "Limit",
         sortable: true,
         field: (rollingBudget: RollingBudget) => {
-          return `${rollingBudget._currencySign!} ${prettifyAmount(rollingBudget.overflowLimit)}`;
+          const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
+          if (!period) return "N/A";
+          return `${rollingBudget._currencySign!} ${prettifyAmount(period.totalAllocatedAmount)}`;
         },
       },
       {
@@ -167,7 +168,7 @@ export default defineComponent({
       let res = await pouchdbService.listByCollection(Collection.ROLLING_BUDGET);
       let docList = res.docs as RollingBudget[];
 
-      await computationService.computeUsedAmountForBudgetListInPlace(docList);
+      await Promise.all(docList.map(computationService.computeUsedAmountForRollingBudgetInPlace));
 
       if (searchFilter.value) {
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
@@ -177,12 +178,6 @@ export default defineComponent({
       docList.sort((a, b) => {
         if (sortBy === "name" || !sortBy) {
           return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else if (sortBy === "status") {
-          return getStatus(a).localeCompare(getStatus(b)) * (descending ? -1 : 1);
-        } else if (sortBy === "used") {
-          return (a._usedAmount || 0) - (b._usedAmount || 0);
-        } else if (sortBy === "limit") {
-          return (a.overflowLimit || 0) - (b.overflowLimit || 0);
         } else {
           return 0;
         }
@@ -246,13 +241,6 @@ export default defineComponent({
       loadData();
     });
 
-    function printUsedPercentage(rollingBudget: RollingBudget) {
-      if (rollingBudget.overflowLimit <= 0) {
-        return "-";
-      }
-      return `${Math.round(((rollingBudget._usedAmount || 0) / rollingBudget.overflowLimit) * 10000) / 100}%`;
-    }
-
     function duplicateClicked(rollingBudget: RollingBudget) {
       $q.dialog({ component: AddRollingBudget, componentProps: { prefill: rollingBudget } }).onOk((res) => {
         loadData();
@@ -260,8 +248,7 @@ export default defineComponent({
     }
 
     function viewRecordsClicked(rollingBudget: RollingBudget) {
-      recordFiltersStore.setRecordFilters(budgetService.createRecordFiltersForBudget(rollingBudget));
-      router.push({ name: "records" });
+      dialogService.alert("Not implemented", "This feature is not implemented yet.");
     }
 
     function viewUnbudgetedRecordsClicked() {
@@ -293,7 +280,6 @@ export default defineComponent({
       deleteClicked,
       pagination,
       dataForTableRequested,
-      printUsedPercentage,
       viewRecordsClicked,
       viewUnbudgetedRecordsClicked,
       duplicateClicked,
