@@ -10,16 +10,17 @@
           </div>
           <div>
             <q-linear-progress
-              :value="rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount"
+              :value="(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount + rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount) / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount"
               class="q-mt-sm"
               rounded
               size="10px"
-              :color="rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange! ].usedAmount > rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount ? 'negative' : 'positive'"
+              :color="rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount + rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount > rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount ? 'negative' : 'positive'"
             />
             <div class="text-caption text-right">
               {{
                 formatService.getPrintableAmount(
-                  rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount,
+                  rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount +
+                    rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount,
                   rollingBudget.currencyId
                 )
               }}

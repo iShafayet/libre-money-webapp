@@ -5,6 +5,7 @@ export type BudgetedPeriod = {
   allocatedAmount: number;
   rolledOverAmount: number;
   totalAllocatedAmount: number;
+  heldAmount: number;
   usedAmount: number;
   remainingAmount: number;
   calculatedEpoch: number;

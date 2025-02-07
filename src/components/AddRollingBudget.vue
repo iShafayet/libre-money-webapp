@@ -41,6 +41,9 @@
                 <q-td key="used" :props="props">
                   {{ props.row.usedAmount }}
                 </q-td>
+                <q-td key="held" :props="props">
+                  <q-input type="number" dense v-model="props.row.heldAmount" @update:model-value="heldAmountChanged(props.row)" />
+                </q-td>
                 <q-td key="remaining" :props="props">
                   {{ props.row.remainingAmount }}
                 </q-td>
@@ -126,10 +129,10 @@ export default {
     const budgetTagIdBlackList: Ref<string[]> = ref([]);
     const budgetCurrencyId: Ref<string | null> = ref(null);
     const budgetedPeriodList: Ref<BudgetedPeriod[]> = ref([]);
-    const newPeriodAmount: Ref<number> = ref(0);
     const budgetRollOverRule: Ref<string> = ref(defaultRollOverRule);
     const budgetCurrencySign: Ref<string | null> = ref(null);
     const budgetIsFeatured: Ref<boolean> = ref(false);
+
     const tableColumns = [
       {
         name: "startDate",
@@ -168,6 +171,12 @@ export default {
         align: "right",
       },
       {
+        name: "held",
+        label: "Reserved Amount",
+        field: "heldAmount",
+        align: "right",
+      },
+      {
         name: "remaining",
         label: "Remaining",
         field: "remainingAmount",
@@ -194,11 +203,12 @@ export default {
         startEpoch: budgetStartEpoch.value,
         endEpoch: budgetEndEpoch.value,
         title: "Untitled",
-        allocatedAmount: newPeriodAmount.value,
+        allocatedAmount: 0,
         rolledOverAmount: 0,
-        totalAllocatedAmount: newPeriodAmount.value,
+        totalAllocatedAmount: 0,
         usedAmount: 0,
-        remainingAmount: newPeriodAmount.value,
+        remainingAmount: 0,
+        heldAmount: 0,
         calculatedEpoch: Date.now(),
       });
     }
@@ -217,6 +227,7 @@ export default {
         rolledOverAmount: asAmount(period.rolledOverAmount),
         totalAllocatedAmount: asAmount(period.totalAllocatedAmount),
         usedAmount: asAmount(period.usedAmount),
+        heldAmount: asAmount(period.heldAmount),
         remainingAmount: asAmount(period.remainingAmount),
       }));
 
@@ -308,7 +319,11 @@ export default {
 
     function allocatedAmountChanged(row: BudgetedPeriod) {
       row.totalAllocatedAmount = parseFloat(String(row.allocatedAmount)) + (parseFloat(String(row.rolledOverAmount)) || 0);
-      row.remainingAmount = row.totalAllocatedAmount - (parseFloat(String(row.usedAmount)) || 0);
+      row.remainingAmount = row.totalAllocatedAmount - (parseFloat(String(row.usedAmount)) || 0) - (parseFloat(String(row.heldAmount)) || 0);
+    }
+
+    function heldAmountChanged(row: BudgetedPeriod) {
+      allocatedAmountChanged(row);
     }
 
     watch(budgetCurrencyId, async (newCurrencyId: any) => {
@@ -334,7 +349,6 @@ export default {
       budgetCurrencyId,
       budgetCurrencySign,
       budgetedPeriodList,
-      newPeriodAmount,
       SelectTag,
       optionChanged,
       addPeriod,
@@ -346,6 +360,7 @@ export default {
       rollOverRuleList,
       allocatedAmountChanged,
       budgetIsFeatured,
+      heldAmountChanged,
     };
   },
 };

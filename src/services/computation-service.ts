@@ -588,7 +588,7 @@ class ComputationService {
       budgetedPeriod.usedAmount = usedAmount;
       budgetedPeriod.rolledOverAmount = toRollOverAmount;
       budgetedPeriod.totalAllocatedAmount = asAmount(budgetedPeriod.allocatedAmount) + asAmount(budgetedPeriod.rolledOverAmount);
-      budgetedPeriod.remainingAmount = asAmount(budgetedPeriod.totalAllocatedAmount) - usedAmount;
+      budgetedPeriod.remainingAmount = asAmount(budgetedPeriod.totalAllocatedAmount) - usedAmount - asAmount(budgetedPeriod.heldAmount);
 
       if (rollingBudget.rollOverRule === "always"
         || (rollingBudget.rollOverRule === "positive-only" && budgetedPeriod.remainingAmount > 0)
