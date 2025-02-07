@@ -1,7 +1,7 @@
 <template>
   <q-page class="row items-start justify-evenly">
     <!-- Featured Rolling Budgets -->
-    <q-card class="std-card" style="margin-bottom: 4px" v-if="featuredRollingBudgetList.length > 0">
+    <q-card class="std-card featured-rolling-budgets-card" style="margin-bottom: 4px" v-show="featuredRollingBudgetList.length > 0">
       <div class="featured-rolling-budget-list q-pa-md q-gutter-sm">
         <div class="featured-rolling-budget" v-for="rollingBudget in featuredRollingBudgetList" :key="rollingBudget._id">
           <div class="featured-rolling-budget-name">
