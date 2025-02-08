@@ -6,7 +6,7 @@
         <q-form class="q-gutter-md q-pa-md" ref="budgetForm">
           <q-input filled v-model="budgetName" label="Name of the Rolling Budget" lazy-rules :rules="validators.name" />
           <select-currency v-model="budgetCurrencyId"></select-currency>
-          <q-checkbox v-model="budgetIsFeatured" label="Show in Records Page" @update:model-value="optionChanged('featured')" />
+          <q-checkbox v-model="budgetIsFeatured" label="Highlight in Records Page" @update:model-value="optionChanged('featured')" />
           <q-select
             v-model="budgetRollOverRule"
             :options="rollOverRuleList"

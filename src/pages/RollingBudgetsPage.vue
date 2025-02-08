@@ -179,7 +179,7 @@ export default defineComponent({
         if (sortBy === "name" || !sortBy) {
           return a.name.localeCompare(b.name) * (descending ? -1 : 1);
         } else {
-          return 0;
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
         }
       });
 
