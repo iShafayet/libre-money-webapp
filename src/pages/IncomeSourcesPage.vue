@@ -8,12 +8,21 @@
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Income Sources" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested">
+        <q-table
+          :loading="isLoading"
+          title="Income Sources"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -90,6 +99,14 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: IncomeSource[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
+      }
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -107,13 +124,8 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
-      docList.sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);

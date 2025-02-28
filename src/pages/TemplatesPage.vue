@@ -2,14 +2,23 @@
   <q-page class="row items-center justify-evenly">
     <q-card class="std-card">
       <div class="q-pa-md">
-
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Templates" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing">
+        <q-table
+          :loading="isLoading"
+          title="Templates"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+          class="std-table-non-morphing"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -94,7 +103,7 @@ export default defineComponent({
 
     const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
-      sortBy: "templateName",
+      sortBy: "name",
       descending: false,
       page: 1,
       rowsPerPage: paginationSizeStore.paginationSize,
@@ -102,6 +111,15 @@ export default defineComponent({
     });
 
     // -----
+
+    function applyOrdering(docList: Record[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        return docList.sort((a, b) => (a.templateName || "").localeCompare(b.templateName || "") * (descending ? -1 : 1));
+      } else if (sortBy === "type") {
+        return docList.sort((a, b) => b.type.localeCompare(a.type) * (descending ? -1 : 1));
+      }
+      return docList;
+    }
 
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
@@ -120,15 +138,7 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.templateName || ""));
       }
-      docList.sort((a, b) => {
-        if (sortBy === "templateName") {
-          return (a.templateName || "").localeCompare(b.templateName || "") * (descending ? -1 : 1);
-        } else if (sortBy === "type") {
-          return b.type.localeCompare(a.type) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);
@@ -215,7 +225,7 @@ export default defineComponent({
       pagination,
       dataForTableRequested,
       applyClicked,
-      renameClicked
+      renameClicked,
     };
   },
 });

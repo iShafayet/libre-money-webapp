@@ -138,23 +138,7 @@ export default defineComponent({
 
     // -----
 
-    async function dataForTableRequested(props: any) {
-      let inputPagination = props?.pagination || pagination.value;
-
-      const { page, rowsPerPage, sortBy, descending } = inputPagination;
-      paginationSizeStore.setPaginationSize(rowsPerPage);
-
-      isLoading.value = true;
-
-      const skip = (page - 1) * rowsPerPage;
-      const limit = rowsPerPage;
-
-      let docList = await computationService.prepareLoanAndDebtSummary();
-
-      if (searchFilter.value) {
-        let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
-        docList = docList.filter((doc) => regex.test(doc.partyName));
-      }
+    function applyOrdering(docList: LoanAndDebtSummary[], sortBy: string, descending: boolean) {
       docList.sort((a, b) => {
         if (sortBy === "partyName") {
           return a.partyName.localeCompare(b.partyName) * (descending ? -1 : 1);
@@ -174,6 +158,27 @@ export default defineComponent({
           return 0;
         }
       });
+    }
+
+    async function dataForTableRequested(props: any) {
+      let inputPagination = props?.pagination || pagination.value;
+
+      const { page, rowsPerPage, sortBy, descending } = inputPagination;
+      paginationSizeStore.setPaginationSize(rowsPerPage);
+
+      isLoading.value = true;
+
+      const skip = (page - 1) * rowsPerPage;
+      const limit = rowsPerPage;
+
+      let docList = await computationService.prepareLoanAndDebtSummary();
+
+      if (searchFilter.value) {
+        let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
+        docList = docList.filter((doc) => regex.test(doc.partyName));
+      }
+
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);

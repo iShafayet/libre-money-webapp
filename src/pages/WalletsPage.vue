@@ -120,6 +120,17 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: Wallet[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        return docList.sort((a, b) => a.name.localeCompare(b.name) * (descending ? -1 : 1));
+      } else if (sortBy === "type") {
+        return docList.sort((a, b) => b.type.localeCompare(a.type) * (descending ? -1 : 1));
+      } else if (sortBy === "balance") {
+        return docList.sort((a, b) => (b._balance || 0) - (a._balance || 0));
+      }
+      return docList;
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -140,15 +151,7 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
-      docList.sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else if (sortBy === "type") {
-          return b.type.localeCompare(a.type) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);

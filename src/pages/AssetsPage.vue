@@ -146,6 +146,26 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: Asset[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "type") {
+        docList.sort((a, b) => {
+          return a.type.localeCompare(b.type) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "liquidity") {
+        docList.sort((a, b) => {
+          return a.liquidity.localeCompare(b.liquidity) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "balance") {
+        docList.sort((a, b) => {
+          return (b._balance! - a._balance!) * (descending ? -1 : 1);
+        });
+      }
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -163,15 +183,8 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
-      docList.sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else if (sortBy === "type") {
-          return b.type.localeCompare(a.type) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+
+      applyOrdering(docList, sortBy, descending);
 
       await computationService.computeBalancesForAssets(docList);
 

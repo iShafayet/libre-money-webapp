@@ -153,6 +153,26 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: Budget[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "status") {
+        docList.sort((a, b) => {
+          return getStatus(a).localeCompare(getStatus(b)) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "used") {
+        docList.sort((a, b) => {
+          return (a._usedAmount || 0) - (b._usedAmount || 0);
+        });
+      } else if (sortBy === "limit") {
+        docList.sort((a, b) => {
+          return (a.overflowLimit || 0) - (b.overflowLimit || 0);
+        });
+      }
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -174,19 +194,7 @@ export default defineComponent({
         docList = docList.filter((doc) => regex.test(doc.name));
       }
 
-      docList.sort((a, b) => {
-        if (sortBy === "name" || !sortBy) {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else if (sortBy === "status") {
-          return getStatus(a).localeCompare(getStatus(b)) * (descending ? -1 : 1);
-        } else if (sortBy === "used") {
-          return (a._usedAmount || 0) - (b._usedAmount || 0);
-        } else if (sortBy === "limit") {
-          return (a.overflowLimit || 0) - (b.overflowLimit || 0);
-        } else {
-          return 0;
-        }
-      });
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);

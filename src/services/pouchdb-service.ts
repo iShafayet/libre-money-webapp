@@ -71,15 +71,15 @@ export const pouchdbService = {
     doc.modifiedEpoch = Date.now();
     stripKnownTemporaryFields(doc);
     if (doc._id) {
-      await pouchdb.put(doc);
+      const res = await pouchdb.put(doc);
 
       this.notifyChangeListeners("upsert", doc);
-      return;
+      return res;
     } else {
-      await pouchdb.post(doc);
+      const res = await pouchdb.post(doc);
 
       this.notifyChangeListeners("upsert", doc);
-      return;
+      return res;
     }
   },
 

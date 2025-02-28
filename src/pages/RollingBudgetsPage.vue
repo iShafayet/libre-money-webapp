@@ -104,7 +104,7 @@ export default defineComponent({
         name: "currentPeriod",
         align: "left",
         label: "Current Period",
-        sortable: true,
+        sortable: false,
         field: (rollingBudget: RollingBudget) => {
           const period = rollingBudget.budgetedPeriodList.find((period) => {
             return period.startEpoch <= Date.now() && period.endEpoch >= Date.now();
@@ -117,7 +117,7 @@ export default defineComponent({
         name: "used",
         align: "left",
         label: "Used",
-        sortable: true,
+        sortable: false,
         field: (rollingBudget: RollingBudget) => {
           const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
           if (!period) return "N/A";
@@ -128,7 +128,7 @@ export default defineComponent({
         name: "limit",
         align: "left",
         label: "Limit",
-        sortable: true,
+        sortable: false,
         field: (rollingBudget: RollingBudget) => {
           const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
           if (!period) return "N/A";
@@ -154,6 +154,15 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: RollingBudget[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
+      }
+      return docList;
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -175,13 +184,7 @@ export default defineComponent({
         docList = docList.filter((doc) => regex.test(doc.name));
       }
 
-      docList.sort((a, b) => {
-        if (sortBy === "name" || !sortBy) {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        }
-      });
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);
