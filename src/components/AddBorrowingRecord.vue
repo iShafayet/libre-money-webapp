@@ -10,8 +10,7 @@
 
           <select-wallet v-model="recordWalletId"></select-wallet>
 
-          <q-input type="number" filled v-model="recordAmount" label="Borrowed Amount" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Borrowed Amount" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">{{ recordCurrencySign }}</div>
             </template>
@@ -42,7 +41,7 @@ import SelectWallet from "./SelectWallet.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
 import { asAmount } from "src/utils/misc-utils";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 
 export default {
@@ -147,8 +146,8 @@ export default {
     }
 
     watch(recordWalletId, async (newWalletId: any) => {
-      let wallet = await dataInferenceService.getWallet(newWalletId as string);
-      let currency = await dataInferenceService.getCurrency(wallet.currencyId);
+      let wallet = await entityService.getWallet(newWalletId as string);
+      let currency = await entityService.getCurrency(wallet.currencyId);
       recordCurrencyId.value = currency._id!;
       recordCurrencySign.value = currency.sign;
     });

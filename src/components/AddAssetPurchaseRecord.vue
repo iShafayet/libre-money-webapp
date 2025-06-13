@@ -7,8 +7,7 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-asset v-model="recordAssetId"></select-asset>
-          <q-input type="number" filled v-model="recordAmount" label="Price of the Asset" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Price of the Asset" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">
                 {{ recordCurrencySign }}
@@ -22,14 +21,14 @@
             <q-tab name="unpaid" label="Unpaid" />
           </q-tabs>
 
-          <select-wallet v-model="recordWalletId" :limitByCurrencyId="recordCurrencyId"
-            v-if="paymentType == 'full' || paymentType == 'partial'"></select-wallet>
-          <div class="wallet-balance-container"
-            v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet">
-            <div>Balance in wallet: {{ printAmount(selectedWallet._balance!) }} </div>
-            <div style="margin-top: 8px">Balance afterwards will be: {{
-    printAmount(selectedWallet.potentialBalance) }}
-            </div>
+          <select-wallet
+            v-model="recordWalletId"
+            :limitByCurrencyId="recordCurrencyId"
+            v-if="paymentType == 'full' || paymentType == 'partial'"
+          ></select-wallet>
+          <div class="wallet-balance-container" v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet">
+            <div>Balance in wallet: {{ printAmount(selectedWallet._balance!) }}</div>
+            <div style="margin-top: 8px">Balance afterwards will be: {{ printAmount(selectedWallet.potentialBalance) }}</div>
             <div class="wallet-limit" style="margin-top: 8px" v-if="selectedWallet._minimumBalanceState !== 'not-set'">
               <span class="wallet-limit-warning" v-if="selectedWallet._minimumBalanceState === 'warning'">
                 Approaching limit {{ printAmount(selectedWallet.minimumBalance!) }}
@@ -43,13 +42,18 @@
             </div>
           </div>
 
-          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules
-            :rules="validators.balance" v-if="paymentType == 'partial'" />
-          <q-input type="number" readonly outlined v-model="recordAmountUnpaid" label="Amount Due"
-            v-if="paymentType == 'partial'" style="margin-top: 8px; margin-bottom: 24px;" />
+          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules :rules="validators.balance" v-if="paymentType == 'partial'" />
+          <q-input
+            type="number"
+            readonly
+            outlined
+            v-model="recordAmountUnpaid"
+            label="Amount Due"
+            v-if="paymentType == 'partial'"
+            style="margin-top: 8px; margin-bottom: 24px"
+          />
 
-          <select-party v-model="recordPartyId"
-            :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
+          <select-party v-model="recordPartyId" :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
           <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
@@ -59,7 +63,7 @@
       <q-card-actions class="row justify-start std-bottom-action-row">
         <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
         <div class="spacer"></div>
-        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px;">
+        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px">
           <q-list>
             <q-item clickable v-close-popup @click="saveAsTemplateClicked">
               <q-item-section>
@@ -88,7 +92,7 @@ import SelectTag from "./SelectTag.vue";
 import { NotificationType, dialogService } from "src/services/dialog-service";
 import { asAmount, deepClone, isNullOrUndefined, prettifyAmount } from "src/utils/misc-utils";
 import DateTimeInput from "./lib/DateTimeInput.vue";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 import { Wallet, WalletWithPotentialBalance } from "src/models/wallet";
 import { computationService } from "src/services/computation-service";
 
@@ -182,7 +186,7 @@ export default {
       (async function () {
         isLoading.value = true;
         initialDoc = (await pouchdbService.getDocById(props.existingRecordId)) as Record;
-        if (!await prefillRecord(initialDoc)) return;
+        if (!(await prefillRecord(initialDoc))) return;
         transactionEpoch.value = initialDoc.transactionEpoch || Date.now();
         isLoading.value = false;
       })();
@@ -191,7 +195,7 @@ export default {
       (async function () {
         isLoading.value = true;
         let templateDoc = (await pouchdbService.getDocById(props.useTemplateId)) as Record;
-        if (!await prefillRecord(templateDoc)) return;
+        if (!(await prefillRecord(templateDoc))) return;
         transactionEpoch.value = Date.now();
         isLoading.value = false;
       })();
@@ -293,7 +297,7 @@ export default {
 
     watch(recordWalletId, async (newWalletId: any) => {
       if (newWalletId) {
-        let wallet = await dataInferenceService.getWallet(newWalletId) as WalletWithPotentialBalance;
+        let wallet = (await entityService.getWallet(newWalletId)) as WalletWithPotentialBalance;
         await computationService.computeBalancesForWallets([wallet]);
         wallet.potentialBalance = 0;
         selectedWallet.value = wallet;
@@ -303,8 +307,8 @@ export default {
     });
 
     watch(recordAssetId, async (newAssetId: any) => {
-      let asset = await dataInferenceService.getAsset(newAssetId);
-      let currency = await dataInferenceService.getCurrency(asset.currencyId);
+      let asset = await entityService.getAsset(newAssetId);
+      let currency = await entityService.getCurrency(asset.currencyId);
       recordCurrencyId.value = currency._id!;
       recordCurrencySign.value = currency.sign;
     });
@@ -332,7 +336,6 @@ export default {
           selectedWallet.value._minimumBalanceState = "exceeded";
         }
       }
-
     });
 
     return {
@@ -357,7 +360,7 @@ export default {
       recordCurrencySign,
       saveAsTemplateClicked,
       selectedWallet,
-      printAmount
+      printAmount,
     };
   },
 };

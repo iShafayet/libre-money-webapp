@@ -1,28 +1,23 @@
 import { Collection, RecordType, assetLiquidityList } from "src/constants/constants";
-import { ExpenseAvenue } from "src/models/expense-avenue";
-import { InferredRecord } from "src/models/inferred/inferred-record";
-import { Record } from "src/models/record";
-import { asAmount, deepClone, isNullOrUndefined } from "src/utils/misc-utils";
-import { pouchdbService } from "./pouchdb-service";
-import { Party } from "src/models/party";
-import { Tag } from "src/models/tag";
-import { Currency } from "src/models/currency";
-import { Wallet } from "src/models/wallet";
-import { IncomeSource } from "src/models/income-source";
 import { Asset } from "src/models/asset";
+import { Budget } from "src/models/budget";
+import { Currency } from "src/models/currency";
+import { ExpenseAvenue } from "src/models/expense-avenue";
+import { IncomeSource } from "src/models/income-source";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
 import { Overview } from "src/models/inferred/overview";
-import { dataInferenceService } from "./data-inference-service";
-import { normalizeEpochRange } from "src/utils/date-utils";
-import { Budget } from "src/models/budget";
 import { QuickSummary } from "src/models/inferred/quick-summary";
-
-let currencyCacheList: Currency[] = [];
+import { Party } from "src/models/party";
+import { Record } from "src/models/record";
+import { Wallet } from "src/models/wallet";
+import { normalizeEpochRange } from "src/utils/date-utils";
+import { asAmount, isNullOrUndefined } from "src/utils/misc-utils";
+import { pouchdbService } from "./pouchdb-service";
+import { QuickExpenseSummary } from "src/models/inferred/quick-expense-summary";
+import { entityService } from "./entity-service";
+import { RollingBudget } from "src/models/rolling-budget";
 
 class ComputationService {
-  async updateCurrencyCache() {
-    currencyCacheList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
-  }
 
   async computeBalancesForAssets(assetList: Asset[]): Promise<void> {
     const res2 = await pouchdbService.listByCollection(Collection.RECORD);
@@ -198,8 +193,6 @@ class ComputationService {
   }
 
   async computeOverview(startEpoch: number, endEpoch: number, currencyId: string): Promise<Overview | null> {
-    await dataInferenceService.updateCurrencyCache();
-
     [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
 
     // ============== Preparation
@@ -550,6 +543,61 @@ class ComputationService {
     return overview;
   }
 
+
+
+  async computeUsedAmountForRollingBudgetInPlace(rollingBudget: RollingBudget) {
+    const res = await pouchdbService.listByCollection(Collection.RECORD);
+    const fullRecordList = res.docs as Record[];
+
+    rollingBudget.budgetedPeriodList.sort((a, b) => a.startEpoch - b.startEpoch);
+
+    let toRollOverAmount = 0;
+
+    for (const budgetedPeriod of rollingBudget.budgetedPeriodList) {
+      let narrowedRecordList = fullRecordList.filter((record) => record.transactionEpoch >= budgetedPeriod.startEpoch && record.transactionEpoch <= budgetedPeriod.endEpoch);
+
+      if (rollingBudget.tagIdWhiteList.length > 0) {
+        narrowedRecordList = narrowedRecordList.filter((record) => {
+          return record.tagIdList.some((tagId) => rollingBudget.tagIdWhiteList.includes(tagId));
+        });
+      }
+
+      if (rollingBudget.tagIdBlackList.length > 0) {
+        narrowedRecordList = narrowedRecordList.filter((record) => {
+          return !record.tagIdList.some((tagId) => rollingBudget.tagIdBlackList.includes(tagId));
+        });
+      }
+
+      let usedAmount = 0;
+
+      if (rollingBudget.includeExpenses) {
+        const finerRecordList = narrowedRecordList.filter(
+          (record) => record.type === RecordType.EXPENSE && record.expense && record.expense.currencyId === rollingBudget.currencyId
+        );
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
+      }
+
+
+      if (rollingBudget.includeAssetPurchases) {
+        const finerRecordList = narrowedRecordList.filter(
+          (record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase && record.assetPurchase.currencyId === rollingBudget.currencyId
+        );
+        usedAmount += finerRecordList.reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
+      }
+
+      budgetedPeriod.usedAmount = usedAmount;
+      budgetedPeriod.rolledOverAmount = toRollOverAmount;
+      budgetedPeriod.totalAllocatedAmount = asAmount(budgetedPeriod.allocatedAmount) + asAmount(budgetedPeriod.rolledOverAmount);
+      budgetedPeriod.remainingAmount = asAmount(budgetedPeriod.totalAllocatedAmount) - usedAmount - asAmount(budgetedPeriod.heldAmount);
+
+      if (rollingBudget.rollOverRule === "always"
+        || (rollingBudget.rollOverRule === "positive-only" && budgetedPeriod.remainingAmount > 0)
+        || (rollingBudget.rollOverRule === "negative-only" && budgetedPeriod.remainingAmount < 0)) {
+        toRollOverAmount = budgetedPeriod.remainingAmount;
+      }
+    }
+  }
+
   async computeUsedAmountForBudgetListInPlace(budgetList: Budget[]) {
     const res = await pouchdbService.listByCollection(Collection.RECORD);
     const fullRecordList = res.docs as Record[];
@@ -696,6 +744,83 @@ class ComputationService {
         return computationService.computeQuickSummaryForCurrency(startEpoch, endEpoch, currency, recordList);
       })
     );
+  }
+
+  async computeQuickExpenseSummary(recordList: Record[]): Promise<{ currency: Currency, sum: number, summary: QuickExpenseSummary[]; }[]> {
+    const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+
+    const result: { currency: Currency, sum: number, summary: QuickExpenseSummary[]; }[] = [];
+
+    for (const currency of currencyList) {
+      const summary: QuickExpenseSummary[] = [];
+
+      // sum expenses by expense avenue
+      const expenseRecordList = recordList.filter((record) => record.expense && record.expense.currencyId === currency._id);
+      const expenseMap: globalThis.Record<string, number> = {};
+      for (const record of expenseRecordList) {
+        const expense = record.expense!;
+        const amount = asAmount(expense.amountPaid);
+        const expenseAvenueId = expense.expenseAvenueId;
+        if (!expenseMap[expenseAvenueId]) {
+          expenseMap[expenseAvenueId] = 0;
+        }
+        expenseMap[expenseAvenueId] += amount;
+      }
+
+      // sum asset purchases by asset
+      const assetPurchaseRecordList = recordList.filter((record) => record.assetPurchase && record.assetPurchase.currencyId === currency._id);
+      const assetPurchaseMap: globalThis.Record<string, number> = {};
+      for (const record of assetPurchaseRecordList) {
+        const assetPurchase = record.assetPurchase!;
+        const amount = asAmount(assetPurchase.amountPaid);
+        const assetId = assetPurchase.assetId;
+        if (!assetPurchaseMap[assetId]) {
+          assetPurchaseMap[assetId] = 0;
+        }
+        assetPurchaseMap[assetId] += amount;
+      }
+
+      // create summary for expenses
+      for (const expenseAvenueId in expenseMap) {
+        const amount = expenseMap[expenseAvenueId];
+        const expenseAvenue = await entityService.getExpenseAvenue(expenseAvenueId);
+        summary.push({
+          currency,
+          type: "Expense",
+          description: expenseAvenue.name,
+          amount,
+          count: 1,
+        });
+      }
+
+      // create summary for asset purchases
+      for (const assetId in assetPurchaseMap) {
+        const amount = assetPurchaseMap[assetId];
+        const asset = await entityService.getAsset(assetId);
+        summary.push({
+          currency,
+          type: "Purchase",
+          description: asset.name,
+          amount,
+          count: 1,
+        });
+      }
+
+      summary.sort((a, b) => b.amount - a.amount);
+      const sum = summary.reduce((sum, item) => sum + item.amount, 0);
+
+      if (sum === 0) {
+        continue;
+      }
+
+      result.push({
+        currency,
+        summary,
+        sum,
+      });
+    }
+
+    return result;
   }
 }
 

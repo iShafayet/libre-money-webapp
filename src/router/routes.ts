@@ -59,6 +59,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/BudgetsPage.vue"),
         meta: { requiresAuthentication: true, title: "Budgets", rememberable: true },
       },
+      {
+        path: "rolling-budgets",
+        name: "rolling-budgets",
+        component: () => import("pages/RollingBudgetsPage.vue"),
+        meta: { requiresAuthentication: true, title: "Rolling Budgets", rememberable: true },
+      },
       // --- Entities:
       {
         path: "parties",

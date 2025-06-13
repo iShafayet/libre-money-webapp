@@ -9,12 +9,22 @@
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Loans & Debts" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing">
+        <q-table
+          :loading="isLoading"
+          title="Loans & Debts"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+          class="std-table-non-morphing"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -23,8 +33,7 @@
 
           <template v-slot:body-cell-actions="rowWrapper">
             <q-td :props="rowWrapper">
-              <q-btn-dropdown size="sm" color="primary" label="View Details" split
-                @click="viewDetailsClicked(rowWrapper.row)">
+              <q-btn-dropdown size="sm" color="primary" label="View Details" split @click="viewDetailsClicked(rowWrapper.row)">
                 <q-list>
                   <q-item clickable v-close-popup @click="viewRecordsClicked(rowWrapper.row)">
                     <q-item-section>
@@ -129,23 +138,7 @@ export default defineComponent({
 
     // -----
 
-    async function dataForTableRequested(props: any) {
-      let inputPagination = props?.pagination || pagination.value;
-
-      const { page, rowsPerPage, sortBy, descending } = inputPagination;
-      paginationSizeStore.setPaginationSize(rowsPerPage);
-
-      isLoading.value = true;
-
-      const skip = (page - 1) * rowsPerPage;
-      const limit = rowsPerPage;
-
-      let docList = await computationService.prepareLoanAndDebtSummary();
-
-      if (searchFilter.value) {
-        let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
-        docList = docList.filter((doc) => regex.test(doc.partyName));
-      }
+    function applyOrdering(docList: LoanAndDebtSummary[], sortBy: string, descending: boolean) {
       docList.sort((a, b) => {
         if (sortBy === "partyName") {
           return a.partyName.localeCompare(b.partyName) * (descending ? -1 : 1);
@@ -165,6 +158,27 @@ export default defineComponent({
           return 0;
         }
       });
+    }
+
+    async function dataForTableRequested(props: any) {
+      let inputPagination = props?.pagination || pagination.value;
+
+      const { page, rowsPerPage, sortBy, descending } = inputPagination;
+      paginationSizeStore.setPaginationSize(rowsPerPage);
+
+      isLoading.value = true;
+
+      const skip = (page - 1) * rowsPerPage;
+      const limit = rowsPerPage;
+
+      let docList = await computationService.prepareLoanAndDebtSummary();
+
+      if (searchFilter.value) {
+        let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
+        docList = docList.filter((doc) => regex.test(doc.partyName));
+      }
+
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);
@@ -214,7 +228,10 @@ export default defineComponent({
         tagIdBlackList: [],
         searchString: "",
         deepSearchString: "",
-        sortBy: "transactionEpochDesc"
+        sortBy: "transactionEpochDesc",
+        type: "loansAndDebts",
+        _partyName: summary.partyName,
+        _preset: "custom",
       };
       recordFiltersStore.setRecordFilters(recordFilter);
       router.push({ name: "records" });

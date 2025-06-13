@@ -46,6 +46,15 @@ export const defaultViewOptionList = [
   { value: "budgets", label: "Budgets" },
 ];
 
+export const rollOverRuleList = [
+  { value: "always", label: "Always" },
+  { value: "never", label: "Never" },
+  { value: "positive-only", label: "Positive Only" },
+  { value: "negative-only", label: "Negative Only" },
+];
+
+export const defaultRollOverRule = "positive-only";
+
 export const defaultWalletType = "cash";
 
 export const Collection = {
@@ -59,6 +68,7 @@ export const Collection = {
   RECORD: "record",
   RECORD_TEMPLATE: "record-template",
   BUDGET: "budget",
+  ROLLING_BUDGET: "rolling-budget",
   MEMO: "memo",
 };
 
@@ -82,6 +92,7 @@ export const dateRangePresetList = [
   { value: "previous-year", label: "Previous Year" },
   { value: "current-month", label: "Current Month" },
   { value: "previous-month", label: "Previous Month" },
+  { value: "current-and-previous-month", label: "Current and Previous Month" },
   { value: "all-time", label: "All time" },
   { value: "custom", label: "Custom" },
 ];

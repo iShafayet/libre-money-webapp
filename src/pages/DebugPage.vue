@@ -8,13 +8,23 @@
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Documents" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing"
-          style="font-family: 'Courier New', Courier, monospace">
+        <q-table
+          :loading="isLoading"
+          title="Documents"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+          class="std-table-non-morphing"
+          style="font-family: 'Courier New', Courier, monospace"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by content"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by content" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -82,7 +92,7 @@ export default defineComponent({
         label: "ID",
         align: "left",
         field: "_id",
-        sortable: true,
+        sortable: false,
       },
       {
         name: "collection",
@@ -120,6 +130,18 @@ export default defineComponent({
 
     // -----
 
+    function applyOrdering(docList: EditableDocument[], sortBy: string, descending: boolean) {
+      if (sortBy === "collection") {
+        docList.sort((a, b) => {
+          return a.collection.localeCompare(b.collection) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "modified") {
+        docList.sort((a, b) => {
+          return (a.modifiedEpoch! - b.modifiedEpoch!) * (descending ? -1 : 1);
+        });
+      }
+    }
+
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
 
@@ -137,7 +159,7 @@ export default defineComponent({
         let collection = "ERROR";
         try {
           collection = (row.doc as any).$collection || "NOT_FOUND";
-        } catch (ex) { }
+        } catch (ex) {}
         return {
           _id: row.id,
           collection,
@@ -150,17 +172,8 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.content));
       }
-      docList.sort((a, b) => {
-        if (a.modifiedEpoch !== b.modifiedEpoch) {
-          return (b.modifiedEpoch - a.modifiedEpoch) * (descending ? -1 : 1);
-        }
 
-        if (sortBy === "id") {
-          return a._id.localeCompare(b._id) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);

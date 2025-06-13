@@ -3,14 +3,14 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
-        <q-btn color="primary" text-color="white" label="Add Wallet" @click="addWalletClicked" />
+        <q-btn color="primary" text-color="white" label="Add Rolling Budget" @click="addBudgetClicked" />
       </div>
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
         <q-table
           :loading="isLoading"
-          title="Wallets"
+          title="Rolling Budgets"
           :rows="rows"
           :columns="columns"
           row-key="_id"
@@ -32,8 +32,18 @@
 
           <template v-slot:body-cell-actions="rowWrapper">
             <q-td :props="rowWrapper">
-              <q-btn-dropdown size="sm" color="primary" label="Edit" split @click="editClicked(rowWrapper.row)">
+              <q-btn-dropdown size="sm" color="primary" label="Records" split @click="viewRecordsClicked(rowWrapper.row)">
                 <q-list>
+                  <q-item clickable v-close-popup @click="editClicked(rowWrapper.row)">
+                    <q-item-section>
+                      <q-item-label>Edit</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item clickable v-close-popup @click="duplicateClicked(rowWrapper.row)">
+                    <q-item-section>
+                      <q-item-label>Duplicate</q-item-label>
+                    </q-item-section>
+                  </q-item>
                   <q-item clickable v-close-popup @click="deleteClicked(rowWrapper.row)">
                     <q-item-section>
                       <q-item-label>Delete</q-item-label>
@@ -50,23 +60,30 @@
 </template>
 
 <script lang="ts">
-import { Ref, defineComponent, ref, watch } from "vue";
-import { Collection, walletTypeList, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddWallet from "./../components/AddWallet.vue";
-import { pouchdbService } from "src/services/pouchdb-service";
-import { Wallet } from "src/models/wallet";
-import { dialogService } from "src/services/dialog-service";
-import { asAmount, prettifyAmount, sleep } from "src/utils/misc-utils";
+import { RollingBudget } from "src/models/rolling-budget";
 import { Currency } from "src/models/currency";
+import { RecordFilters } from "src/models/inferred/record-filters";
 import { computationService } from "src/services/computation-service";
+import { dialogService } from "src/services/dialog-service";
+import { pouchdbService } from "src/services/pouchdb-service";
 import { usePaginationSizeStore } from "src/stores/pagination";
+import { useRecordFiltersStore } from "src/stores/record-filters-store";
+import { prettifyAmount, prettifyDate } from "src/utils/misc-utils";
+import { Ref, defineComponent, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import AddRollingBudget from "./../components/AddRollingBudget.vue";
+import { Collection, RecordType, rowsPerPageOptions } from "./../constants/constants";
+import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+import { budgetService } from "src/services/budget-service";
 
 export default defineComponent({
-  name: "WalletsPage",
+  name: "RollingBudgetsPage",
   components: {},
   setup() {
     const $q = useQuasar();
+    const recordFiltersStore = useRecordFiltersStore();
+    const router = useRouter();
 
     // -----
 
@@ -84,21 +101,38 @@ export default defineComponent({
         sortable: true,
       },
       {
-        name: "type",
+        name: "currentPeriod",
         align: "left",
-        label: "Type",
-        sortable: true,
-        field: (wallet: Wallet) => {
-          return walletTypeList.find((walletType) => walletType.value === wallet.type)?.label;
+        label: "Current Period",
+        sortable: false,
+        field: (rollingBudget: RollingBudget) => {
+          const period = rollingBudget.budgetedPeriodList.find((period) => {
+            return period.startEpoch <= Date.now() && period.endEpoch >= Date.now();
+          });
+          if (!period) return "None";
+          return `${prettifyDate(period.startEpoch)} - ${prettifyDate(period.endEpoch)}`;
         },
       },
       {
-        name: "balance",
+        name: "used",
         align: "left",
-        label: "Balance",
-        sortable: true,
-        field: (wallet: Wallet) => {
-          return `${wallet._currencySign!} ${prettifyAmount(wallet._balance)}`;
+        label: "Used",
+        sortable: false,
+        field: (rollingBudget: RollingBudget) => {
+          const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
+          if (!period) return "N/A";
+          return `${rollingBudget._currencySign!} ${prettifyAmount(period.usedAmount)}`;
+        },
+      },
+      {
+        name: "limit",
+        align: "left",
+        label: "Limit",
+        sortable: false,
+        field: (rollingBudget: RollingBudget) => {
+          const period = rollingBudget.budgetedPeriodList.find((period) => period.startEpoch <= Date.now() && period.endEpoch >= Date.now());
+          if (!period) return "N/A";
+          return `${rollingBudget._currencySign!} ${prettifyAmount(period.totalAllocatedAmount)}`;
         },
       },
       {
@@ -111,7 +145,7 @@ export default defineComponent({
 
     const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
-      sortBy: "name",
+      sortBy: "status",
       descending: false,
       page: 1,
       rowsPerPage: paginationSizeStore.paginationSize,
@@ -120,13 +154,11 @@ export default defineComponent({
 
     // -----
 
-    function applyOrdering(docList: Wallet[], sortBy: string, descending: boolean) {
+    function applyOrdering(docList: RollingBudget[], sortBy: string, descending: boolean) {
       if (sortBy === "name") {
-        return docList.sort((a, b) => a.name.localeCompare(b.name) * (descending ? -1 : 1));
-      } else if (sortBy === "type") {
-        return docList.sort((a, b) => b.type.localeCompare(a.type) * (descending ? -1 : 1));
-      } else if (sortBy === "balance") {
-        return docList.sort((a, b) => (b._balance || 0) - (a._balance || 0));
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
       }
       return docList;
     }
@@ -142,15 +174,16 @@ export default defineComponent({
       const skip = (page - 1) * rowsPerPage;
       const limit = rowsPerPage;
 
-      let res = await pouchdbService.listByCollection(Collection.WALLET);
-      let docList = res.docs as Wallet[];
+      let res = await pouchdbService.listByCollection(Collection.ROLLING_BUDGET);
+      let docList = res.docs as RollingBudget[];
 
-      computationService.computeBalancesForWallets(docList);
+      await Promise.all(docList.map(computationService.computeUsedAmountForRollingBudgetInPlace));
 
       if (searchFilter.value) {
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
+
       applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
@@ -173,8 +206,8 @@ export default defineComponent({
       isLoading.value = false;
     }
 
-    async function addWalletClicked() {
-      $q.dialog({ component: AddWallet }).onOk((res) => {
+    async function addBudgetClicked() {
+      $q.dialog({ component: AddRollingBudget }).onOk((res) => {
         loadData();
       });
     }
@@ -183,19 +216,19 @@ export default defineComponent({
       dataForTableRequested(null);
     }
 
-    async function editClicked(wallet: Wallet) {
-      $q.dialog({ component: AddWallet, componentProps: { existingWalletId: wallet._id } }).onOk((res) => {
+    async function editClicked(rollingBudget: RollingBudget) {
+      $q.dialog({ component: AddRollingBudget, componentProps: { existingBudgetId: rollingBudget._id } }).onOk((res) => {
         loadData();
       });
     }
 
-    async function deleteClicked(wallet: Wallet) {
-      let answer = await dialogService.confirm("Remove wallet", `Are you sure you want to remove the wallet "${wallet.name}"?`);
+    async function deleteClicked(rollingBudget: RollingBudget) {
+      let answer = await dialogService.confirm("Remove budget", `Are you sure you want to remove the budget "${rollingBudget.name}"?`);
       if (!answer) return;
 
-      let res = await pouchdbService.removeDoc(wallet);
+      let res = await pouchdbService.removeDoc(rollingBudget);
       if (!res.ok) {
-        await dialogService.alert("Error", "There was an error trying to remove the wallet.");
+        await dialogService.alert("Error", "There was an error trying to remove the budget.");
       }
 
       loadData();
@@ -211,8 +244,18 @@ export default defineComponent({
       loadData();
     });
 
+    function duplicateClicked(rollingBudget: RollingBudget) {
+      $q.dialog({ component: AddRollingBudget, componentProps: { prefill: rollingBudget } }).onOk((res) => {
+        loadData();
+      });
+    }
+
+    function viewRecordsClicked(rollingBudget: RollingBudget) {
+      dialogService.alert("Not implemented", "This feature is not implemented yet.");
+    }
+
     return {
-      addWalletClicked,
+      addBudgetClicked,
       searchFilter,
       rowsPerPageOptions,
       columns,
@@ -222,6 +265,8 @@ export default defineComponent({
       deleteClicked,
       pagination,
       dataForTableRequested,
+      viewRecordsClicked,
+      duplicateClicked,
     };
   },
 });

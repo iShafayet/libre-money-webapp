@@ -3,17 +3,28 @@
     <q-card class="std-card">
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title"></div>
+        <q-btn color="secondary" text-color="white" label="View Unbudgeted" @click="viewUnbudgetedRecordsClicked" />
         <q-btn color="primary" text-color="white" label="Add Budget" @click="addBudgetClicked" />
       </div>
 
       <div class="q-pa-md">
         <!-- @vue-expect-error -->
-        <q-table :loading="isLoading" title="Budgets" :rows="rows" :columns="columns" row-key="_id" flat bordered
-          :rows-per-page-options="rowsPerPageOptions" binary-state-sort v-model:pagination="pagination"
-          @request="dataForTableRequested" class="std-table-non-morphing">
+        <q-table
+          :loading="isLoading"
+          title="Budgets"
+          :rows="rows"
+          :columns="columns"
+          row-key="_id"
+          flat
+          bordered
+          :rows-per-page-options="rowsPerPageOptions"
+          binary-state-sort
+          v-model:pagination="pagination"
+          @request="dataForTableRequested"
+          class="std-table-non-morphing"
+        >
           <template v-slot:top-right>
-            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name"
-              placeholder="Search" class="search-field">
+            <q-input outlined rounded dense clearable debounce="1" v-model="searchFilter" label="Search by name" placeholder="Search" class="search-field">
               <template v-slot:prepend>
                 <q-btn icon="search" flat round @click="dataForTableRequested" />
               </template>
@@ -22,8 +33,7 @@
 
           <template v-slot:body-cell-actions="rowWrapper">
             <q-td :props="rowWrapper">
-              <q-btn-dropdown size="sm" color="primary" label="Records" split
-                @click="viewRecordsClicked(rowWrapper.row)">
+              <q-btn-dropdown size="sm" color="primary" label="Records" split @click="viewRecordsClicked(rowWrapper.row)">
                 <q-list>
                   <q-item clickable v-close-popup @click="editClicked(rowWrapper.row)">
                     <q-item-section>
@@ -65,6 +75,8 @@ import { Ref, defineComponent, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import AddBudget from "./../components/AddBudget.vue";
 import { Collection, RecordType, rowsPerPageOptions } from "./../constants/constants";
+import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+import { budgetService } from "src/services/budget-service";
 
 export default defineComponent({
   name: "BudgetsPage",
@@ -75,6 +87,12 @@ export default defineComponent({
     const router = useRouter();
 
     // -----
+
+    function getStatus(budget: Budget) {
+      if (budget.startEpoch > Date.now()) return "Upcoming";
+      if (budget.endEpoch < Date.now()) return "Past";
+      return "Current";
+    }
 
     const searchFilter: Ref<string | null> = ref(null);
 
@@ -95,9 +113,7 @@ export default defineComponent({
         label: "Status",
         sortable: true,
         field: (budget: Budget) => {
-          if (budget.startEpoch > Date.now()) return "Upcoming";
-          if (budget.endEpoch < Date.now()) return "Past";
-          return "Current";
+          return getStatus(budget);
         },
       },
       {
@@ -128,7 +144,7 @@ export default defineComponent({
 
     const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
-      sortBy: "name",
+      sortBy: "status",
       descending: false,
       page: 1,
       rowsPerPage: paginationSizeStore.paginationSize,
@@ -136,6 +152,26 @@ export default defineComponent({
     });
 
     // -----
+
+    function applyOrdering(docList: Budget[], sortBy: string, descending: boolean) {
+      if (sortBy === "name") {
+        docList.sort((a, b) => {
+          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "status") {
+        docList.sort((a, b) => {
+          return getStatus(a).localeCompare(getStatus(b)) * (descending ? -1 : 1);
+        });
+      } else if (sortBy === "used") {
+        docList.sort((a, b) => {
+          return (a._usedAmount || 0) - (b._usedAmount || 0);
+        });
+      } else if (sortBy === "limit") {
+        docList.sort((a, b) => {
+          return (a.overflowLimit || 0) - (b.overflowLimit || 0);
+        });
+      }
+    }
 
     async function dataForTableRequested(props: any) {
       let inputPagination = props?.pagination || pagination.value;
@@ -157,13 +193,8 @@ export default defineComponent({
         let regex = new RegExp(`.*${searchFilter.value}.*`, "i");
         docList = docList.filter((doc) => regex.test(doc.name));
       }
-      docList.sort((a, b) => {
-        if (sortBy === "name") {
-          return a.name.localeCompare(b.name) * (descending ? -1 : 1);
-        } else {
-          return 0;
-        }
-      });
+
+      applyOrdering(docList, sortBy, descending);
 
       let totalRowCount = docList.length;
       let currentRows = docList.slice(skip, skip + limit);
@@ -237,23 +268,23 @@ export default defineComponent({
     }
 
     function viewRecordsClicked(budget: Budget) {
-      let recordTypeList: string[] = [];
-      if (budget.includeExpenses) {
-        recordTypeList.push(RecordType.EXPENSE);
-      }
-      if (budget.includeAssetPurchases) {
-        recordTypeList.push(RecordType.ASSET_PURCHASE);
-      }
+      recordFiltersStore.setRecordFilters(budgetService.createRecordFiltersForBudget(budget));
+      router.push({ name: "records" });
+    }
 
+    function viewUnbudgetedRecordsClicked() {
       let recordFilter: RecordFilters = {
-        startEpoch: budget.startEpoch,
-        endEpoch: budget.endEpoch,
-        recordTypeList,
-        tagIdWhiteList: budget.tagIdWhiteList,
-        tagIdBlackList: budget.tagIdBlackList,
+        startEpoch: 0,
+        endEpoch: Date.now(),
+        recordTypeList: [RecordType.EXPENSE, RecordType.ASSET_PURCHASE],
+        tagIdWhiteList: [],
+        tagIdBlackList: [],
         searchString: "",
         deepSearchString: "",
-        sortBy: "transactionEpochDesc"
+        sortBy: "transactionEpochDesc",
+        type: "budget",
+        _budgetName: UNBUDGETED_RECORDS_BUDGET_NAME,
+        _preset: "custom",
       };
       recordFiltersStore.setRecordFilters(recordFilter);
       router.push({ name: "records" });
@@ -272,7 +303,8 @@ export default defineComponent({
       dataForTableRequested,
       printUsedPercentage,
       viewRecordsClicked,
-      duplicateClicked
+      viewUnbudgetedRecordsClicked,
+      duplicateClicked,
     };
   },
 });

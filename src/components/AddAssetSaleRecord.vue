@@ -7,8 +7,7 @@
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-asset v-model="recordAssetId"></select-asset>
-          <q-input type="number" filled v-model="recordAmount" label="Price of the Asset" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" label="Price of the Asset" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">
                 {{ recordCurrencySign }}
@@ -22,14 +21,15 @@
             <q-tab name="unpaid" label="Unpaid" />
           </q-tabs>
 
-          <select-wallet v-model="recordWalletId" :limitByCurrencyId="recordCurrencyId"
-            v-if="paymentType == 'full' || paymentType == 'partial'"></select-wallet>
-          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules
-            :rules="validators.balance" v-if="paymentType == 'partial'" />
+          <select-wallet
+            v-model="recordWalletId"
+            :limitByCurrencyId="recordCurrencyId"
+            v-if="paymentType == 'full' || paymentType == 'partial'"
+          ></select-wallet>
+          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules :rules="validators.balance" v-if="paymentType == 'partial'" />
           <div v-if="paymentType == 'partial'">Amount remaining: {{ recordAmountUnpaid }}</div>
 
-          <select-party v-model="recordPartyId"
-            :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
+          <select-party v-model="recordPartyId" :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
           <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
@@ -59,7 +59,7 @@ import SelectTag from "./SelectTag.vue";
 import { dialogService } from "src/services/dialog-service";
 import { asAmount } from "src/utils/misc-utils";
 import DateTimeInput from "./lib/DateTimeInput.vue";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 
 export default {
   props: {
@@ -220,8 +220,8 @@ export default {
     }
 
     watch(recordAssetId, async (newAssetId: any) => {
-      let asset = await dataInferenceService.getAsset(newAssetId);
-      let currency = await dataInferenceService.getCurrency(asset.currencyId);
+      let asset = await entityService.getAsset(newAssetId);
+      let currency = await entityService.getCurrency(asset.currencyId);
       recordCurrencyId.value = currency._id!;
       recordCurrencySign.value = currency.sign;
     });

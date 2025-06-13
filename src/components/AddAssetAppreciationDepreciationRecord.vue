@@ -3,14 +3,11 @@
     <q-card class="q-dialog-plugin">
       <q-card-section>
         <div class="std-dialog-title q-pa-md">
-          {{ existingRecordId
-    ? "Editing an Asset Appreciation/Depreciation Record"
-    : "Adding an Asset Appreciation / Depreciation Record" }}
+          {{ existingRecordId ? "Editing an Asset Appreciation/Depreciation Record" : "Adding an Asset Appreciation / Depreciation Record" }}
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="recordForm">
           <select-asset v-model="recordAssetId"></select-asset>
-          <q-input type="number" filled v-model="recordAmount" :label="`Amount of ${type}`" lazy-rules
-            :rules="validators.balance">
+          <q-input type="number" filled v-model="recordAmount" :label="`Amount of ${type}`" lazy-rules :rules="validators.balance">
             <template v-slot:append>
               <div class="currency-label">
                 {{ recordCurrencySign }}
@@ -52,7 +49,7 @@ import SelectTag from "./SelectTag.vue";
 import { dialogService } from "src/services/dialog-service";
 import { asAmount } from "src/utils/misc-utils";
 import DateTimeInput from "./lib/DateTimeInput.vue";
-import { dataInferenceService } from "src/services/data-inference-service";
+import { entityService } from "src/services/entity-service";
 
 export default {
   props: {
@@ -169,8 +166,8 @@ export default {
     }
 
     watch(recordAssetId, async (newAssetId: any) => {
-      let asset = await dataInferenceService.getAsset(newAssetId);
-      let currency = await dataInferenceService.getCurrency(asset.currencyId);
+      let asset = await entityService.getAsset(newAssetId);
+      let currency = await entityService.getCurrency(asset.currencyId);
       recordCurrencyId.value = currency._id!;
       recordCurrencySign.value = currency.sign;
     });
