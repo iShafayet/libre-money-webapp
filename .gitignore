@@ -165,3 +165,5 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+local/
