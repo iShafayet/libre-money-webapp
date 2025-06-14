@@ -9,8 +9,15 @@
           </div>
         </div>
         <q-form @submit="onSubmit" class="q-gutter-md q-pa-md" v-if="needsPasswordInput">
-          <q-input type="password" filled v-model="password" :label="`Your password for ${username}`"
-            :hint="`Your password for ${username}`" lazy-rules :rules="validators.password" />
+          <q-input
+            type="password"
+            filled
+            v-model="password"
+            :label="`Your password for ${username}`"
+            :hint="`Your password for ${username}`"
+            lazy-rules
+            :rules="validators.password"
+          />
           <div></div>
         </q-form>
       </q-card-section>
@@ -24,11 +31,12 @@
 </template>
 
 <script lang="ts">
-import { useDialogPluginComponent } from "quasar";
+import { useDialogPluginComponent, useQuasar } from "quasar";
 import { partyTypeList } from "src/constants/constants";
 import { credentialService } from "src/services/credential-service";
 import { dialogService } from "src/services/dialog-service";
 import { loginService } from "src/services/login-service";
+import { migrationService } from "src/services/migration-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useUserStore } from "src/stores/user";
 import { validators } from "src/utils/validators";
@@ -58,6 +66,8 @@ export default {
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
+    const $q = useQuasar();
+
     isLoading.value = true;
 
     isLoading.value = false;
@@ -85,6 +95,8 @@ export default {
         if (errorCount > 0) {
           await dialogService.alert("Sync Ended", `Sync ended with ${errorCount} non-fatal errors. Please inform administrator to avoid data loss.`);
         }
+
+        await migrationService.migrateDefaultExpenseAvenueAndIncomeSource($q);
 
         // FIXME: Remove hack
         window.location.reload();
