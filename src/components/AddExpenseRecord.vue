@@ -115,7 +115,7 @@ export default {
       required: false,
       default: null,
     },
-    parsedData: {
+    suggestion: {
       type: Object,
       required: false,
       default: null,
@@ -217,33 +217,29 @@ export default {
         transactionEpoch.value = Date.now();
         isLoading.value = false;
       })();
-    } else if (props.parsedData) {
+    } else if (props.suggestion) {
       isLoading.value = true;
       (async function () {
         isLoading.value = true;
 
-        console.debug("Parsed data: ", props.parsedData);
+        console.debug("suggestion data: ", props.suggestion);
 
-        // // Find matching wallet
-        // const wallets = (await pouchdbService.listByCollection(Collection.WALLET)).docs;
-        // const matchingWallet = wallets.find((w) => w.name.toLowerCase().includes(props.parsedData.wallet.toLowerCase()));
-        // if (matchingWallet) {
-        //   recordWalletId.value = matchingWallet._id;
-        //   recordCurrencyId.value = matchingWallet.currencyId;
-        // }
+        if (props.suggestion.wallet) {
+          recordWalletId.value = props.suggestion.wallet._id;
+          recordCurrencyId.value = props.suggestion.wallet.currencyId;
+        }
 
-        // // Find matching expense avenue
-        // const expenseAvenues = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)).docs;
-        // const matchingExpenseAvenue = expenseAvenues.find((ea) => ea.name.toLowerCase().includes(props.parsedData.expenseAvenue.toLowerCase()));
-        // if (matchingExpenseAvenue) {
-        //   recordExpenseAvenueId.value = matchingExpenseAvenue._id;
-        // }
+        if (props.suggestion.expenseAvenue) {
+          recordExpenseAvenueId.value = props.suggestion.expenseAvenue._id;
+        }
 
-        // // Set amount
-        // recordAmount.value = parseFloat(props.parsedData.amount.replace(/[^0-9.-]+/g, ""));
+        if (props.suggestion.amount) {
+          recordAmount.value = props.suggestion.amount;
+        }
 
-        // // Set date
-        // transactionEpoch.value = new Date(props.parsedData.date).getTime();
+        if (props.suggestion.date) {
+          transactionEpoch.value = new Date(props.suggestion.date).getTime();
+        }
 
         isLoading.value = false;
       })();

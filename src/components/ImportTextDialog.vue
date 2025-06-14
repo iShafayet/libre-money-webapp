@@ -23,13 +23,13 @@
               <q-item>
                 <q-item-section>
                   <q-item-label caption>Wallet</q-item-label>
-                  <q-item-label>{{ parsedData.wallet }}</q-item-label>
+                  <q-item-label>{{ parsedData.wallet?.name }}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item>
                 <q-item-section>
                   <q-item-label caption>Expense Avenue</q-item-label>
-                  <q-item-label>{{ parsedData.expenseAvenue }}</q-item-label>
+                  <q-item-label>{{ parsedData.expenseAvenue?.name }}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item>
@@ -60,7 +60,7 @@
 
 <script lang="ts">
 import { QForm, useDialogPluginComponent, useQuasar } from "quasar";
-import { Ref, ref, computed } from "vue";
+import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
 import { TextImportRules } from "src/models/text-import-rules";
 import { pouchdbService } from "src/services/pouchdb-service";
@@ -68,16 +68,12 @@ import { Collection } from "src/constants/constants";
 import { dialogService } from "src/services/dialog-service";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import { date } from "quasar";
+import { Wallet } from "src/models/wallet";
+import { ExpenseAvenue } from "src/models/expense-avenue";
+import { ExpenseRecordSuggestion } from "src/models/inferred/expense-record-suggestion";
 
 const parse = (text: string, format: string) => {
   return date.extractDate(text, format);
-};
-
-type ParsedData = {
-  wallet: string;
-  expenseAvenue: string;
-  date: string;
-  amount: string;
 };
 
 export default {
@@ -90,14 +86,18 @@ export default {
     const importForm: Ref<QForm | null> = ref(null);
     const importText: Ref<string | null> = ref(null);
     const selectedRuleId: Ref<string | null> = ref(null);
-    const parsedData: Ref<ParsedData | null> = ref(null);
+    const parsedData: Ref<ExpenseRecordSuggestion | null> = ref(null);
 
     const ruleOptions = ref<{ label: string; value: string }[]>([]);
 
-    async function loadRules() {
+    async function getRuleList(): Promise<TextImportRules[]> {
       const res = await pouchdbService.listByCollection(Collection.TEXT_IMPORT_RULES);
       const rules = res.docs as TextImportRules[];
-      ruleOptions.value = rules
+      return rules;
+    }
+
+    async function loadRules() {
+      ruleOptions.value = (await getRuleList())
         .filter((rule) => rule.isActive)
         .map((rule) => ({
           label: rule.name,
@@ -110,7 +110,15 @@ export default {
     const parseText = async () => {
       if (!selectedRuleId.value || !importText.value) return;
 
-      const rule = (await pouchdbService.getDocById(selectedRuleId.value)) as TextImportRules;
+      const rule = (await getRuleList()).find((r) => r._id === selectedRuleId.value);
+      if (!rule) {
+        $q.notify({
+          type: "negative",
+          message: "Selected rule not found",
+        });
+        return;
+      }
+
       console.debug("Selected rule:", rule);
       console.debug("Text to parse:", importText.value);
 
@@ -129,20 +137,86 @@ export default {
       }
 
       try {
-        const date = parse(match[rule.dateCaptureGroup], rule.dateFormat);
+        // Validate wallet
+        const capturedWallet = match[rule.walletCaptureGroup];
+        if (capturedWallet !== rule.walletExpectedValue) {
+          $q.notify({
+            type: "negative",
+            message: `Invalid wallet. Expected: ${rule.walletExpectedValue}, Got: ${capturedWallet}`,
+          });
+          return;
+        }
+
+        // Find matching wallet
+        const walletsList = (await pouchdbService.listByCollection(Collection.WALLET)).docs as Wallet[];
+        console.debug("Wallets list:", walletsList);
+        const matchingWallet = walletsList.find((w) => w.name === rule.prefillWalletName);
+        if (!matchingWallet) {
+          $q.notify({
+            type: "negative",
+            message: `Wallet not found: ${rule.prefillWalletName}`,
+          });
+          return;
+        }
+
+        // Validate expense avenue
+        const capturedExpenseAvenue = match[rule.expenseAvenueCaptureGroup];
+        if (rule.expenseAvenueExpectedValue !== capturedExpenseAvenue) {
+          $q.notify({
+            type: "negative",
+            message: `Invalid expense avenue. Pattern: ${rule.expenseAvenueExpectedValue}, Got: ${capturedExpenseAvenue}`,
+          });
+          return;
+        }
+
+        // Find matching expense avenue
+        const expenseAvenuesList = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)).docs as ExpenseAvenue[];
+        console.debug("Expense avenues list:", expenseAvenuesList);
+        const matchingExpenseAvenue = expenseAvenuesList.find((ea) => ea.name === rule.prefillExpenseAvenueName);
+        if (!matchingExpenseAvenue) {
+          $q.notify({
+            type: "negative",
+            message: `Expense avenue not found: ${rule.prefillExpenseAvenueName}`,
+          });
+          return;
+        }
+
+        // Validate and parse date
+        const capturedDate = match[rule.dateCaptureGroup];
+        const parsedDate = parse(capturedDate, rule.dateFormat);
+        if (!parsedDate) {
+          $q.notify({
+            type: "negative",
+            message: `Invalid date format. Expected: ${rule.dateFormat}, Got: ${capturedDate}`,
+          });
+          return;
+        }
+
+        // Validate and parse amount
+        const capturedAmount = match[rule.amountCaptureGroup];
+        const amount = parseFloat(capturedAmount);
+        if (isNaN(amount)) {
+          $q.notify({
+            type: "negative",
+            message: `Invalid amount: ${capturedAmount}`,
+          });
+          return;
+        }
+
         parsedData.value = {
-          wallet: match[rule.walletCaptureGroup],
-          expenseAvenue: match[rule.expenseAvenueCaptureGroup],
-          date: date.toISOString(),
-          amount: match[rule.amountCaptureGroup],
+          wallet: matchingWallet,
+          expenseAvenue: matchingExpenseAvenue,
+          date: parsedDate.toISOString(),
+          amount: amount,
+          notes: `Imported from text: ${importText.value}`,
         };
 
         console.debug("Parsed data:", parsedData.value);
       } catch (error) {
-        console.error("Error parsing date:", error);
+        console.error("Error parsing data:", error);
         $q.notify({
           type: "negative",
-          message: "Error parsing date from text",
+          message: "Error parsing data from text",
         });
       }
     };
@@ -153,7 +227,7 @@ export default {
       $q.dialog({
         component: AddExpenseRecord,
         componentProps: {
-          parsedData: parsedData.value,
+          suggestion: parsedData.value,
         },
       }).onOk(() => {
         onDialogOK();
