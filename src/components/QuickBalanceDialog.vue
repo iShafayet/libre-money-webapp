@@ -30,13 +30,13 @@
                   </span>
                 </td>
                 <td>
-                  <q-btn v-if="intent === 'balances'" flat dense round icon="tune" @click="onCalibrateClick(row.walletId)" class="q-ml-sm" />
+                  <q-btn v-if="intent === 'balances'" flat dense round icon="tune" @click="onCalibrateClick(row.walletId, row.balance)" class="q-ml-sm" />
                   <q-btn
                     v-else-if="intent === 'calibration'"
                     color="primary"
                     size="sm"
                     label="Calibrate"
-                    @click="onCalibrateClick(row.walletId)"
+                    @click="onCalibrateClick(row.walletId, row.balance)"
                     class="q-ml-sm"
                   />
                 </td>
@@ -118,14 +118,14 @@ export default {
       isLoading.value = false;
     }
 
-    async function onCalibrateClick(walletId: string) {
+    async function onCalibrateClick(walletId: string, balance: number) {
       const wallet = overviewAndCurrencyList.value.flatMap((oc) => oc.overview?.wallets.list || []).find((w) => w.walletId === walletId)?.wallet;
 
       if (!wallet) {
         throw new CodedError("WALLET_NOT_FOUND", "Wallet not found");
       }
 
-      $q.dialog({ component: WalletCalibrationDialog, componentProps: { wallet } })
+      $q.dialog({ component: WalletCalibrationDialog, componentProps: { wallet, balance } })
         .onOk(() => {
           onDialogOK();
         })

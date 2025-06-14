@@ -18,6 +18,15 @@ function deserializeBoolean(localStorageKey: string): boolean {
   }
 }
 
+function deserializeNumber(localStorageKey: string, defaultValue: number): number {
+  const value = localStorage.getItem(localStorageKey) || String(defaultValue);
+  try {
+    return JSON.parse(value);
+  } catch (ex) {
+    return defaultValue;
+  }
+}
+
 function serializeValue(localStorageKey: string, value: any) {
   localStorage.setItem(localStorageKey, JSON.stringify(value));
 }
@@ -26,6 +35,7 @@ const LOCAL_STORAGE_KEY__CURRENCY_ID = "--settings--default-currency-id";
 const LOCAL_STORAGE_KEY__DEFAULT_VIEW = "--settings--default-view";
 const LOCAL_STORAGE_KEY__REMEMBER_VIEW = "--settings--remember-view";
 const LOCAL_STORAGE_KEY__LAST_VIEW = "--settings--last-opened-view";
+const LOCAL_STORAGE_KEY__WALLET_CALIBRATION_STEP_SIZE = "--settings--wallet-calibration-step-size";
 
 export const useSettingsStore = defineStore("settingsStore", {
   state: () => ({
@@ -33,6 +43,7 @@ export const useSettingsStore = defineStore("settingsStore", {
     defaultView: deserializeString(LOCAL_STORAGE_KEY__DEFAULT_VIEW) || "overview",
     rememberLastOpenedView: deserializeBoolean(LOCAL_STORAGE_KEY__REMEMBER_VIEW),
     lastOpenedView: deserializeString(LOCAL_STORAGE_KEY__LAST_VIEW) || "overview",
+    walletCalibrationStepSize: deserializeNumber(LOCAL_STORAGE_KEY__WALLET_CALIBRATION_STEP_SIZE, 100),
   }),
 
   getters: {},
@@ -53,6 +64,10 @@ export const useSettingsStore = defineStore("settingsStore", {
     setLastOpenedView(value: string) {
       serializeValue(LOCAL_STORAGE_KEY__LAST_VIEW, value);
       this.lastOpenedView = value;
+    },
+    setWalletCalibrationStepSize(value: number) {
+      serializeValue(LOCAL_STORAGE_KEY__WALLET_CALIBRATION_STEP_SIZE, value);
+      this.walletCalibrationStepSize = value;
     },
   },
 });
