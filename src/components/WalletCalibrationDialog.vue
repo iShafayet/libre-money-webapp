@@ -35,8 +35,20 @@
             </div>
 
             <div v-for="(row, index) in breakdownRows" :key="index" class="breakdown-row">
-              <q-select v-model="row.type" :options="breakdownTypes" dense outlined class="breakdown-type" emit-value map-options />
-              <q-input v-model.number="row.amount" type="number" dense outlined class="breakdown-amount" :prefix="calibration?.currencySign" />
+              <q-btn
+                flat
+                dense
+                :icon="row.type === 'income' ? 'arrow_upward' : 'arrow_downward'"
+                @click="row.type = row.type === 'income' ? 'expense' : 'income'"
+                class="type-toggle-btn"
+              />
+
+              <div class="breakdown-selector">
+                <select-expense-avenue v-if="row.type === 'expense'" v-model="row.expenseAvenueId" />
+                <select-income-source v-else v-model="row.incomeSourceId" />
+              </div>
+
+              <q-input v-model.number="row.amount" type="number" dense outlined class="breakdown-amount" />
               <q-btn flat dense icon="delete" @click="removeBreakdownRow(index)" class="delete-btn" />
             </div>
 
@@ -64,6 +76,8 @@ import { ref, Ref, watch, computed, onMounted } from "vue";
 import { entityService } from "src/services/entity-service";
 import { useSettingsStore } from "src/stores/settings";
 import { prettifyAmount } from "src/utils/misc-utils";
+import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
+import SelectIncomeSource from "./SelectIncomeSource.vue";
 
 type WalletCalibration = {
   walletId: string;
@@ -89,6 +103,11 @@ export default {
       type: Number,
       required: true,
     },
+  },
+
+  components: {
+    SelectExpenseAvenue,
+    SelectIncomeSource,
   },
 
   emits: [...useDialogPluginComponent.emits],
@@ -244,8 +263,9 @@ export default {
   margin-bottom: 8px;
 }
 
-.breakdown-type {
-  width: 200px;
+.breakdown-selector {
+  width: 150px;
+  margin-top: 30px;
 }
 
 .breakdown-amount {
@@ -259,5 +279,9 @@ export default {
 
 .spacer {
   flex: 1;
+}
+
+.type-toggle-btn {
+  min-width: 40px;
 }
 </style>
