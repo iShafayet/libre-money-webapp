@@ -13,6 +13,7 @@ export const validators = {
   domain: [(val: string) => (val && val.length > 0) || "Please type your domain"],
   password: [(val: string) => (val && val.length > 0) || "Please type your password"],
   currencySign: [(val: string) => (val && val.length > 0 && val.length < 4) || "Sign must be within 1 to 3 characters"],
+  required: [(val: any) => (val !== null && val !== undefined && val !== "") || "This field is required"],
   balance: [
     (val: string) => {
       return isNumeric(String(val)) || "A valid number is required";

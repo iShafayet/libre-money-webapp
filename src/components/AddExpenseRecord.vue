@@ -115,6 +115,11 @@ export default {
       required: false,
       default: null,
     },
+    parsedData: {
+      type: Object,
+      required: false,
+      default: null,
+    },
   },
 
   components: {
@@ -210,6 +215,36 @@ export default {
         let templateDoc = (await pouchdbService.getDocById(props.useTemplateId)) as Record;
         if (!(await prefillRecord(templateDoc))) return;
         transactionEpoch.value = Date.now();
+        isLoading.value = false;
+      })();
+    } else if (props.parsedData) {
+      isLoading.value = true;
+      (async function () {
+        isLoading.value = true;
+
+        console.debug("Parsed data: ", props.parsedData);
+
+        // // Find matching wallet
+        // const wallets = (await pouchdbService.listByCollection(Collection.WALLET)).docs;
+        // const matchingWallet = wallets.find((w) => w.name.toLowerCase().includes(props.parsedData.wallet.toLowerCase()));
+        // if (matchingWallet) {
+        //   recordWalletId.value = matchingWallet._id;
+        //   recordCurrencyId.value = matchingWallet.currencyId;
+        // }
+
+        // // Find matching expense avenue
+        // const expenseAvenues = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)).docs;
+        // const matchingExpenseAvenue = expenseAvenues.find((ea) => ea.name.toLowerCase().includes(props.parsedData.expenseAvenue.toLowerCase()));
+        // if (matchingExpenseAvenue) {
+        //   recordExpenseAvenueId.value = matchingExpenseAvenue._id;
+        // }
+
+        // // Set amount
+        // recordAmount.value = parseFloat(props.parsedData.amount.replace(/[^0-9.-]+/g, ""));
+
+        // // Set date
+        // transactionEpoch.value = new Date(props.parsedData.date).getTime();
+
         isLoading.value = false;
       })();
     } else {

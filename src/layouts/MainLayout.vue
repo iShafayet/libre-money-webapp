@@ -50,6 +50,11 @@
       </q-list>
 
       <q-list>
+        <q-item-label header> ADVANCED </q-item-label>
+        <EssentialLink v-for="link in advancedList" :key="link.title" v-bind="link" />
+      </q-list>
+
+      <q-list>
         <q-item-label header> MISC </q-item-label>
         <EssentialLink v-for="link in miscList" :key="link.title" v-bind="link" />
       </q-list>
@@ -211,6 +216,15 @@ const accountingList = [
   },
 ];
 
+const advancedList = [
+  {
+    title: "Text Import Rules",
+    caption: "",
+    icon: "text_snippet",
+    link: "#/text-import-rules",
+  },
+];
+
 const miscList = [
   {
     title: "Memos",
@@ -303,6 +317,7 @@ export default defineComponent({
       APP_VERSION,
 
       miscList,
+      advancedList,
       userStore,
       logoutClicked,
       syncClicked,

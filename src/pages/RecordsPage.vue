@@ -84,7 +84,6 @@
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
         <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickExpenseSummaryClicked" />
         <q-btn color="green-6" icon="wallet" flat round @click="showQuickBalanceClicked" />
-
         <div class="title">
           <div class="month-and-year-input-wrapper" v-if="!recordFilters && $q.screen.gt.xs">
             <month-and-year-input v-model:month="filterMonth" v-model:year="filterYear" @selection="monthAndYearSelected()"></month-and-year-input>
@@ -112,6 +111,11 @@
             <q-item clickable v-close-popup @click="addBulkExpensesClicked">
               <q-item-section>
                 <q-item-label>Add Expenses (Bulk)</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item clickable v-close-popup @click="importTextClicked">
+              <q-item-section>
+                <q-item-label>Import Text</q-item-label>
               </q-item-section>
             </q-item>
             <q-item clickable v-close-popup @click="showQuickBalanceCalibrationClicked">
@@ -306,6 +310,7 @@ import QuickBalanceDialog from "src/components/QuickBalanceDialog.vue";
 import QuickExpenseSummaryDialog from "src/components/QuickExpenseSummaryDialog.vue";
 import QuickSummaryDialog from "src/components/QuickSummaryDialog.vue";
 import SelectTemplateDialog from "src/components/SelectTemplateDialog.vue";
+import ImportTextDialog from "src/components/ImportTextDialog.vue";
 import { PROMISE_POOL_CONCURRENCY_LIMT, RECORD_BATCH_PROCESSING_OPTIMIZATION_THRESHOLD, UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
 import { Collection, RecordType } from "src/constants/constants";
 import { Asset } from "src/models/asset";
@@ -615,6 +620,13 @@ async function clearFiltersClicked() {
   recordFilters.value = null;
   recordFiltersStore.setRecordFilters(null);
   loadData();
+}
+
+async function importTextClicked() {
+  $q.dialog({ component: ImportTextDialog }).onOk(() => {
+    paginationCurrentPage.value = 1;
+    loadData();
+  });
 }
 
 // ----- Computed and Embedded

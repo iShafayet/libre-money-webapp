@@ -70,6 +70,7 @@ export const Collection = {
   BUDGET: "budget",
   ROLLING_BUDGET: "rolling-budget",
   MEMO: "memo",
+  TEXT_IMPORT_RULES: "text-import-rules",
 };
 
 export const RecordType = {

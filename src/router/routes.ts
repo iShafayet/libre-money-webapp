@@ -96,6 +96,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/CurrenciesPage.vue"),
         meta: { requiresAuthentication: true, title: "Currencies", rememberable: true },
       },
+      {
+        path: "text-import-rules",
+        name: "text-import-rules",
+        component: () => import("pages/TextImportRulesPage.vue"),
+        meta: { requiresAuthentication: true, title: "Text Import Rules", rememberable: true },
+      },
       // --- Reports:
       {
         path: "combined-report",
