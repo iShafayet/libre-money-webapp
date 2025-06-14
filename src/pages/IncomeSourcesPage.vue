@@ -151,12 +151,25 @@ export default defineComponent({
     }
 
     async function editClicked(incomeSource: IncomeSource) {
+      if (incomeSource.dissuadeEditing) {
+        let answer = await dialogService.confirm(
+          "Edit Income Source",
+          `"${incomeSource.name}" is a system-defined income source. Are you sure you want to edit it?`
+        );
+        if (!answer) return;
+      }
+
       $q.dialog({ component: AddIncomeSource, componentProps: { existingIncomeSourceId: incomeSource._id } }).onOk((res) => {
         loadData();
       });
     }
 
     async function deleteClicked(incomeSource: IncomeSource) {
+      if (incomeSource.denyDeletion) {
+        await dialogService.alert("Error", "This income source cannot be deleted.");
+        return;
+      }
+
       let answer = await dialogService.confirm("Remove Income Source", `Are you sure you want to remove the Income Source "${incomeSource.name}"?`);
       if (!answer) return;
 

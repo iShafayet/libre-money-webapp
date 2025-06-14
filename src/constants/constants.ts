@@ -96,3 +96,8 @@ export const dateRangePresetList = [
   { value: "all-time", label: "All time" },
   { value: "custom", label: "Custom" },
 ];
+
+export const fixtureCode = {
+  AUTO_CALIBRATED_EXPENSE: "auto-calibrated-expense",
+  AUTO_CALIBRATED_INCOME: "auto-calibrated-income",
+};

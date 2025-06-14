@@ -151,12 +151,25 @@ export default defineComponent({
     }
 
     async function editClicked(expenseAvenue: ExpenseAvenue) {
+      if (expenseAvenue.dissuadeEditing) {
+        let answer = await dialogService.confirm(
+          "Edit Expense Avenue",
+          `"${expenseAvenue.name}" is a system-defined expense avenue. Are you sure you want to edit it?`
+        );
+        if (!answer) return;
+      }
+
       $q.dialog({ component: AddExpenseAvenue, componentProps: { existingExpenseAvenueId: expenseAvenue._id } }).onOk((res) => {
         loadData();
       });
     }
 
     async function deleteClicked(expenseAvenue: ExpenseAvenue) {
+      if (expenseAvenue.denyDeletion) {
+        await dialogService.alert("Error", "This expense avenue cannot be deleted.");
+        return;
+      }
+
       let answer = await dialogService.confirm("Remove Expense Avenue", `Are you sure you want to remove the Expense Avenue "${expenseAvenue.name}"?`);
       if (!answer) return;
 
