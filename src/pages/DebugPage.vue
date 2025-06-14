@@ -103,6 +103,12 @@ export default defineComponent({
         sortable: true,
       },
       {
+        name: "modifiedEpoch",
+        label: "Modified Epoch",
+        sortable: true,
+        field: "modifiedEpoch",
+      },
+      {
         name: "content",
         align: "left",
         label: "Content",
@@ -121,7 +127,7 @@ export default defineComponent({
 
     const paginationSizeStore = usePaginationSizeStore();
     const pagination = ref({
-      sortBy: "name",
+      sortBy: "modifiedEpoch",
       descending: false,
       page: 1,
       rowsPerPage: paginationSizeStore.paginationSize,
@@ -135,7 +141,7 @@ export default defineComponent({
         docList.sort((a, b) => {
           return a.collection.localeCompare(b.collection) * (descending ? -1 : 1);
         });
-      } else if (sortBy === "modified") {
+      } else if (sortBy === "modifiedEpoch") {
         docList.sort((a, b) => {
           return (a.modifiedEpoch! - b.modifiedEpoch!) * (descending ? -1 : 1);
         });
