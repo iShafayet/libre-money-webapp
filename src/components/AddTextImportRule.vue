@@ -1,13 +1,76 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
+    <q-card class="q-dialog-plugin" style="min-width: 800px">
       <q-card-section>
         <div class="std-dialog-title q-pa-md">
           {{ existingRuleId ? "Editing an Import Rule" : "Adding an Import Rule" }}
         </div>
         <q-form class="q-gutter-md q-pa-md" ref="ruleForm">
-          <div class="text-subtitle2 q-mb-sm">Rule Configuration (JSON)</div>
-          <q-input filled type="textarea" v-model="ruleJson" label="Rule Configuration" lazy-rules :rules="[validateJson]" autogrow />
+          <!-- Basic Information -->
+          <div class="text-h6">Basic Information</div>
+          <q-input filled v-model="ruleName" label="Rule Name" lazy-rules :rules="validators.required" />
+          <q-input filled v-model="ruleDescription" label="Description" type="textarea" />
+          <q-input filled v-model="ruleRegex" label="Regular Expression" lazy-rules :rules="[validateRegex]" />
+
+          <!-- Capture Groups -->
+          <div class="text-h6 q-mt-lg">Capture Groups</div>
+          <div class="row q-gutter-md">
+            <q-input
+              filled
+              v-model.number="walletCaptureGroup"
+              label="Wallet Capture Group"
+              type="number"
+              lazy-rules
+              :rules="validators.required"
+              class="col"
+            />
+            <q-input
+              filled
+              v-model.number="expenseAvenueCaptureGroup"
+              label="Expense Avenue Capture Group"
+              type="number"
+              lazy-rules
+              :rules="validators.required"
+              class="col"
+            />
+            <q-input filled v-model.number="dateCaptureGroup" label="Date Capture Group" type="number" lazy-rules :rules="validators.required" class="col" />
+            <q-input
+              filled
+              v-model.number="amountCaptureGroup"
+              label="Amount Capture Group"
+              type="number"
+              lazy-rules
+              :rules="validators.required"
+              class="col"
+            />
+          </div>
+          <q-input filled v-model="dateFormat" label="Date Format" lazy-rules :rules="validators.required" />
+
+          <!-- Wallet Match Rules -->
+          <div class="text-h6 q-mt-lg">Wallet Match Rules</div>
+          <div v-for="(rule, index) in walletMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
+            <div class="row q-gutter-md items-center">
+              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" />
+              <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
+              <select-wallet v-model="rule.walletId" label="Target Wallet" class="col-4" />
+              <q-btn icon="delete" color="negative" flat @click="removeWalletRule(index)" />
+            </div>
+          </div>
+          <q-btn icon="add" color="primary" label="Add Wallet Rule" @click="addWalletRule" />
+
+          <!-- Expense Avenue Match Rules -->
+          <div class="text-h6 q-mt-lg">Expense Avenue Match Rules</div>
+          <div v-for="(rule, index) in expenseAvenueMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
+            <div class="row q-gutter-md items-center">
+              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" />
+              <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
+              <select-expense-avenue v-model="rule.expenseAvenueId" label="Target Expense Avenue" class="col-4" />
+              <q-btn icon="delete" color="negative" flat @click="removeExpenseAvenueRule(index)" />
+            </div>
+          </div>
+          <q-btn icon="add" color="primary" label="Add Expense Avenue Rule" @click="addExpenseAvenueRule" />
+
+          <q-toggle v-model="ruleIsActive" label="Active" />
 
           <div v-if="validationErrors.length > 0" class="q-mt-md">
             <div class="text-negative text-subtitle2">Validation Errors:</div>
@@ -19,8 +82,6 @@
               </q-item>
             </q-list>
           </div>
-
-          <q-toggle v-model="ruleIsActive" label="Active" />
         </q-form>
       </q-card-section>
 
@@ -34,12 +95,20 @@
 
 <script lang="ts">
 import { QForm, useDialogPluginComponent, useQuasar } from "quasar";
-import { Ref, ref } from "vue";
-import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
+import { Ref, ref, computed } from "vue";
+import { TextImportRules, TextImportRulesValidator, WalletMatchRule, ExpenseAvenueMatchRule, MatchingOperator } from "src/models/text-import-rules";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection } from "src/constants/constants";
+import SelectWallet from "./SelectWallet.vue";
+import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
+import { validators } from "src/utils/validators";
 
 export default {
+  components: {
+    SelectWallet,
+    SelectExpenseAvenue,
+  },
+
   props: {
     existingRuleId: {
       type: String,
@@ -56,9 +125,25 @@ export default {
 
     const isLoading = ref(false);
     const ruleForm: Ref<QForm | null> = ref(null);
-    const ruleJson: Ref<string> = ref("");
-    const ruleIsActive: Ref<boolean> = ref(true);
-    const validationErrors = ref<string[]>([]);
+    const ruleName = ref("");
+    const ruleDescription = ref("");
+    const ruleRegex = ref("");
+    const walletCaptureGroup = ref(1);
+    const expenseAvenueCaptureGroup = ref(2);
+    const dateCaptureGroup = ref(3);
+    const amountCaptureGroup = ref(4);
+    const dateFormat = ref("DD/MM/YYYY");
+    const walletMatchRules = ref<WalletMatchRule[]>([]);
+    const expenseAvenueMatchRules = ref<ExpenseAvenueMatchRule[]>([]);
+    const ruleIsActive = ref(true);
+
+    const operatorOptions = [
+      { label: "Exact Match", value: "exact-match" as MatchingOperator },
+      { label: "Contains", value: "contains" as MatchingOperator },
+      { label: "Starts With", value: "starts-with" as MatchingOperator },
+      { label: "Ends With", value: "ends-with" as MatchingOperator },
+      { label: "Regex", value: "regex" as MatchingOperator },
+    ];
 
     const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
@@ -67,26 +152,73 @@ export default {
       (async function () {
         let res = (await pouchdbService.getDocById(props.existingRuleId)) as TextImportRules;
         initialDoc = res;
-        ruleIsActive.value = res.isActive;
 
-        // Remove _id and _rev from the JSON display
-        const { _id, _rev, $collection, ...ruleConfig } = res;
-        ruleJson.value = JSON.stringify(ruleConfig, null, 2);
+        // Populate form fields
+        ruleName.value = res.name;
+        ruleDescription.value = res.description || "";
+        ruleRegex.value = res.regex;
+        walletCaptureGroup.value = res.walletCaptureGroup;
+        expenseAvenueCaptureGroup.value = res.expenseAvenueCaptureGroup;
+        dateCaptureGroup.value = res.dateCaptureGroup;
+        amountCaptureGroup.value = res.amountCaptureGroup;
+        dateFormat.value = res.dateFormat;
+        walletMatchRules.value = [...res.walletMatchRules];
+        expenseAvenueMatchRules.value = [...res.expenseAvenueMatchRules];
+        ruleIsActive.value = res.isActive;
 
         isLoading.value = false;
       })();
     }
 
-    const validateJson = (val: string) => {
+    const validationErrors = computed(() => {
+      const rule: Partial<TextImportRules> = {
+        name: ruleName.value,
+        description: ruleDescription.value,
+        regex: ruleRegex.value,
+        walletCaptureGroup: walletCaptureGroup.value,
+        expenseAvenueCaptureGroup: expenseAvenueCaptureGroup.value,
+        dateCaptureGroup: dateCaptureGroup.value,
+        amountCaptureGroup: amountCaptureGroup.value,
+        dateFormat: dateFormat.value,
+        walletMatchRules: walletMatchRules.value,
+        expenseAvenueMatchRules: expenseAvenueMatchRules.value,
+      };
+
+      return TextImportRulesValidator.validate(rule).errors;
+    });
+
+    const validateRegex = (val: string) => {
+      if (!val) return "Regex is required";
       try {
-        const parsed = JSON.parse(val);
-        const validation = TextImportRulesValidator.validate(parsed);
-        validationErrors.value = validation.errors;
-        return validation.isValid || "Invalid rule configuration";
+        new RegExp(val);
+        return true;
       } catch (e) {
-        validationErrors.value = ["Invalid JSON format"];
-        return false;
+        return "Invalid regular expression";
       }
+    };
+
+    const addWalletRule = () => {
+      walletMatchRules.value.push({
+        operator: "contains",
+        value: "",
+        walletId: "",
+      });
+    };
+
+    const removeWalletRule = (index: number) => {
+      walletMatchRules.value.splice(index, 1);
+    };
+
+    const addExpenseAvenueRule = () => {
+      expenseAvenueMatchRules.value.push({
+        operator: "contains",
+        value: "",
+        expenseAvenueId: "",
+      });
+    };
+
+    const removeExpenseAvenueRule = (index: number) => {
+      expenseAvenueMatchRules.value.splice(index, 1);
     };
 
     async function okClicked() {
@@ -94,21 +226,28 @@ export default {
         return;
       }
 
+      if (validationErrors.value.length > 0) {
+        $q.notify({
+          type: "negative",
+          message: "Please fix validation errors before saving",
+        });
+        return;
+      }
+
       try {
-        const parsedJson = JSON.parse(ruleJson.value);
-        const validation = TextImportRulesValidator.validate(parsedJson);
-
-        if (!validation.isValid) {
-          $q.notify({
-            type: "negative",
-            message: "Invalid rule configuration",
-          });
-          return;
-        }
-
         let rule: TextImportRules = {
           $collection: Collection.TEXT_IMPORT_RULES,
-          ...parsedJson,
+          name: ruleName.value,
+          description: ruleDescription.value,
+          regex: ruleRegex.value,
+          walletCaptureGroup: walletCaptureGroup.value,
+          expenseAvenueCaptureGroup: expenseAvenueCaptureGroup.value,
+          dateCaptureGroup: dateCaptureGroup.value,
+          amountCaptureGroup: amountCaptureGroup.value,
+          dateFormat: dateFormat.value,
+          walletMatchRules: walletMatchRules.value,
+          expenseAvenueMatchRules: expenseAvenueMatchRules.value,
+          isActive: ruleIsActive.value,
         };
 
         if (initialDoc) {
@@ -118,11 +257,20 @@ export default {
         await pouchdbService.upsertDoc(rule);
         onDialogOK();
       } catch (error) {
+        console.error("Error saving rule:", error);
         $q.notify({
           type: "negative",
           message: "Error saving rule",
         });
       }
+    }
+
+    // Initialize with at least one rule for each type
+    if (walletMatchRules.value.length === 0) {
+      addWalletRule();
+    }
+    if (expenseAvenueMatchRules.value.length === 0) {
+      addExpenseAvenueRule();
     }
 
     return {
@@ -131,11 +279,26 @@ export default {
       okClicked,
       cancelClicked: onDialogCancel,
       isLoading,
-      ruleJson,
-      ruleIsActive,
-      validationErrors,
-      validateJson,
       ruleForm,
+      ruleName,
+      ruleDescription,
+      ruleRegex,
+      walletCaptureGroup,
+      expenseAvenueCaptureGroup,
+      dateCaptureGroup,
+      amountCaptureGroup,
+      dateFormat,
+      walletMatchRules,
+      expenseAvenueMatchRules,
+      ruleIsActive,
+      operatorOptions,
+      validationErrors,
+      validateRegex,
+      addWalletRule,
+      removeWalletRule,
+      addExpenseAvenueRule,
+      removeExpenseAvenueRule,
+      validators,
     };
   },
 };

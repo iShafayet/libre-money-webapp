@@ -62,7 +62,7 @@
 import { QForm, useDialogPluginComponent, useQuasar } from "quasar";
 import { Ref, ref } from "vue";
 import { validators } from "src/utils/validators";
-import { TextImportRules } from "src/models/text-import-rules";
+import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection } from "src/constants/constants";
 import { dialogService } from "src/services/dialog-service";
@@ -137,52 +137,61 @@ export default {
       }
 
       try {
-        // Validate wallet
+        // Check if all capture groups are present (non-empty)
         const capturedWallet = match[rule.walletCaptureGroup];
-        if (capturedWallet !== rule.walletExpectedValue) {
+        const capturedExpenseAvenue = match[rule.expenseAvenueCaptureGroup];
+        const capturedDate = match[rule.dateCaptureGroup];
+        const capturedAmount = match[rule.amountCaptureGroup];
+
+        if (!capturedWallet || !capturedExpenseAvenue || !capturedDate || !capturedAmount) {
           $q.notify({
             type: "negative",
-            message: `Invalid wallet. Expected: ${rule.walletExpectedValue}, Got: ${capturedWallet}`,
+            message: "Rule failed: One or more capture groups are empty",
           });
           return;
         }
 
-        // Find matching wallet
+        // Match wallet using flexible rules
+        let matchingWallet: Wallet | null = null;
         const walletsList = (await pouchdbService.listByCollection(Collection.WALLET)).docs as Wallet[];
         console.debug("Wallets list:", walletsList);
-        const matchingWallet = walletsList.find((w) => w.name === rule.prefillWalletName);
+
+        for (const walletRule of rule.walletMatchRules) {
+          if (TextImportRulesValidator.matchValue(capturedWallet, walletRule)) {
+            matchingWallet = walletsList.find((w) => w._id === walletRule.walletId) || null;
+            if (matchingWallet) break;
+          }
+        }
+
         if (!matchingWallet) {
           $q.notify({
             type: "negative",
-            message: `Wallet not found: ${rule.prefillWalletName}`,
+            message: `No wallet matched for captured value: ${capturedWallet}`,
           });
           return;
         }
 
-        // Validate expense avenue
-        const capturedExpenseAvenue = match[rule.expenseAvenueCaptureGroup];
-        if (rule.expenseAvenueExpectedValue !== capturedExpenseAvenue) {
-          $q.notify({
-            type: "negative",
-            message: `Invalid expense avenue. Pattern: ${rule.expenseAvenueExpectedValue}, Got: ${capturedExpenseAvenue}`,
-          });
-          return;
-        }
-
-        // Find matching expense avenue
+        // Match expense avenue using flexible rules
+        let matchingExpenseAvenue: ExpenseAvenue | null = null;
         const expenseAvenuesList = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)).docs as ExpenseAvenue[];
         console.debug("Expense avenues list:", expenseAvenuesList);
-        const matchingExpenseAvenue = expenseAvenuesList.find((ea) => ea.name === rule.prefillExpenseAvenueName);
+
+        for (const expenseAvenueRule of rule.expenseAvenueMatchRules) {
+          if (TextImportRulesValidator.matchValue(capturedExpenseAvenue, expenseAvenueRule)) {
+            matchingExpenseAvenue = expenseAvenuesList.find((ea) => ea._id === expenseAvenueRule.expenseAvenueId) || null;
+            if (matchingExpenseAvenue) break;
+          }
+        }
+
         if (!matchingExpenseAvenue) {
           $q.notify({
             type: "negative",
-            message: `Expense avenue not found: ${rule.prefillExpenseAvenueName}`,
+            message: `No expense avenue matched for captured value: ${capturedExpenseAvenue}`,
           });
           return;
         }
 
         // Validate and parse date
-        const capturedDate = match[rule.dateCaptureGroup];
         const parsedDate = parse(capturedDate, rule.dateFormat);
         if (!parsedDate) {
           $q.notify({
@@ -193,7 +202,6 @@ export default {
         }
 
         // Validate and parse amount
-        const capturedAmount = match[rule.amountCaptureGroup];
         const amount = parseFloat(capturedAmount);
         if (isNaN(amount)) {
           $q.notify({

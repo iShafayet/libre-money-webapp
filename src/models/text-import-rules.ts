@@ -1,3 +1,17 @@
+export type MatchingOperator = "exact-match" | "contains" | "starts-with" | "ends-with" | "regex";
+
+export type WalletMatchRule = {
+  operator: MatchingOperator;
+  value: string;
+  walletId: string;
+};
+
+export type ExpenseAvenueMatchRule = {
+  operator: MatchingOperator;
+  value: string;
+  expenseAvenueId: string;
+};
+
 export type TextImportRules = {
   _id?: string;
   _rev?: string;
@@ -7,12 +21,10 @@ export type TextImportRules = {
   regex: string;
   // WALLET
   walletCaptureGroup: number;
-  walletExpectedValue: string;
-  prefillWalletName: string;
+  walletMatchRules: WalletMatchRule[];
   // EXPENSE AVENUE
   expenseAvenueCaptureGroup: number;
-  expenseAvenueExpectedValue: string;
-  prefillExpenseAvenueName: string;
+  expenseAvenueMatchRules: ExpenseAvenueMatchRule[];
   // DATE
   dateCaptureGroup: number;
   dateFormat: string;
@@ -38,10 +50,8 @@ export class TextImportRulesValidator {
       "dateCaptureGroup",
       "amountCaptureGroup",
       "dateFormat",
-      "walletExpectedValue",
-      "expenseAvenueExpectedValue",
-      "prefillWalletName",
-      "prefillExpenseAvenueName",
+      "walletMatchRules",
+      "expenseAvenueMatchRules",
     ];
 
     // Check JSON configuration fields
@@ -74,6 +84,56 @@ export class TextImportRulesValidator {
       }
     }
 
+    // Validate wallet match rules
+    if (rule.walletMatchRules) {
+      if (!Array.isArray(rule.walletMatchRules)) {
+        errors.push("walletMatchRules must be an array");
+      } else if (rule.walletMatchRules.length === 0) {
+        errors.push("walletMatchRules must contain at least one rule");
+      } else {
+        rule.walletMatchRules.forEach((matchRule, index) => {
+          if (!matchRule.operator || !matchRule.value || !matchRule.walletId) {
+            errors.push(`walletMatchRules[${index}] must have operator, value, and walletId`);
+          }
+          if (matchRule.operator && !["exact-match", "contains", "starts-with", "ends-with", "regex"].includes(matchRule.operator)) {
+            errors.push(`walletMatchRules[${index}] has invalid operator: ${matchRule.operator}`);
+          }
+          if (matchRule.operator === "regex" && matchRule.value) {
+            try {
+              new RegExp(matchRule.value);
+            } catch (e) {
+              errors.push(`walletMatchRules[${index}] has invalid regex pattern`);
+            }
+          }
+        });
+      }
+    }
+
+    // Validate expense avenue match rules
+    if (rule.expenseAvenueMatchRules) {
+      if (!Array.isArray(rule.expenseAvenueMatchRules)) {
+        errors.push("expenseAvenueMatchRules must be an array");
+      } else if (rule.expenseAvenueMatchRules.length === 0) {
+        errors.push("expenseAvenueMatchRules must contain at least one rule");
+      } else {
+        rule.expenseAvenueMatchRules.forEach((matchRule, index) => {
+          if (!matchRule.operator || !matchRule.value || !matchRule.expenseAvenueId) {
+            errors.push(`expenseAvenueMatchRules[${index}] must have operator, value, and expenseAvenueId`);
+          }
+          if (matchRule.operator && !["exact-match", "contains", "starts-with", "ends-with", "regex"].includes(matchRule.operator)) {
+            errors.push(`expenseAvenueMatchRules[${index}] has invalid operator: ${matchRule.operator}`);
+          }
+          if (matchRule.operator === "regex" && matchRule.value) {
+            try {
+              new RegExp(matchRule.value);
+            } catch (e) {
+              errors.push(`expenseAvenueMatchRules[${index}] has invalid regex pattern`);
+            }
+          }
+        });
+      }
+    }
+
     // Validate date format
     if (rule.dateFormat) {
       const testDate = new Date();
@@ -101,5 +161,29 @@ export class TextImportRulesValidator {
       isValid: errors.length === 0,
       errors,
     };
+  }
+
+  static matchValue(capturedValue: string, matchRule: WalletMatchRule | ExpenseAvenueMatchRule): boolean {
+    if (!capturedValue || !matchRule.value) return false;
+
+    switch (matchRule.operator) {
+      case "exact-match":
+        return capturedValue === matchRule.value;
+      case "contains":
+        return capturedValue.toLowerCase().includes(matchRule.value.toLowerCase());
+      case "starts-with":
+        return capturedValue.toLowerCase().startsWith(matchRule.value.toLowerCase());
+      case "ends-with":
+        return capturedValue.toLowerCase().endsWith(matchRule.value.toLowerCase());
+      case "regex":
+        try {
+          const regex = new RegExp(matchRule.value, "i");
+          return regex.test(capturedValue);
+        } catch (e) {
+          return false;
+        }
+      default:
+        return false;
+    }
   }
 }
