@@ -168,7 +168,9 @@
               <div class="details-section">
                 <div class="record-date">
                   {{ prettifyDate(record.transactionEpoch) }}
-                  <q-icon v-if="isPotentialDuplicate(record)" name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
+                  <template v-if="isPotentialDuplicate(record)">
+                    <q-icon name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
+                  </template>
                 </div>
 
                 <div class="primary-line" v-if="record.type === RecordType.EXPENSE">
@@ -229,7 +231,9 @@
               <div class="details-section">
                 <div class="record-date">
                   {{ prettifyDate(record.transactionEpoch) }}
-                  <q-icon v-if="isPotentialDuplicate(record)" name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
+                  <template v-if="isPotentialDuplicate(record)">
+                    <q-icon name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
+                  </template>
                 </div>
 
                 <div class="primary-line">Transfer {{ record.moneyTransfer.fromWallet.name }} to {{ record.moneyTransfer.toWallet.name }}</div>
