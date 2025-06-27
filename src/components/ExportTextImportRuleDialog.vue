@@ -1,6 +1,6 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin" style="min-width: 600px">
+    <q-card class="q-dialog-plugin" style="max-width: 500px">
       <q-card-section>
         <div class="std-dialog-title q-pa-md">Export Rule as Code</div>
         <div class="q-pa-md">

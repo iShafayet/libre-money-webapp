@@ -1,98 +1,114 @@
 <template>
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin" style="min-width: 800px">
-      <q-card-section>
-        <div class="std-dialog-title q-pa-md">
-          {{ existingRuleId ? "Editing an Import Rule" : "Adding an Import Rule" }}
+    <q-card class="q-dialog-plugin" style="max-width: 500px; max-height: 90vh">
+      <q-card-section class="q-pa-md" style="max-height: calc(90vh - 80px); overflow-y: auto">
+        <div class="text-h6 q-mb-sm">
+          {{ existingRuleId ? "Edit Import Rule" : "Add Import Rule" }}
         </div>
-        <q-form class="q-gutter-md q-pa-md" ref="ruleForm">
+        <q-form class="q-gutter-sm" ref="ruleForm">
           <!-- Basic Information -->
-          <div class="text-h6">Basic Information</div>
-          <q-input filled v-model="ruleName" label="Rule Name" lazy-rules :rules="validators.required" />
-          <q-input filled v-model="ruleDescription" label="Description" type="textarea" />
-          <q-input filled v-model="ruleRegex" label="Regular Expression" lazy-rules :rules="[validateRegex]" />
+          <div class="text-subtitle1 text-primary q-mb-xs">Basic Information</div>
+          <q-input filled v-model="ruleName" label="Rule Name" lazy-rules :rules="validators.required" dense />
+          <q-input filled v-model="ruleDescription" label="Description" type="textarea" dense />
+          <q-input filled v-model="ruleRegex" label="Regular Expression" lazy-rules :rules="[validateRegex]" dense />
 
           <!-- Capture Groups -->
-          <div class="text-h6 q-mt-lg">Capture Groups</div>
-          <div class="row q-gutter-md">
+          <div class="text-subtitle1 text-primary q-mb-xs q-mt-md">Capture Groups</div>
+          <div class="row q-gutter-xs">
             <q-input
               filled
               v-model.number="walletCaptureGroup"
-              label="Wallet Capture Group"
+              label="Wallet Group"
               type="number"
               lazy-rules
               :rules="validators.required"
-              class="col"
+              class="col-6 col-sm-3"
+              dense
             />
             <q-input
               filled
               v-model.number="expenseAvenueCaptureGroup"
-              label="Expense Avenue Capture Group"
+              label="Expense Group"
               type="number"
               lazy-rules
               :rules="validators.required"
-              class="col"
+              class="col-6 col-sm-3"
+              dense
             />
-            <q-input filled v-model.number="dateCaptureGroup" label="Date Capture Group" type="number" lazy-rules :rules="validators.required" class="col" />
+            <q-input
+              filled
+              v-model.number="dateCaptureGroup"
+              label="Date Group"
+              type="number"
+              lazy-rules
+              :rules="validators.required"
+              class="col-6 col-sm-3"
+              dense
+            />
             <q-input
               filled
               v-model.number="amountCaptureGroup"
-              label="Amount Capture Group"
+              label="Amount Group"
               type="number"
               lazy-rules
               :rules="validators.required"
-              class="col"
+              class="col-6 col-sm-3"
+              dense
             />
           </div>
-          <q-input filled v-model="dateFormat" label="Date Format" lazy-rules :rules="validators.required" />
+          <q-input filled v-model="dateFormat" label="Date Format" lazy-rules :rules="validators.required" dense />
 
           <!-- Wallet Match Rules -->
-          <div class="text-h6 q-mt-lg">Wallet Match Rules</div>
-          <div v-for="(rule, index) in walletMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
-            <div class="row q-gutter-md items-center">
-              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" emit-value map-options />
-              <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
-              <select-wallet v-model="rule.walletId" label="Target Wallet" class="col-4" />
-              <q-btn icon="delete" color="negative" flat @click="removeWalletRule(index)" />
+          <div class="text-subtitle1 text-primary q-mb-xs q-mt-md">Wallet Match Rules</div>
+          <div v-for="(rule, index) in walletMatchRules" :key="index" class="q-pa-sm q-mb-sm" style="border: 1px solid #e0e0e0; border-radius: 4px">
+            <div class="column q-gutter-xs">
+              <div class="row q-gutter-xs">
+                <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-12 col-sm-4" emit-value map-options dense />
+                <q-input filled v-model="rule.value" label="Match Value" class="col-12 col-sm-8" dense />
+              </div>
+              <div class="row q-gutter-xs items-center">
+                <select-wallet v-model="rule.walletId" label="Target Wallet" class="col" />
+                <q-btn icon="delete" color="negative" flat size="sm" @click="removeWalletRule(index)" />
+              </div>
             </div>
           </div>
-          <q-btn icon="add" color="primary" label="Add Wallet Rule" @click="addWalletRule" />
+          <q-btn icon="add" color="primary" label="Add Wallet Rule" @click="addWalletRule" size="sm" />
 
           <!-- Expense Avenue Match Rules -->
-          <div class="text-h6 q-mt-lg">Expense Avenue Match Rules</div>
-          <div v-for="(rule, index) in expenseAvenueMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
-            <div class="row q-gutter-md items-center">
-              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" emit-value map-options />
-              <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
-              <select-expense-avenue v-model="rule.expenseAvenueId" label="Target Expense Avenue" class="col-4" />
-              <q-btn icon="delete" color="negative" flat @click="removeExpenseAvenueRule(index)" />
+          <div class="text-subtitle1 text-primary q-mb-xs q-mt-md">Expense Avenue Match Rules</div>
+          <div v-for="(rule, index) in expenseAvenueMatchRules" :key="index" class="q-pa-sm q-mb-sm" style="border: 1px solid #e0e0e0; border-radius: 4px">
+            <div class="column q-gutter-xs">
+              <div class="row q-gutter-xs">
+                <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-12 col-sm-4" emit-value map-options dense />
+                <q-input filled v-model="rule.value" label="Match Value" class="col-12 col-sm-8" dense />
+              </div>
+              <div class="row q-gutter-xs items-center">
+                <select-expense-avenue v-model="rule.expenseAvenueId" label="Target Expense Avenue" class="col" />
+                <q-btn icon="delete" color="negative" flat size="sm" @click="removeExpenseAvenueRule(index)" />
+              </div>
             </div>
           </div>
-          <q-btn icon="add" color="primary" label="Add Expense Avenue Rule" @click="addExpenseAvenueRule" />
+          <q-btn icon="add" color="primary" label="Add Expense Avenue Rule" @click="addExpenseAvenueRule" size="sm" />
 
-          <q-toggle v-model="ruleIsActive" label="Active" />
+          <q-toggle v-model="ruleIsActive" label="Active" class="q-mt-sm" />
 
-          <div v-if="validationErrors.length > 0" class="q-mt-md">
+          <div v-if="validationErrors.length > 0" class="q-mt-sm">
             <div class="text-negative text-subtitle2">Validation Errors:</div>
-            <q-list bordered separator>
-              <q-item v-for="error in validationErrors" :key="error" dense>
-                <q-item-section>
-                  <q-item-label class="text-negative">{{ error }}</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+            <q-card flat bordered class="q-pa-sm">
+              <div v-for="error in validationErrors" :key="error" class="text-negative text-body2">• {{ error }}</div>
+            </q-card>
           </div>
         </q-form>
       </q-card-section>
 
-      <q-card-actions class="row justify-between">
-        <div class="row q-gutter-sm">
-          <q-btn color="orange" icon="code" label="Export as Code" @click="exportAsCodeClicked" outline />
-          <q-btn color="purple" icon="download" label="Import Code" @click="importCodeClicked" outline />
+      <q-card-actions class="column q-gutter-xs q-pa-sm">
+        <div class="row justify-center q-gutter-xs">
+          <q-btn color="orange" icon="code" label="Export Code" @click="exportAsCodeClicked" outline size="sm" />
+          <q-btn color="purple" icon="download" label="Import Code" @click="importCodeClicked" outline size="sm" />
         </div>
-        <div class="row q-gutter-sm">
-          <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
-          <q-btn color="primary" label="OK" @click="okClicked" :disable="validationErrors.length > 0" />
+        <div class="row justify-end q-gutter-xs">
+          <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" size="sm" />
+          <q-btn color="primary" label="Save" @click="okClicked" :disable="validationErrors.length > 0" size="sm" />
         </div>
       </q-card-actions>
     </q-card>
