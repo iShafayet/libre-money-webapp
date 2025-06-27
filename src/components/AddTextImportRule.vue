@@ -50,7 +50,7 @@
           <div class="text-h6 q-mt-lg">Wallet Match Rules</div>
           <div v-for="(rule, index) in walletMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
             <div class="row q-gutter-md items-center">
-              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" />
+              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" emit-value map-options />
               <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
               <select-wallet v-model="rule.walletId" label="Target Wallet" class="col-4" />
               <q-btn icon="delete" color="negative" flat @click="removeWalletRule(index)" />
@@ -62,7 +62,7 @@
           <div class="text-h6 q-mt-lg">Expense Avenue Match Rules</div>
           <div v-for="(rule, index) in expenseAvenueMatchRules" :key="index" class="q-pa-md q-mb-md" style="border: 1px solid #e0e0e0; border-radius: 4px">
             <div class="row q-gutter-md items-center">
-              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" />
+              <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-3" emit-value map-options />
               <q-input filled v-model="rule.value" label="Match Value" class="col-4" />
               <select-expense-avenue v-model="rule.expenseAvenueId" label="Target Expense Avenue" class="col-4" />
               <q-btn icon="delete" color="negative" flat @click="removeExpenseAvenueRule(index)" />
