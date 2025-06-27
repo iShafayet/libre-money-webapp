@@ -241,6 +241,10 @@ export default {
           transactionEpoch.value = new Date(props.suggestion.date).getTime();
         }
 
+        if (props.suggestion.notes) {
+          recordNotes.value = props.suggestion.notes;
+        }
+
         isLoading.value = false;
       })();
     } else {

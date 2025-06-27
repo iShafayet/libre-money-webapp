@@ -201,8 +201,9 @@ export default {
           return;
         }
 
-        // Validate and parse amount
-        const amount = parseFloat(capturedAmount);
+        // Validate and parse amount (handle comma separators)
+        const cleanedAmount = capturedAmount.replace(/,/g, ""); // Remove commas
+        const amount = parseFloat(cleanedAmount);
         if (isNaN(amount)) {
           $q.notify({
             type: "negative",
