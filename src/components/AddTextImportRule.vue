@@ -85,9 +85,15 @@
         </q-form>
       </q-card-section>
 
-      <q-card-actions class="row justify-end">
-        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
-        <q-btn color="primary" label="OK" @click="okClicked" :disable="validationErrors.length > 0" />
+      <q-card-actions class="row justify-between">
+        <div class="row q-gutter-sm">
+          <q-btn color="orange" icon="code" label="Export as Code" @click="exportAsCodeClicked" outline />
+          <q-btn color="purple" icon="download" label="Import Code" @click="importCodeClicked" outline />
+        </div>
+        <div class="row q-gutter-sm">
+          <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
+          <q-btn color="primary" label="OK" @click="okClicked" :disable="validationErrors.length > 0" />
+        </div>
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -102,6 +108,8 @@ import { Collection } from "src/constants/constants";
 import SelectWallet from "./SelectWallet.vue";
 import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
 import { validators } from "src/utils/validators";
+import ExportTextImportRuleDialog from "./ExportTextImportRuleDialog.vue";
+import ImportTextImportRuleDialog from "./ImportTextImportRuleDialog.vue";
 
 export default {
   components: {
@@ -221,6 +229,55 @@ export default {
       expenseAvenueMatchRules.value.splice(index, 1);
     };
 
+    const getCurrentRuleData = (): Partial<TextImportRules> => {
+      return {
+        name: ruleName.value,
+        description: ruleDescription.value,
+        regex: ruleRegex.value,
+        walletCaptureGroup: walletCaptureGroup.value,
+        expenseAvenueCaptureGroup: expenseAvenueCaptureGroup.value,
+        dateCaptureGroup: dateCaptureGroup.value,
+        amountCaptureGroup: amountCaptureGroup.value,
+        dateFormat: dateFormat.value,
+        walletMatchRules: walletMatchRules.value,
+        expenseAvenueMatchRules: expenseAvenueMatchRules.value,
+        isActive: ruleIsActive.value,
+      };
+    };
+
+    const exportAsCodeClicked = () => {
+      $q.dialog({
+        component: ExportTextImportRuleDialog,
+        componentProps: {
+          rule: getCurrentRuleData(),
+        },
+      });
+    };
+
+    const importCodeClicked = () => {
+      $q.dialog({
+        component: ImportTextImportRuleDialog,
+      }).onOk((importedRule: Partial<TextImportRules>) => {
+        // Update UI values with imported data
+        if (importedRule.name !== undefined) ruleName.value = importedRule.name;
+        if (importedRule.description !== undefined) ruleDescription.value = importedRule.description;
+        if (importedRule.regex !== undefined) ruleRegex.value = importedRule.regex;
+        if (importedRule.walletCaptureGroup !== undefined) walletCaptureGroup.value = importedRule.walletCaptureGroup;
+        if (importedRule.expenseAvenueCaptureGroup !== undefined) expenseAvenueCaptureGroup.value = importedRule.expenseAvenueCaptureGroup;
+        if (importedRule.dateCaptureGroup !== undefined) dateCaptureGroup.value = importedRule.dateCaptureGroup;
+        if (importedRule.amountCaptureGroup !== undefined) amountCaptureGroup.value = importedRule.amountCaptureGroup;
+        if (importedRule.dateFormat !== undefined) dateFormat.value = importedRule.dateFormat;
+        if (importedRule.walletMatchRules !== undefined) walletMatchRules.value = [...importedRule.walletMatchRules];
+        if (importedRule.expenseAvenueMatchRules !== undefined) expenseAvenueMatchRules.value = [...importedRule.expenseAvenueMatchRules];
+        if (importedRule.isActive !== undefined) ruleIsActive.value = importedRule.isActive;
+
+        $q.notify({
+          type: "positive",
+          message: "Rule imported successfully! Review and save to apply changes.",
+        });
+      });
+    };
+
     async function okClicked() {
       if (!(await ruleForm.value?.validate())) {
         return;
@@ -299,6 +356,8 @@ export default {
       addExpenseAvenueRule,
       removeExpenseAvenueRule,
       validators,
+      exportAsCodeClicked,
+      importCodeClicked,
     };
   },
 };
