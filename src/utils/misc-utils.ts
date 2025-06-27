@@ -20,12 +20,16 @@ export function deepClone(object: any) {
   return JSON.parse(JSON.stringify(object));
 }
 
+import { numberService } from "src/services/number-service";
+
+/** @deprecated Use numberService.asAmount() instead */
 export function asAmount(amount: number | string | null | undefined) {
-  return parseFloat(String(amount)) || 0;
+  return numberService.asAmount(amount);
 }
 
+/** @deprecated Use numberService.asFinancialAmount() instead */
 export function asFinancialAmount(amount: number | string | null | undefined) {
-  return Math.round(parseFloat(String(amount)) * 1000) / 1000 || 0;
+  return numberService.asFinancialAmount(amount);
 }
 
 function hexToRgb(hex: any) {
@@ -39,10 +43,10 @@ function hexToRgb(hex: any) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16),
-    }
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
     : null;
 }
 
@@ -61,12 +65,14 @@ export function guessFontColorCode(colorCode: string) {
   }
 }
 
+/** @deprecated Use numberService.prettifyAmount() instead */
 export function prettifyAmount(amount: number | string | null | undefined) {
-  return asFinancialAmount(amount).toLocaleString("en-US");
+  return numberService.prettifyAmount(amount);
 }
 
+/** @deprecated Use numberService.prettifyCount() instead */
 export function prettifyCount(amount: number | string | null | undefined) {
-  return asAmount(amount).toLocaleString("en-US");
+  return numberService.prettifyCount(amount);
 }
 
 export function prettifyDate(timestamp: number) {

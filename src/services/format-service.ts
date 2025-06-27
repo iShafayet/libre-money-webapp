@@ -1,12 +1,11 @@
 import { Collection } from "src/constants/constants";
 import { pouchdbService } from "./pouchdb-service";
 import { Currency } from "src/models/currency";
-import { prettifyAmount } from "src/utils/misc-utils";
+import { numberService, NumberFormatOptions, CurrencyFormatOptions } from "./number-service";
 
 let currencyCacheList: Currency[] = [];
 
 class FormatService {
-
   async updateCurrencyCache() {
     currencyCacheList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
   }
@@ -22,11 +21,26 @@ class FormatService {
     }
   }
 
-  getPrintableAmount(amount: number, currencyId: string) {
+  getPrintableAmount(amount: number, currencyId: string, options?: CurrencyFormatOptions) {
     const currency = currencyCacheList.find((_currency) => _currency._id === currencyId);
-    return `${prettifyAmount(amount)} ${currency?.sign}`;
+    return numberService.formatCurrency(amount, currency?.sign || "", options);
   }
 
+  getFormattedNumber(value: any, options?: NumberFormatOptions) {
+    return numberService.formatNumber(value, options);
+  }
+
+  getFormattedFinancialAmount(value: any, options?: Omit<NumberFormatOptions, "decimals">) {
+    return numberService.formatFinancialAmount(value, options);
+  }
+
+  getFormattedPercentage(value: any, decimals?: number) {
+    return numberService.formatPercentage(value, decimals);
+  }
+
+  getFormattedBudgetPercentage(usedAmount: any, totalAmount: any) {
+    return numberService.formatBudgetPercentage(usedAmount, totalAmount);
+  }
 }
 
 export const formatService = new FormatService();

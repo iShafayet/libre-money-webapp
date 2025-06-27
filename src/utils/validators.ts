@@ -1,3 +1,6 @@
+import { numberService } from "src/services/number-service";
+
+/** @deprecated Use numberService.isValidNumber() instead */
 function isNumeric(str: string) {
   if (typeof str != "string") return false; // we only process strings!
   return (
@@ -16,25 +19,47 @@ export const validators = {
   required: [(val: any) => (val !== null && val !== undefined && val !== "") || "This field is required"],
   balance: [
     (val: string) => {
-      return isNumeric(String(val)) || "A valid number is required";
+      return numberService.isValidNumber(val) || "A valid number is required";
     },
   ],
   balanceOptional: [
     (val: string) => {
       if (!val) return true;
-      return isNumeric(String(val)) || "A valid number is required";
+      return numberService.isValidNumber(val) || "A valid number is required";
     },
   ],
   nonZeroInteger: [
     (val: string) => {
-      if (!isNumeric(String(val))) {
+      if (!numberService.isValidNumber(val)) {
         return "A valid number is required";
       }
-      if (parseFloat(String(val)) <= 0) {
-        return "Value must be greater than Zero";
+      if (!numberService.isPositiveNumber(val)) {
+        return "Value must be greater than zero";
       }
-      if (!Number.isInteger(parseFloat(String(val)))) {
+      if (!numberService.isInteger(val)) {
         return "The number must be a whole number";
+      }
+      return true;
+    },
+  ],
+  positiveNumber: [
+    (val: string) => {
+      if (!numberService.isValidNumber(val)) {
+        return "A valid number is required";
+      }
+      if (!numberService.isPositiveNumber(val)) {
+        return "Value must be greater than zero";
+      }
+      return true;
+    },
+  ],
+  nonNegativeNumber: [
+    (val: string) => {
+      if (!numberService.isValidNumber(val)) {
+        return "A valid number is required";
+      }
+      if (!numberService.isNonNegativeNumber(val)) {
+        return "Value must be zero or greater";
       }
       return true;
     },
