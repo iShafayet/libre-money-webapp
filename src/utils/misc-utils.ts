@@ -1,4 +1,6 @@
 import { date } from "quasar";
+import { formatFinancialAmount, formatCount, parseNumber, parseFinancialAmount } from "./number-utils";
+import { NUMBER_CONFIG } from "src/constants/number-constants";
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export async function suppress(fn: Function | (() => Promise<any>)) {
@@ -18,18 +20,6 @@ export async function sleep(duration: number) {
 
 export function deepClone(object: any) {
   return JSON.parse(JSON.stringify(object));
-}
-
-import { numberService } from "src/services/number-service";
-
-/** @deprecated Use numberService.asAmount() instead */
-export function asAmount(amount: number | string | null | undefined) {
-  return numberService.asAmount(amount);
-}
-
-/** @deprecated Use numberService.asFinancialAmount() instead */
-export function asFinancialAmount(amount: number | string | null | undefined) {
-  return numberService.asFinancialAmount(amount);
 }
 
 function hexToRgb(hex: any) {
@@ -65,16 +55,6 @@ export function guessFontColorCode(colorCode: string) {
   }
 }
 
-/** @deprecated Use numberService.prettifyAmount() instead */
-export function prettifyAmount(amount: number | string | null | undefined) {
-  return numberService.prettifyAmount(amount);
-}
-
-/** @deprecated Use numberService.prettifyCount() instead */
-export function prettifyCount(amount: number | string | null | undefined) {
-  return numberService.prettifyCount(amount);
-}
-
 export function prettifyDate(timestamp: number) {
   return date.formatDate(timestamp, "YYYY MMM DD");
 }
@@ -89,4 +69,52 @@ export function getCurrentYear() {
 
 export function isNullOrUndefined(value: any) {
   return value == null;
+}
+
+export function tryOrElse<T, U>(fn: () => T, fallback: U): T | U {
+  try {
+    return fn();
+  } catch (ex) {
+    return fallback;
+  }
+}
+
+/** @deprecated Use printAmount() from de-facto-utils.ts instead */
+export function prettifyAmount(amount: number | string | null | undefined) {
+  if (amount === null || amount === undefined) return "0";
+  try {
+    return formatFinancialAmount(amount);
+  } catch {
+    return "0";
+  }
+}
+
+/** @deprecated Use printCount() from de-facto-utils.ts instead */
+export function prettifyCount(amount: number | string | null | undefined) {
+  if (amount === null || amount === undefined) return "0";
+  try {
+    return formatCount(amount);
+  } catch {
+    return "0";
+  }
+}
+
+/** @deprecated Use asAmount() or asRawAmount() from de-facto-utils.ts instead */
+export function asAmount(amount: number | string | null | undefined) {
+  if (amount === null || amount === undefined) return 0;
+  try {
+    return parseNumber(amount);
+  } catch {
+    return 0;
+  }
+}
+
+/** @deprecated Use asAmount() or asRawAmount() from de-facto-utils.ts instead */
+export function asFinancialAmount(amount: number | string | null | undefined) {
+  if (amount === null || amount === undefined) return 0;
+  try {
+    return parseFinancialAmount(amount, NUMBER_CONFIG.FINANCIAL_PRECISION);
+  } catch {
+    return 0;
+  }
 }

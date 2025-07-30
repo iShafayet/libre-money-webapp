@@ -1,6 +1,6 @@
-import { numberService } from "src/services/number-service";
+import { isValidNumber, isPositiveNumber, isNonNegativeNumber, isInteger } from "./number-utils";
 
-/** @deprecated Use numberService.isValidNumber() instead */
+/** @deprecated Use isValidNumber() instead */
 function isNumeric(str: string) {
   if (typeof str != "string") return false; // we only process strings!
   return (
@@ -19,24 +19,24 @@ export const validators = {
   required: [(val: any) => (val !== null && val !== undefined && val !== "") || "This field is required"],
   balance: [
     (val: string) => {
-      return numberService.isValidNumber(val) || "A valid number is required";
+      return isValidNumber(val) || "A valid number is required";
     },
   ],
   balanceOptional: [
     (val: string) => {
       if (!val) return true;
-      return numberService.isValidNumber(val) || "A valid number is required";
+      return isValidNumber(val) || "A valid number is required";
     },
   ],
   nonZeroInteger: [
     (val: string) => {
-      if (!numberService.isValidNumber(val)) {
+      if (!isValidNumber(val)) {
         return "A valid number is required";
       }
-      if (!numberService.isPositiveNumber(val)) {
+      if (!isPositiveNumber(val)) {
         return "Value must be greater than zero";
       }
-      if (!numberService.isInteger(val)) {
+      if (!isInteger(val)) {
         return "The number must be a whole number";
       }
       return true;
@@ -44,10 +44,10 @@ export const validators = {
   ],
   positiveNumber: [
     (val: string) => {
-      if (!numberService.isValidNumber(val)) {
+      if (!isValidNumber(val)) {
         return "A valid number is required";
       }
-      if (!numberService.isPositiveNumber(val)) {
+      if (!isPositiveNumber(val)) {
         return "Value must be greater than zero";
       }
       return true;
@@ -55,10 +55,10 @@ export const validators = {
   ],
   nonNegativeNumber: [
     (val: string) => {
-      if (!numberService.isValidNumber(val)) {
+      if (!isValidNumber(val)) {
         return "A valid number is required";
       }
-      if (!numberService.isNonNegativeNumber(val)) {
+      if (!isNonNegativeNumber(val)) {
         return "Value must be zero or greater";
       }
       return true;

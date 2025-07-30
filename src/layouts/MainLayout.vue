@@ -88,7 +88,7 @@ import { sleep } from "src/utils/misc-utils";
 import { useQuasar } from "quasar";
 import SyncDialog from "src/components/SyncDialog.vue";
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
-import { formatService } from "src/services/format-service";
+import { currencyFormatService } from "src/services/currency-format-service";
 
 const operationList = [
   {
@@ -302,7 +302,7 @@ export default defineComponent({
       await dialogService.alert(title, body);
     }
 
-    formatService.init();
+    currencyFormatService.init();
 
     return {
       operationList,

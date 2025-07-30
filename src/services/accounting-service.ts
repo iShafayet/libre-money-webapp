@@ -15,7 +15,7 @@ import { Wallet } from "src/models/wallet";
 import { asFinancialAmount } from "src/utils/misc-utils";
 import PromisePool from "src/utils/promise-pool";
 import { dialogService } from "./dialog-service";
-import { formatService } from "./format-service";
+import { currencyFormatService } from "./currency-format-service";
 import { pouchdbService } from "./pouchdb-service";
 import { recordService } from "./record-service";
 
@@ -258,7 +258,7 @@ class AccountingService {
       currencyId: expense.currencyId,
       amount: asFinancialAmount(expense.amount),
     });
-    description += `Spent ${formatService.getPrintableAmount(expense.amount, expense.currencyId)} as "${expense.expenseAvenue.name}". `;
+    description += `Spent ${currencyFormatService.getPrintableAmountWithCurrency(expense.amount, expense.currencyId)} as "${expense.expenseAvenue.name}". `;
 
     if (expense.amountPaid > 0) {
       if (expense.wallet.type === "credit-card") {
@@ -314,7 +314,7 @@ class AccountingService {
       currencyId: income.currencyId,
       amount: asFinancialAmount(income.amount),
     });
-    description += `Earned ${formatService.getPrintableAmount(income.amount, income.currencyId)} as "${income.incomeSource.name}". `;
+    description += `Earned ${currencyFormatService.getPrintableAmountWithCurrency(income.amount, income.currencyId)} as "${income.incomeSource.name}". `;
 
     if (income.amountPaid > 0) {
       if (income.wallet.type === "credit-card") {
@@ -408,11 +408,11 @@ class AccountingService {
     }
 
     if (moneyTransfer.fromAmount === moneyTransfer.toAmount && moneyTransfer.fromCurrencyId === moneyTransfer.toCurrencyId) {
-      description += `Transfered ${formatService.getPrintableAmount(moneyTransfer.fromAmount, moneyTransfer.fromCurrencyId)} from
+      description += `Transfered ${currencyFormatService.getPrintableAmountWithCurrency(moneyTransfer.fromAmount, moneyTransfer.fromCurrencyId)} from
       "${moneyTransfer.fromWallet.name}" to "${moneyTransfer.toWallet.name}". `;
     } else {
-      description += `Transfered ${formatService.getPrintableAmount(moneyTransfer.fromAmount, moneyTransfer.fromCurrencyId)} from
-      "${moneyTransfer.fromWallet.name}" into ${formatService.getPrintableAmount(moneyTransfer.toAmount, moneyTransfer.toCurrencyId)}
+      description += `Transfered ${currencyFormatService.getPrintableAmountWithCurrency(moneyTransfer.fromAmount, moneyTransfer.fromCurrencyId)} from
+      "${moneyTransfer.fromWallet.name}" into ${currencyFormatService.getPrintableAmountWithCurrency(moneyTransfer.toAmount, moneyTransfer.toCurrencyId)}
        on "${moneyTransfer.toWallet.name}". `;
     }
 
@@ -424,7 +424,7 @@ class AccountingService {
           currencyId: moneyTransfer.toCurrencyId,
           amount: diff,
         });
-        description += `Transfer fee: ${formatService.getPrintableAmount(diff, moneyTransfer.toCurrencyId)}. `;
+        description += `Transfer fee: ${currencyFormatService.getPrintableAmountWithCurrency(diff, moneyTransfer.toCurrencyId)}. `;
       } else if (asFinancialAmount(moneyTransfer.fromAmount) < asFinancialAmount(moneyTransfer.toAmount)) {
         const diff = asFinancialAmount(moneyTransfer.toAmount) - asFinancialAmount(moneyTransfer.fromAmount);
         debitList.push({
@@ -432,7 +432,7 @@ class AccountingService {
           currencyId: moneyTransfer.toCurrencyId,
           amount: diff,
         });
-        description += `Gained during transfer: ${formatService.getPrintableAmount(diff, moneyTransfer.toCurrencyId)}. `;
+        description += `Gained during transfer: ${currencyFormatService.getPrintableAmountWithCurrency(diff, moneyTransfer.toCurrencyId)}. `;
       }
     }
 
@@ -472,7 +472,7 @@ class AccountingService {
       currencyId: assetPurchase.currencyId,
       amount: asFinancialAmount(assetPurchase.amount),
     });
-    description += `Purchased asset "${assetPurchase.asset.name}" for ${formatService.getPrintableAmount(
+    description += `Purchased asset "${assetPurchase.asset.name}" for ${currencyFormatService.getPrintableAmountWithCurrency(
       assetPurchase.amount,
       assetPurchase.currencyId
     )}. `;
@@ -538,7 +538,7 @@ class AccountingService {
       currencyId: assetSale.currencyId,
       amount: asFinancialAmount(assetSale.amount),
     });
-    description += `Sold asset "${assetSale.asset.name}" for ${formatService.getPrintableAmount(assetSale.amount, assetSale.currencyId)}. `;
+    description += `Sold asset "${assetSale.asset.name}" for ${currencyFormatService.getPrintableAmountWithCurrency(assetSale.amount, assetSale.currencyId)}. `;
 
     if (assetSale.amountPaid > 0) {
       if (assetSale.wallet.type === "credit-card") {
@@ -607,7 +607,7 @@ class AccountingService {
         currencyId: assetAppreciationDepreciation.currencyId,
         amount: asFinancialAmount(assetAppreciationDepreciation.amount),
       });
-      description += `Asset "${assetAppreciationDepreciation.asset.name}" appreciated by ${formatService.getPrintableAmount(
+      description += `Asset "${assetAppreciationDepreciation.asset.name}" appreciated by ${currencyFormatService.getPrintableAmountWithCurrency(
         assetAppreciationDepreciation.amount,
         assetAppreciationDepreciation.currencyId
       )}. `;
@@ -623,7 +623,7 @@ class AccountingService {
         amount: asFinancialAmount(assetAppreciationDepreciation.amount),
       });
 
-      description += `Asset "${assetAppreciationDepreciation.asset.name}" depreciated by ${formatService.getPrintableAmount(
+      description += `Asset "${assetAppreciationDepreciation.asset.name}" depreciated by ${currencyFormatService.getPrintableAmountWithCurrency(
         assetAppreciationDepreciation.amount,
         assetAppreciationDepreciation.currencyId
       )}. `;
@@ -644,7 +644,7 @@ class AccountingService {
       currencyId: lending.currencyId,
       amount: asFinancialAmount(lending.amount),
     });
-    description += `Lent ${formatService.getPrintableAmount(lending.amount, lending.currencyId)} to "${lending.party.name}"
+    description += `Lent ${currencyFormatService.getPrintableAmountWithCurrency(lending.amount, lending.currencyId)} to "${lending.party.name}"
      from "${lending.wallet.name}". `;
 
     if (lending.wallet.type === "credit-card") {
@@ -682,7 +682,7 @@ class AccountingService {
       currencyId: borrowing.currencyId,
       amount: asFinancialAmount(borrowing.amount),
     });
-    description += `Borrowed ${formatService.getPrintableAmount(borrowing.amount, borrowing.currencyId)} from "${borrowing.party.name}"
+    description += `Borrowed ${currencyFormatService.getPrintableAmountWithCurrency(borrowing.amount, borrowing.currencyId)} from "${borrowing.party.name}"
      into "${borrowing.wallet.name}". `;
 
     if (borrowing.wallet.type === "credit-card") {
@@ -720,7 +720,7 @@ class AccountingService {
       currencyId: repaymentReceived.currencyId,
       amount: asFinancialAmount(repaymentReceived.amount),
     });
-    description += `Repayment received of ${formatService.getPrintableAmount(repaymentReceived.amount, repaymentReceived.currencyId)}
+    description += `Repayment received of ${currencyFormatService.getPrintableAmountWithCurrency(repaymentReceived.amount, repaymentReceived.currencyId)}
           from "${repaymentReceived.party.name}"
           into "${repaymentReceived.wallet.name}". `;
 
@@ -759,7 +759,7 @@ class AccountingService {
       currencyId: repaymentGiven.currencyId,
       amount: asFinancialAmount(repaymentGiven.amount),
     });
-    description += `Repayment given of ${formatService.getPrintableAmount(repaymentGiven.amount, repaymentGiven.currencyId)}
+    description += `Repayment given of ${currencyFormatService.getPrintableAmountWithCurrency(repaymentGiven.amount, repaymentGiven.currencyId)}
           to "${repaymentGiven.party.name}"
           from "${repaymentGiven.wallet.name}". `;
 
@@ -1176,7 +1176,7 @@ class AccountingService {
 
     const gapInPermanentBalance = asFinancialAmount(
       trialBalanceWithCurrency.trialBalanceOfTypeMap["Asset"].totalBalance -
-      (trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].totalBalance + trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].totalBalance)
+        (trialBalanceWithCurrency.trialBalanceOfTypeMap["Liability"].totalBalance + trialBalanceWithCurrency.trialBalanceOfTypeMap["Equity"].totalBalance)
     );
 
     if (retainedEarnings !== gapInPermanentBalance) {
