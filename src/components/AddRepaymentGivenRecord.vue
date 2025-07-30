@@ -44,7 +44,7 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import SelectWallet from "./SelectWallet.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount } from "src/utils/de-facto-utils";
 import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 

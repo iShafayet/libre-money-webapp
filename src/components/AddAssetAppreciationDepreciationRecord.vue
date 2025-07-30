@@ -47,7 +47,7 @@ import SelectWallet from "./SelectWallet.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
 import { dialogService } from "src/services/dialog-service";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount } from "src/utils/de-facto-utils";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import { entityService } from "src/services/entity-service";
 

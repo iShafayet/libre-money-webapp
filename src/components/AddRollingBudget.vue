@@ -88,7 +88,8 @@ import { Ref, ref, watch } from "vue";
 import DateInput from "./lib/DateInput.vue";
 import SelectCurrency from "./SelectCurrency.vue";
 import SelectTag from "./SelectTag.vue";
-import { asAmount, prettifyDate } from "src/utils/misc-utils";
+import { prettifyDate } from "src/utils/misc-utils";
+import { asAmount } from "src/utils/de-facto-utils";
 import { computationService } from "src/services/computation-service";
 import { normalizeEpochAsDate } from "src/utils/date-utils";
 export default {

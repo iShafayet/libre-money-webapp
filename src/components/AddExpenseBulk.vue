@@ -57,7 +57,7 @@ import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
-import { asAmount } from "src/utils/misc-utils";
+import { asAmount } from "src/utils/de-facto-utils";
 import { validators } from "src/utils/validators";
 import { Ref, ref } from "vue";
 import DateInput from "./lib/DateInput.vue";

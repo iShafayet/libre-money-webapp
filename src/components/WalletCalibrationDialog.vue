@@ -75,12 +75,11 @@ import { useDialogPluginComponent } from "quasar";
 import { ref, Ref, watch, computed, onMounted } from "vue";
 import { entityService } from "src/services/entity-service";
 import { useSettingsStore } from "src/stores/settings";
-import { printAmount } from "src/utils/de-facto-utils";
+import { printAmount, asAmount } from "src/utils/de-facto-utils";
 import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
 import SelectIncomeSource from "./SelectIncomeSource.vue";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection, fixtureCode, RecordType } from "src/constants/constants";
-import { asAmount } from "src/utils/misc-utils";
 import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
 
