@@ -10,7 +10,7 @@ import { QuickSummary } from "src/models/inferred/quick-summary";
 import { Party } from "src/models/party";
 import { Record } from "src/models/record";
 import { Wallet } from "src/models/wallet";
-import { normalizeEpochRange } from "src/utils/date-utils";
+import { normalizeEpochAsDateAtTheEndOfDay, normalizeEpochAsDate, normalizeEpochRange } from "src/utils/date-utils";
 import { isNullOrUndefined } from "src/utils/misc-utils";
 import { asAmount } from "src/utils/de-facto-utils";
 import { pouchdbService } from "./pouchdb-service";
@@ -552,9 +552,9 @@ class ComputationService {
     let toRollOverAmount = 0;
 
     for (const budgetedPeriod of rollingBudget.budgetedPeriodList) {
-      let narrowedRecordList = fullRecordList.filter(
-        (record) => record.transactionEpoch >= budgetedPeriod.startEpoch && record.transactionEpoch <= budgetedPeriod.endEpoch
-      );
+      const startEpoch = normalizeEpochAsDate(budgetedPeriod.startEpoch);
+      const endEpoch = normalizeEpochAsDateAtTheEndOfDay(budgetedPeriod.endEpoch);
+      let narrowedRecordList = fullRecordList.filter((record) => record.transactionEpoch >= startEpoch && record.transactionEpoch <= endEpoch);
 
       if (rollingBudget.tagIdWhiteList.length > 0) {
         narrowedRecordList = narrowedRecordList.filter((record) => {
