@@ -46,8 +46,7 @@ import { Currency } from "src/models/currency";
 import { QuickExpenseSummary } from "src/models/inferred/quick-expense-summary";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
-import { asFinancialAmount } from "src/utils/misc-utils";
-import { printCount } from "src/utils/de-facto-utils";
+import { asAmount, printCount } from "src/utils/de-facto-utils";
 import { Ref, onMounted, ref } from "vue";
 
 export default {
@@ -97,7 +96,7 @@ export default {
       isLoading,
       printCount,
       summaryList,
-      asFinancialAmount,
+      asAmount,
     };
   },
 };
