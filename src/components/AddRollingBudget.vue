@@ -77,7 +77,7 @@
 
 <script lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { UNBUDGETED_RECORDS_BUDGET_NAME } from "src/constants/config-constants";
+
 import { Collection, defaultRollOverRule, rollOverRuleList } from "src/constants/constants";
 import { BudgetedPeriod, RollingBudget } from "src/models/rolling-budget";
 import { dialogService } from "src/services/dialog-service";
@@ -277,11 +277,6 @@ export default {
 
     async function okClicked() {
       if (!(await budgetForm.value?.validate())) {
-        return;
-      }
-
-      if (budgetName.value === UNBUDGETED_RECORDS_BUDGET_NAME) {
-        dialogService.alert("Error", "Cannot create rolling budget with name " + UNBUDGETED_RECORDS_BUDGET_NAME + ".");
         return;
       }
 

@@ -85,17 +85,6 @@ export function formatPercentage(value: NumberValue, decimals = percentagePrecis
   return `${formatNumber(number, { decimals })}%`;
 }
 
-// Special formatting for budget percentages (existing pattern)
-export function formatBudgetPercentage(usedAmount: NumberValue, totalAmount: NumberValue): string {
-  const used = parseNumber(usedAmount);
-  const total = parseNumber(totalAmount);
-
-  if (total === 0) return "0%";
-
-  const percentage = (used / total) * 100;
-  return `${Math.round(percentage * 100) / 100}%`;
-}
-
 // Validation functions
 export function isValidNumber(value: NumberValue): boolean {
   if (value === null || value === undefined || value === "") return false;

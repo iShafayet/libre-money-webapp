@@ -128,15 +128,9 @@ const operationList = [
     link: "#/loans-and-debts",
   },
   {
-    title: "Budgets",
-    caption: "Budget and save more",
-    icon: "energy_savings_leaf",
-    link: "#/budgets",
-  },
-  {
     title: "Rolling Budgets",
     caption: "Monthly recurring budgets",
-    icon: "calendar_month",
+    icon: "energy_savings_leaf",
     link: "#/rolling-budgets",
   },
 ];

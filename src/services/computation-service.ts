@@ -1,6 +1,6 @@
 import { Collection, RecordType, assetLiquidityList } from "src/constants/constants";
 import { Asset } from "src/models/asset";
-import { Budget } from "src/models/budget";
+
 import { Currency } from "src/models/currency";
 import { ExpenseAvenue } from "src/models/expense-avenue";
 import { IncomeSource } from "src/models/income-source";
@@ -596,45 +596,6 @@ class ComputationService {
       ) {
         toRollOverAmount = budgetedPeriod.remainingAmount;
       }
-    }
-  }
-
-  async computeUsedAmountForBudgetListInPlace(budgetList: Budget[]) {
-    const res = await pouchdbService.listByCollection(Collection.RECORD);
-    const fullRecordList = res.docs as Record[];
-
-    for (const budget of budgetList) {
-      let narrowedRecordList = fullRecordList.filter((record) => record.transactionEpoch >= budget.startEpoch && record.transactionEpoch <= budget.endEpoch);
-
-      if (budget.tagIdWhiteList.length > 0) {
-        narrowedRecordList = narrowedRecordList.filter((record) => {
-          return record.tagIdList.some((tagId) => budget.tagIdWhiteList.includes(tagId));
-        });
-      }
-
-      if (budget.tagIdBlackList.length > 0) {
-        narrowedRecordList = narrowedRecordList.filter((record) => {
-          return !record.tagIdList.some((tagId) => budget.tagIdBlackList.includes(tagId));
-        });
-      }
-
-      let usedAmount = 0;
-
-      if (budget.includeExpenses) {
-        const finerRecordList = narrowedRecordList.filter(
-          (record) => record.type === RecordType.EXPENSE && record.expense && record.expense.currencyId === budget.currencyId
-        );
-        usedAmount += finerRecordList.reduce((sum, record) => sum + record.expense!.amount, 0);
-      }
-
-      if (budget.includeAssetPurchases) {
-        const finerRecordList = narrowedRecordList.filter(
-          (record) => record.type === RecordType.ASSET_PURCHASE && record.assetPurchase && record.assetPurchase.currencyId === budget.currencyId
-        );
-        usedAmount += finerRecordList.reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
-      }
-
-      budget._usedAmount = usedAmount;
     }
   }
 
