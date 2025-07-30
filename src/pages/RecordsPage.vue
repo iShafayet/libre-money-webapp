@@ -43,32 +43,14 @@
                 ></div>
               </div>
               <div class="text-caption text-right">
-                {{
-                  currencyFormatService.getPrintableAmountWithCurrency(
-                    rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount,
-                    rollingBudget.currencyId
-                  )
-                }}
+                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount, rollingBudget.currencyId) }}
                 +
-                {{
-                  currencyFormatService.getPrintableAmountWithCurrency(
-                    rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount,
-                    rollingBudget.currencyId
-                  )
-                }}
+                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount, rollingBudget.currencyId) }}
                 /
-                {{
-                  currencyFormatService.getPrintableAmountWithCurrency(
-                    rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount,
-                    rollingBudget.currencyId
-                  )
-                }}
+                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount, rollingBudget.currencyId) }}
                 <br />{{ rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount >= 0 ? "Remaining: " : "Over budget by: "
                 }}{{
-                  currencyFormatService.getPrintableAmountWithCurrency(
-                    Math.abs(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount),
-                    rollingBudget.currencyId
-                  )
+                  printAmount(Math.abs(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount), rollingBudget.currencyId)
                 }}
               </div>
             </div>
@@ -207,12 +189,12 @@
 
               <div class="amounts-section">
                 <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
-                  {{ currencyFormatService.getPrintableAmountWithCurrency(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
+                  {{ printAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
                 <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
                   Unpaid:
-                  {{ currencyFormatService.getPrintableAmountWithCurrency(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
+                  {{ printAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
                 </div>
                 <div class="controls">
                   <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
@@ -258,15 +240,11 @@
               <div class="amounts-section">
                 <div class="row amounts-section-row">
                   <div class="amount-col amount-left-col">
-                    <div class="amount amount-out">
-                      Out {{ currencyFormatService.getPrintableAmountWithCurrency(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}
-                    </div>
+                    <div class="amount amount-out">Out {{ printAmount(record.moneyTransfer.fromAmount, record.moneyTransfer.fromCurrencyId) }}</div>
                     <div class="wallet">({{ record.moneyTransfer.fromWallet.name }})</div>
                   </div>
                   <div class="amount-col amount-right-col">
-                    <div class="amount amount-in">
-                      In {{ currencyFormatService.getPrintableAmountWithCurrency(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}
-                    </div>
+                    <div class="amount amount-in">In {{ printAmount(record.moneyTransfer.toAmount, record.moneyTransfer.toCurrencyId) }}</div>
                     <div class="wallet">({{ record.moneyTransfer.toWallet.name }})</div>
                   </div>
                 </div>
@@ -334,7 +312,7 @@ import { Wallet } from "src/models/wallet";
 import { computationService } from "src/services/computation-service";
 import { dialogService } from "src/services/dialog-service";
 import { duplicateFinderService } from "src/services/duplicate-finder-service";
-import { currencyFormatService } from "src/services/currency-format-service";
+import { printAmount } from "src/utils/de-facto-utils";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { recordService } from "src/services/record-service";
 import { rollingBudgetService } from "src/services/rolling-budget-service";
