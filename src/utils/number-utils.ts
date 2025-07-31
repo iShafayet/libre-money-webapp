@@ -117,3 +117,10 @@ export function isInteger(value: NumberValue): boolean {
 export function isPositiveInteger(value: NumberValue): boolean {
   return isInteger(value) && parseNumber(value) > 0;
 }
+
+export function enforceNonNegativeZero(value: NumberValue): number {
+  console.log("enforceNonNegativeZero", value);
+  if (value === null || value === undefined || value === "") return 0;
+  const parsed = parseNumber(value);
+  return parsed > 0 ? parsed : 0;
+}

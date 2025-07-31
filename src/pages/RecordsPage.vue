@@ -40,14 +40,15 @@
               </q-item-section>
             </q-item>
             <q-separator inset />
-            <q-item clickable v-close-popup @click="addBulkExpensesClicked">
-              <q-item-section>
-                <q-item-label>Add Expenses (Bulk)</q-item-label>
-              </q-item-section>
-            </q-item>
             <q-item clickable v-close-popup @click="importTextClicked">
               <q-item-section>
                 <q-item-label>Import Text</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator inset />
+            <q-item clickable v-close-popup @click="addBulkExpensesClicked">
+              <q-item-section>
+                <q-item-label>Add Expenses (Bulk)</q-item-label>
               </q-item-section>
             </q-item>
             <q-item clickable v-close-popup @click="showQuickBalanceCalibrationClicked">
@@ -71,7 +72,9 @@
             <span v-if="recordFilters.type === 'standard'">These results are filtered.</span>
             <span v-else-if="recordFilters.type === 'budget' && recordFilters._budgetName === UNBUDGETED_RECORDS_BUDGET_NAME">Viewing unbudgeted records.</span>
             <span v-else-if="recordFilters.type === 'budget'">Viewing records under budget: {{ recordFilters._budgetName }}.</span>
-            <span v-else-if="recordFilters.type === 'loansAndDebts'">Viewing dealings with party: {{ recordFilters._partyName }}.</span>
+            <span v-else-if="recordFilters.type === 'loansAndDebts' || recordFilters.type === 'parties'">
+              Viewing dealings with party: {{ recordFilters._partyName }}.
+            </span>
           </div>
           <q-btn size="sm" color="secondary" outline rounded label="Clear" @click="clearFiltersClicked" />
         </div>

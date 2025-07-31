@@ -16,7 +16,7 @@
               <tr v-for="row in overviewAndCurrency.overview!.wallets.list" v-bind:key="row.walletId">
                 <td>{{ row.wallet.name }}</td>
                 <td>
-                  {{ printAmount(row.balance, overviewAndCurrency.currency._id) }}
+                  {{ printAmount(enforceNonNegativeZero(row.balance), overviewAndCurrency.currency._id) }}
                   <span class="wallet-limit" v-if="row.minimumBalanceState !== 'not-set'">
                     <span class="wallet-limit-warning" v-if="row.minimumBalanceState === 'warning'">
                       (Approaching limit {{ printAmount(row.wallet.minimumBalance!, overviewAndCurrency.currency._id) }})
@@ -43,7 +43,9 @@
               </tr>
               <tr>
                 <th>Grand Total</th>
-                <th colspan="2">{{ printAmount(overviewAndCurrency.overview!.wallets.sumOfBalances, overviewAndCurrency.currency._id) }}</th>
+                <th colspan="2">
+                  {{ printAmount(enforceNonNegativeZero(overviewAndCurrency.overview!.wallets.sumOfBalances), overviewAndCurrency.currency._id) }}
+                </th>
               </tr>
             </tbody>
           </table>
@@ -73,6 +75,7 @@ import { Collection } from "src/constants/constants";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { Currency } from "src/models/currency";
 import WalletCalibrationDialog from "./WalletCalibrationDialog.vue";
+import { enforceNonNegativeZero } from "src/utils/number-utils";
 
 export default {
   props: {
@@ -144,6 +147,7 @@ export default {
       cancelClicked: onDialogCancel,
       isLoading,
       printAmount,
+      enforceNonNegativeZero,
       overviewAndCurrencyList,
       onCalibrateClick,
     };

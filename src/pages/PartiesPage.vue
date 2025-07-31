@@ -34,6 +34,11 @@
             <q-td :props="rowWrapper">
               <q-btn-dropdown size="sm" color="primary" label="Edit" split @click="editClicked(rowWrapper.row)">
                 <q-list>
+                  <q-item clickable v-close-popup @click="viewRecordsClicked(rowWrapper.row)">
+                    <q-item-section>
+                      <q-item-label>View Records</q-item-label>
+                    </q-item-section>
+                  </q-item>
                   <q-item clickable v-close-popup @click="deleteClicked(rowWrapper.row)">
                     <q-item-section>
                       <q-item-label>Delete</q-item-label>
@@ -59,12 +64,17 @@ import { Party } from "src/models/party";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
 import { usePaginationSizeStore } from "src/stores/pagination";
+import { RecordFilters } from "src/models/inferred/record-filters";
+import { useRecordFiltersStore } from "src/stores/record-filters-store";
+import { useRouter } from "vue-router";
 
 export default defineComponent({
   name: "PartiesPage",
   components: {},
   setup() {
     const $q = useQuasar();
+    const recordFiltersStore = useRecordFiltersStore();
+    const router = useRouter();
 
     // -----
 
@@ -182,6 +192,25 @@ export default defineComponent({
       loadData();
     }
 
+    async function viewRecordsClicked(party: Party) {
+      let recordFilter: RecordFilters = {
+        startEpoch: 0,
+        endEpoch: Date.now(),
+        recordTypeList: [],
+        partyId: party._id,
+        tagIdWhiteList: [],
+        tagIdBlackList: [],
+        searchString: "",
+        deepSearchString: "",
+        sortBy: "transactionEpochDesc",
+        type: "parties",
+        _partyName: party.name,
+        _preset: "custom",
+      };
+      recordFiltersStore.setRecordFilters(recordFilter);
+      router.push({ name: "records" });
+    }
+
     // -----
 
     loadData();
@@ -203,6 +232,7 @@ export default defineComponent({
       deleteClicked,
       pagination,
       dataForTableRequested,
+      viewRecordsClicked,
     };
   },
 });
