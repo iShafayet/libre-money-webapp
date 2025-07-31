@@ -14,6 +14,8 @@ export interface SyncStatus {
 export interface SyncRequest {
   syncType: "full" | "background";
   initTimestamp: number;
+  completionCallback: ((result: boolean) => void) | null;
+  reloadWindowAfterSync: boolean;
 }
 
 class SyncService {
@@ -34,15 +36,19 @@ class SyncService {
   }
 
   // Entry point for full sync - delegates to SyncDialog for UI and credential handling
-  doFullSync($q: QVueGlobals): void {
-    this.$q = $q;
-    const syncRequest: SyncRequest = {
-      syncType: "full",
-      initTimestamp: Date.now(),
-    };
+  doFullSync($q: QVueGlobals, reloadWindowAfterSync: boolean): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      this.$q = $q;
+      const syncRequest: SyncRequest = {
+        syncType: "full",
+        initTimestamp: Date.now(),
+        completionCallback: resolve,
+        reloadWindowAfterSync,
+      };
 
-    this.syncQueue.push(syncRequest);
-    this.processQueue();
+      this.syncQueue.push(syncRequest);
+      this.processQueue();
+    });
   }
 
   // Entry point for background sync - silent, graceful failure if no credentials
@@ -50,6 +56,8 @@ class SyncService {
     const syncRequest: SyncRequest = {
       syncType: "background",
       initTimestamp: Date.now(),
+      completionCallback: null,
+      reloadWindowAfterSync: false,
     };
 
     this.syncQueue.push(syncRequest);
@@ -79,7 +87,7 @@ class SyncService {
     if (syncRequest.syncType === "background") {
       await this.performBackgroundSync();
     } else if (syncRequest.syncType === "full") {
-      await this.performFullSync();
+      await this.performFullSync(syncRequest);
     }
   }
 
@@ -115,7 +123,7 @@ class SyncService {
   }
 
   // Perform full sync - delegates to SyncDialog for actual sync
-  private async performFullSync(): Promise<void> {
+  private async performFullSync(syncRequest: SyncRequest): Promise<void> {
     this.syncStatus.value.isFullSyncing = true;
 
     try {
@@ -125,7 +133,11 @@ class SyncService {
       // Let SyncDialog handle the full sync including credential collection
       this.$q!.dialog({
         component: SyncDialog,
-        componentProps: { bidirectional: true },
+        componentProps: { bidirectional: true, reloadWindowAfterSync: syncRequest.reloadWindowAfterSync },
+      }).onDismiss(() => {
+        if (syncRequest.completionCallback) {
+          syncRequest.completionCallback(true);
+        }
       });
     } finally {
       this.syncStatus.value.isFullSyncing = false;

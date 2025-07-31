@@ -295,7 +295,7 @@ export default defineComponent({
     }
 
     function fullSyncClicked() {
-      syncService.doFullSync($q);
+      syncService.doFullSync($q, true);
     }
 
     function backgroundSyncClicked() {

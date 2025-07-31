@@ -53,12 +53,12 @@
 </template>
 
 <script lang="ts">
-import { QForm } from "quasar";
+import { QForm, useQuasar } from "quasar";
 import { configService } from "src/services/config-service";
 import { NotificationType, dialogService } from "src/services/dialog-service";
 import { localDataService } from "src/services/local-data-service";
 import { authService } from "src/services/auth-service";
-
+import { syncService } from "src/services/sync-service";
 import { validators } from "src/utils/validators";
 import { Ref, defineComponent, ref, computed } from "vue";
 import { RouteLocationRaw, useRoute, useRouter } from "vue-router";
@@ -70,6 +70,8 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const router = useRouter();
+
+    const $q = useQuasar();
 
     const currentStep = ref(1);
 
@@ -137,6 +139,13 @@ export default defineComponent({
         }
 
         dialogService.notify(NotificationType.LOGIN, "Successfully logged in.");
+
+        try {
+          await syncService.doFullSync($q, false);
+        } catch (error) {
+          console.error(error);
+          await dialogService.alert("Sync Error", "Unable to sync data. Please try again later.");
+        }
 
         if (route.query && route.query.next) {
           await router.push(route.query.next as RouteLocationRaw);

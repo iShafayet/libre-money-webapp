@@ -49,13 +49,18 @@ export default {
       required: false,
       default: true,
     },
+    reloadWindowAfterSync: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
 
   components: {},
 
   emits: [...useDialogPluginComponent.emits],
 
-  setup() {
+  setup(props) {
     const isLoading = ref(false);
 
     const userStore = useUserStore();
@@ -98,8 +103,10 @@ export default {
 
         await migrationService.migrateDefaultExpenseAvenueAndIncomeSource($q);
 
-        // FIXME: Remove hack
-        window.location.reload();
+        if (props.reloadWindowAfterSync) {
+          // FIXME: Remove hack
+          window.location.reload();
+        }
         onDialogCancel();
       } catch (error) {
         await dialogService.alert("Sync Error", "Encountered error while trying to sync with remote. Ensure you have working internet connection");
