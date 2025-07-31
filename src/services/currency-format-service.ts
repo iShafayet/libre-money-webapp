@@ -11,7 +11,7 @@ class CurrencyFormatService {
   }
 
   async init() {
-    pouchdbService.registerChangeListener(this.onUpsert);
+    pouchdbService.registerChangeListener((...args) => this.onUpsert(...args));
     await this.updateCurrencyCache();
   }
 

@@ -8,15 +8,24 @@
           {{ $route.meta.title || "Cash Keeper" }}
         </q-toolbar-title>
 
+        <!-- Sync Spinner -->
+        <div v-if="syncService.status.value.isBackgroundSyncing" class="sync-spinner-container">
+          <q-spinner color="white" size="20px" :thickness="3" />
+          <span class="sync-spinner-text">Syncing...</span>
+        </div>
+
         <div v-if="$route.meta.title && !isDevDatabase && !isDevMachine">Cash Keeper</div>
         <div class="dev-mode-notification" v-if="isDevDatabase">DEV DB</div>
         <div class="dev-mode-warning" v-if="!isDevDatabase && isDevMachine">PROD DB in DEV ENV</div>
 
         <q-btn flat dense round icon="perm_identity">
           <q-menu>
-            <q-list style="min-width: 100px">
-              <q-item clickable v-close-popup @click="syncClicked">
-                <q-item-section>Sync</q-item-section>
+            <q-list style="min-width: 150px">
+              <q-item clickable v-close-popup @click="fullSyncClicked" :disable="syncService.isSyncing()">
+                <q-item-section>Full Sync</q-item-section>
+              </q-item>
+              <q-item clickable v-close-popup @click="backgroundSyncClicked" :disable="syncService.isSyncing()">
+                <q-item-section>Background Sync</q-item-section>
               </q-item>
               <q-separator />
               <q-item clickable v-close-popup @click="logoutClicked">
@@ -85,10 +94,10 @@ import EssentialLink from "components/sidebar/EssentialLink.vue";
 import { loginService } from "src/services/login-service";
 import { dialogService } from "src/services/dialog-service";
 import { sleep } from "src/utils/misc-utils";
-import { useQuasar } from "quasar";
-import SyncDialog from "src/components/SyncDialog.vue";
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
 import { currencyFormatService } from "src/services/currency-format-service";
+import { syncService } from "src/services/sync-service";
+import { useQuasar } from "quasar";
 
 const operationList = [
   {
@@ -254,13 +263,12 @@ export default defineComponent({
   },
 
   setup() {
-    const $q = useQuasar();
-
     const isLeftDrawerOpen = ref(false);
     const isDevDatabase = ref(false);
     const isDevMachine = ref(false);
 
     const userStore = useUserStore();
+    const $q = useQuasar();
 
     function checkIfInDevMode() {
       isDevDatabase.value = false;
@@ -286,8 +294,12 @@ export default defineComponent({
       window.location.reload(true);
     }
 
-    async function syncClicked() {
-      $q.dialog({ component: SyncDialog, componentProps: { bidirectional: true } });
+    function fullSyncClicked() {
+      syncService.doFullSync($q);
+    }
+
+    function backgroundSyncClicked() {
+      syncService.doBackgroundSync();
     }
 
     async function verionClicked() {
@@ -297,6 +309,7 @@ export default defineComponent({
     }
 
     currencyFormatService.init();
+    syncService.setUpPouchdbListener();
 
     return {
       operationList,
@@ -314,8 +327,10 @@ export default defineComponent({
       advancedList,
       userStore,
       logoutClicked,
-      syncClicked,
+      fullSyncClicked,
+      backgroundSyncClicked,
       verionClicked,
+      syncService,
 
       isDevDatabase,
       isDevMachine,
@@ -325,6 +340,19 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+.sync-spinner-container {
+  display: flex;
+  align-items: center;
+  margin-right: 16px;
+  gap: 8px;
+}
+
+.sync-spinner-text {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .drawer-bottom {
   margin-top: 8px;
   background: rgb(29, 29, 29);
