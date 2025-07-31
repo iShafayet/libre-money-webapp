@@ -1,64 +1,8 @@
 <template>
   <q-page class="column items-center justify-evenly">
-    <!-- Featured Rolling Budgets -->
-    <q-card class="std-card featured-rolling-budgets-card" style="margin-bottom: 4px" v-show="featuredRollingBudgetList.length > 0">
-      <div class="featured-rolling-budget-list q-pa-md q-gutter-sm">
-        <q-btn
-          v-if="featuredRollingBudgetList.length > 1"
-          style="position: absolute; left: -4px; top: 52px"
-          color="secondary"
-          :icon="showAllRollingBudgets ? 'expand_less' : 'expand_more'"
-          flat
-          round
-          @click="toggleShowAllRollingBudgets"
-        />
-        <template v-for="rollingBudget in featuredRollingBudgetList" :key="rollingBudget._id">
-          <div class="featured-rolling-budget" v-if="rollingBudget.isFeatured || showAllRollingBudgets">
-            <div class="featured-rolling-budget-name" style="margin-bottom: 8px">
-              {{ rollingBudget.name }} ({{ prettifyDate(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].startEpoch) }} to
-              {{ prettifyDate(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].endEpoch) }})
-            </div>
-            <div>
-              <div class="row no-wrap" style="height: 10px; border-radius: 5px; overflow: hidden">
-                <div
-                  :style="{
-                    width: (rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount * 100) + '%',
-                    backgroundColor: rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount + rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount > rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount ? 'var(--q-negative)' : 'var(--q-positive)',
-                    height: '100%',
-                  }"
-                ></div>
-                <div
-                  :style="{
-                    width: (rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount * 100) + '%',
-                    backgroundColor: 'var(--q-warning)',
-                    height: '100%',
-                  }"
-                ></div>
-                <div
-                  :style="{
-                    flex: 1,
-                    backgroundColor: '#e0e0e0',
-                    height: '100%',
-                  }"
-                ></div>
-              </div>
-              <div class="text-caption text-right">
-                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount, rollingBudget.currencyId) }}
-                +
-                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount, rollingBudget.currencyId) }}
-                /
-                {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount, rollingBudget.currencyId) }}
-                <br />{{ rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount >= 0 ? "Remaining: " : "Over budget by: "
-                }}{{
-                  printAmount(Math.abs(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount), rollingBudget.currencyId)
-                }}
-              </div>
-            </div>
-          </div>
-        </template>
-      </div>
-    </q-card>
-    <!-- End of Featured Rolling Budgets -->
+    <!-- Budget Highlights -->
+    <BudgetHighlights ref="budgetHighlightsRef" :record-filters="recordFilters" :filter-month="filterMonth" :filter-year="filterYear" />
+    <!-- End of Budget Highlights -->
 
     <!-- Records -->
     <q-card class="std-card">
@@ -279,7 +223,7 @@
 </template>
 
 <script lang="ts" setup>
-import { debounce, useQuasar } from "quasar";
+import { useQuasar } from "quasar";
 import AddAssetAppreciationDepreciationRecord from "src/components/AddAssetAppreciationDepreciationRecord.vue";
 import AddAssetPurchaseRecord from "src/components/AddAssetPurchaseRecord.vue";
 import AddAssetSaleRecord from "src/components/AddAssetSaleRecord.vue";
@@ -291,6 +235,7 @@ import AddLendingRecord from "src/components/AddLendingRecord.vue";
 import AddMoneyTransferRecord from "src/components/AddMoneyTransferRecord.vue";
 import AddRepaymentGivenRecord from "src/components/AddRepaymentGivenRecord.vue";
 import AddRepaymentReceivedRecord from "src/components/AddRepaymentReceivedRecord.vue";
+import BudgetHighlights from "src/components/BudgetHighlights.vue";
 import FilterRecordsDialog from "src/components/FilterRecordsDialog.vue";
 import MonthAndYearInput from "src/components/lib/MonthAndYearInput.vue";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
@@ -307,7 +252,6 @@ import { QuickSummary } from "src/models/inferred/quick-summary";
 import { RecordFilters } from "src/models/inferred/record-filters";
 import { Party } from "src/models/party";
 import { Record } from "src/models/record";
-import { RollingBudget } from "src/models/rolling-budget";
 import { Wallet } from "src/models/wallet";
 import { computationService } from "src/services/computation-service";
 import { dialogService } from "src/services/dialog-service";
@@ -315,7 +259,6 @@ import { duplicateFinderService } from "src/services/duplicate-finder-service";
 import { printAmount } from "src/utils/de-facto-utils";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { recordService } from "src/services/record-service";
-import { rollingBudgetService } from "src/services/rolling-budget-service";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import { useRecordPaginationSizeStore } from "src/stores/record-pagination";
 import { normalizeEpochRange } from "src/utils/date-utils";
@@ -330,6 +273,7 @@ const recordFiltersStore = useRecordFiltersStore();
 // ----- Refs
 const isLoading = ref(false);
 const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
+const budgetHighlightsRef = ref<InstanceType<typeof BudgetHighlights>>();
 
 const rows: Ref<InferredRecord[]> = ref([]);
 
@@ -346,9 +290,6 @@ const quickSummaryList: Ref<QuickSummary[]> = ref([]);
 
 let cachedInferredRecordList: InferredRecord[] = [];
 
-const featuredRollingBudgetList: Ref<RollingBudget[]> = ref([]);
-const showAllRollingBudgets = ref(false);
-
 // Duplicate detection
 const duplicateIds: Ref<Set<string>> = ref(new Set<string>());
 
@@ -362,7 +303,7 @@ async function loadData(origin = "unspecified") {
 
   // Need to update cache if the cache is empty or the request is not from pagination interaction
   if (cachedInferredRecordList.length === 0 || origin !== "pagination") {
-    hideRollingBudgets();
+    budgetHighlightsRef.value?.hideRollingBudgets();
 
     loadingIndicator.value?.startPhase({ phase: 1, weight: 10, label: "Updating cache" });
 
@@ -425,33 +366,11 @@ async function loadData(origin = "unspecified") {
   }
 
   if (cachedInferredRecordList.length === 0 || origin !== "pagination") {
-    loadFeaturedRollingBudgetsDebounced();
+    budgetHighlightsRef.value?.loadFeaturedRollingBudgets();
   }
 
   isLoading.value = false;
 }
-
-function hideRollingBudgets() {
-  featuredRollingBudgetList.value = [];
-}
-
-async function loadFeaturedRollingBudgets() {
-  let startEpoch,
-    endEpoch = 0;
-  if (recordFilters.value) {
-    [startEpoch, endEpoch] = normalizeEpochRange(recordFilters.value.startEpoch, recordFilters.value.endEpoch);
-  } else {
-    let rangeStart = new Date(filterYear.value, filterMonth.value, 1);
-    let rangeEnd = new Date(filterYear.value, filterMonth.value, 1);
-    rangeEnd.setMonth(rangeEnd.getMonth() + 1);
-    rangeEnd.setDate(rangeEnd.getDate() - 1);
-    [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
-  }
-  featuredRollingBudgetList.value = await rollingBudgetService.listAllFeaturedInRange(startEpoch, endEpoch);
-  console.debug({ featuredRollingBudgetList: deepClone(featuredRollingBudgetList.value) });
-}
-
-const loadFeaturedRollingBudgetsDebounced = debounce(loadFeaturedRollingBudgets, 100, true);
 
 // ----- Event Handlers
 
@@ -694,17 +613,13 @@ function getString(record: InferredRecord, key: string): string | null {
   return value;
 }
 
-function toggleShowAllRollingBudgets() {
-  showAllRollingBudgets.value = !showAllRollingBudgets.value;
-}
-
 function isPotentialDuplicate(record: InferredRecord): boolean {
   return duplicateIds.value.has(record._id || "");
 }
 
 // ----- Watchers
 
-watch(paginationCurrentPage, (currentPage, previousPage) => {
+watch(paginationCurrentPage, (_currentPage, _previousPage) => {
   console.debug("paginationCurrentPage", paginationCurrentPage);
   loadData("pagination");
 });
