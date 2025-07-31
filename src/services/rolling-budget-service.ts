@@ -4,18 +4,22 @@ import { RollingBudget } from "src/models/rolling-budget";
 import { computationService } from "./computation-service";
 import { deepClone } from "src/utils/misc-utils";
 import { RecordFilters } from "src/models/inferred/record-filters";
+import { normalizeEpochRange } from "src/utils/date-utils";
 
 class RollingBudgetService {
   public async listAll(): Promise<RollingBudget[]> {
     return (await pouchdbService.listByCollection(Collection.ROLLING_BUDGET)).docs as RollingBudget[];
   }
 
-  public async listAllFeaturedInRange(startEpoch: number, endEpoch: number): Promise<RollingBudget[]> {
+  public async listAllBudgetsInRange(startEpoch: number, endEpoch: number): Promise<RollingBudget[]> {
+    [startEpoch, endEpoch] = normalizeEpochRange(startEpoch, endEpoch);
     let list = (await pouchdbService.listByCollection(Collection.ROLLING_BUDGET)).docs as RollingBudget[];
-    // list = list.filter((doc) => doc.isFeatured);
     list.forEach((doc) => {
       doc._budgetedPeriodIndexInRange = -1;
-      doc._budgetedPeriodIndexInRange = doc.budgetedPeriodList.findIndex((period) => period.startEpoch >= startEpoch && period.endEpoch <= endEpoch);
+      doc._budgetedPeriodIndexInRange = doc.budgetedPeriodList.findIndex((period) => {
+        const [periodStart, periodEnd] = normalizeEpochRange(period.startEpoch, period.endEpoch);
+        return periodStart >= startEpoch && periodEnd <= endEpoch;
+      });
     });
     list = list.filter((doc) => doc._budgetedPeriodIndexInRange !== -1);
     list = list.sort((a, b) => a.name.localeCompare(b.name));

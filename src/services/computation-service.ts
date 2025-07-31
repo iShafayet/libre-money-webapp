@@ -584,6 +584,8 @@ class ComputationService {
         usedAmount += finerRecordList.reduce((sum, record) => sum + record.assetPurchase!.amount, 0);
       }
 
+      budgetedPeriod.allocatedAmount = asAmount(budgetedPeriod.allocatedAmount);
+      budgetedPeriod.heldAmount = asAmount(budgetedPeriod.heldAmount);
       budgetedPeriod.usedAmount = usedAmount;
       budgetedPeriod.rolledOverAmount = toRollOverAmount;
       budgetedPeriod.totalAllocatedAmount = asAmount(budgetedPeriod.allocatedAmount) + asAmount(budgetedPeriod.rolledOverAmount);

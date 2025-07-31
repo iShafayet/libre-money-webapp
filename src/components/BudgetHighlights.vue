@@ -27,6 +27,7 @@
                 }"
               ></div>
               <div
+                v-if="rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount < rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount"
                 :style="{
                   width: (rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount * 100) + '%',
                   backgroundColor: 'var(--q-warning)',
@@ -42,15 +43,28 @@
               ></div>
             </div>
             <div class="text-caption text-right">
-              {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount, rollingBudget.currencyId) }}
-              +
-              {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount, rollingBudget.currencyId) }}
-              /
+              Used
+              {{
+                printAmount(
+                  asAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount) +
+                    asAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount),
+                  rollingBudget.currencyId
+                )
+              }}
+              out of
               {{ printAmount(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount, rollingBudget.currencyId) }}
               <br />{{ rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount >= 0 ? "Remaining: " : "Over budget by: "
               }}{{
                 printAmount(Math.abs(rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].remainingAmount), rollingBudget.currencyId)
               }}
+              <q-icon
+                name="info"
+                size="12px"
+                class="budget-details-icon q-ml-xs"
+                @click="showBudgetDetails(rollingBudget)"
+                style="cursor: pointer; color: #666"
+                title="View budget details"
+              />
             </div>
           </div>
         </div>
@@ -61,14 +75,16 @@
 </template>
 
 <script lang="ts" setup>
-import { debounce } from "quasar";
+import { debounce, useQuasar } from "quasar";
 import { RollingBudget } from "src/models/rolling-budget";
 import { RecordFilters } from "src/models/inferred/record-filters";
+import BudgetHighlightsDetailsDialog from "src/components/BudgetHighlightsDetailsDialog.vue";
 import { rollingBudgetService } from "src/services/rolling-budget-service";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import { deepClone, prettifyDate } from "src/utils/misc-utils";
 import { printAmount } from "src/utils/de-facto-utils";
 import { Ref, ref } from "vue";
+import { asAmount } from "src/utils/de-facto-utils";
 
 // Props
 interface Props {
@@ -82,6 +98,9 @@ const props = withDefaults(defineProps<Props>(), {
   filterMonth: () => new Date().getMonth(),
   filterYear: () => new Date().getFullYear(),
 });
+
+// Quasar
+const $q = useQuasar();
 
 // Reactive data
 const featuredRollingBudgetList: Ref<RollingBudget[]> = ref([]);
@@ -104,7 +123,7 @@ async function loadFeaturedRollingBudgets() {
     rangeEnd.setDate(rangeEnd.getDate() - 1);
     [startEpoch, endEpoch] = normalizeEpochRange(rangeStart.getTime(), rangeEnd.getTime());
   }
-  featuredRollingBudgetList.value = await rollingBudgetService.listAllFeaturedInRange(startEpoch, endEpoch);
+  featuredRollingBudgetList.value = await rollingBudgetService.listAllBudgetsInRange(startEpoch, endEpoch);
   console.debug({ featuredRollingBudgetList: deepClone(featuredRollingBudgetList.value) });
 }
 
@@ -112,6 +131,15 @@ const loadFeaturedRollingBudgetsDebounced = debounce(loadFeaturedRollingBudgets,
 
 function toggleShowAllRollingBudgets() {
   showAllRollingBudgets.value = !showAllRollingBudgets.value;
+}
+
+function showBudgetDetails(rollingBudget: RollingBudget) {
+  $q.dialog({
+    component: BudgetHighlightsDetailsDialog,
+    componentProps: {
+      rollingBudget: rollingBudget,
+    },
+  });
 }
 
 // Expose functions for parent component
