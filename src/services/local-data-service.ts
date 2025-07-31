@@ -22,6 +22,8 @@ class LocalDataService {
     localStorage.clear();
     sessionStorage.clear();
 
+    window.location.hash = "";
+
     // @ts-ignore
     window.location.reload(true);
   }

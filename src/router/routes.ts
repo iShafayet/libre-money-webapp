@@ -16,6 +16,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/LoginPage.vue"),
         meta: { requiresAuthentication: false, title: null },
       },
+      {
+        path: "post-logout",
+        name: "post-logout",
+        component: () => import("pages/PostLogoutPage.vue"),
+        meta: { requiresAuthentication: false, title: null },
+      },
       // --- Core:
       {
         path: "overview",
@@ -163,7 +169,7 @@ const routes: RouteRecordRaw[] = [
         path: "about",
         name: "about",
         component: () => import("pages/AboutPage.vue"),
-        meta: { requiresAuthentication: true, title: "About", rememberable: true },
+        meta: { requiresAuthentication: false, title: "About", rememberable: false },
       },
     ],
   },

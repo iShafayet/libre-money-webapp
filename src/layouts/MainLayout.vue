@@ -93,11 +93,11 @@ import { useUserStore } from "src/stores/user";
 import EssentialLink from "components/sidebar/EssentialLink.vue";
 import { authService } from "src/services/auth-service";
 import { dialogService } from "src/services/dialog-service";
-import { sleep } from "src/utils/misc-utils";
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
 import { currencyFormatService } from "src/services/currency-format-service";
 import { syncService } from "src/services/sync-service";
 import { useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 
 const operationList = [
   {
@@ -269,6 +269,7 @@ export default defineComponent({
 
     const userStore = useUserStore();
     const $q = useQuasar();
+    const router = useRouter();
 
     function checkIfInDevMode() {
       isDevDatabase.value = false;
@@ -288,10 +289,11 @@ export default defineComponent({
       let [successful, failureReason] = await authService.logout();
       if (!successful) {
         await dialogService.alert("Logout Error", failureReason as string);
+        return;
       }
-      await sleep(100);
-      // @ts-ignore
-      window.location.reload(true);
+
+      // Navigate to post-logout page instead of reloading
+      await router.push({ name: "post-logout" });
     }
 
     function fullSyncClicked() {
