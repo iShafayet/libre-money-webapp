@@ -44,9 +44,9 @@
               {{ ledgerEntry.description }}
               <div v-if="ledgerEntry.notes">{{ ledgerEntry.notes }}</div>
             </div>
-            <div class="fin-presentation-item-numeric debit-sum">{{ ledgerEntry.debitAmount }}&nbsp;{{ ledgerEntry._currencySign }}</div>
-            <div class="fin-presentation-item-numeric credit-sum">{{ ledgerEntry.creditAmount }}&nbsp;{{ ledgerEntry._currencySign }}</div>
-            <div class="fin-presentation-item-numeric balance-sum">{{ ledgerEntry.balance }}&nbsp;{{ ledgerEntry._currencySign }}</div>
+            <div class="fin-presentation-item-numeric debit-sum">{{ printAmount(ledgerEntry.debitAmount, ledgerEntry.currencyId) }}</div>
+            <div class="fin-presentation-item-numeric credit-sum">{{ printAmount(ledgerEntry.creditAmount, ledgerEntry.currencyId) }}</div>
+            <div class="fin-presentation-item-numeric balance-sum">{{ printAmount(ledgerEntry.balance, ledgerEntry.currencyId) }}</div>
           </div>
         </template>
       </div>
@@ -65,7 +65,7 @@
             <div class="fin-presentation-item-textual currency">
               {{ balanceEntry._currency!.name }}
             </div>
-            <div class="fin-presentation-item-numeric balance">{{ balanceEntry.balance }}&nbsp;{{ balanceEntry._currency?.sign }}</div>
+            <div class="fin-presentation-item-numeric balance">{{ printAmount(balanceEntry.balance, balanceEntry.currencyId) }}</div>
           </div>
         </template>
       </div>
@@ -81,6 +81,7 @@ import { Record } from "src/models/record";
 import { accountingService } from "src/services/accounting-service";
 import { Ref, onMounted, ref, watch } from "vue";
 import { deepClone, prettifyDate, prettifyDateTime, sleep } from "src/utils/misc-utils";
+import { printAmount } from "src/utils/de-facto-utils";
 import { Collection, dateRangePresetList, defaultPartyType, partyTypeList } from "src/constants/constants";
 import DateInput from "src/components/lib/DateInput.vue";
 import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
