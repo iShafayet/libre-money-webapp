@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { User } from "src/models/user";
 
-const LOCAL_STORAGE_USER_KEY = "--user";
+const LOCAL_STORAGE_USER_KEY = "--ck-user";
 
 const initialUser: User | null = ((): User | null => {
   const user = localStorage.getItem(LOCAL_STORAGE_USER_KEY) || "null";

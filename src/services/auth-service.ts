@@ -6,13 +6,13 @@ const userStore = useUserStore();
 import axios, { AxiosError } from "axios";
 import { credentialService } from "./credential-service";
 import { configService } from "./config-service";
+import { localDataService } from "./local-data-service";
 
 export const authService = {
   async logout() {
     try {
       await credentialService.clearCredentials();
       userStore.setUser(null);
-
       return [true, null];
     } catch (error) {
       console.error(error);

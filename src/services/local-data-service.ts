@@ -7,8 +7,17 @@ class LocalDataService {
     const answer = await dialogService.confirm("Remove Local Data", "Are you sure you want to remove all local data? Any un-synced data will be lost forever.");
     if (!answer) return;
 
-    await pouchdbService.getDb().destroy();
-    await authService.logout();
+    try {
+      await pouchdbService.getDb().destroy();
+    } catch (error) {
+      console.error(error);
+    }
+
+    try {
+      await authService.logout();
+    } catch (error) {
+      console.error(error);
+    }
 
     localStorage.clear();
     sessionStorage.clear();
