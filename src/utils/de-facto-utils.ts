@@ -1,9 +1,10 @@
 import { currencyFormatService } from "src/services/currency-format-service";
-import { NumberValue, parseNumber, formatCurrency as formatCurrencyBase, formatCount as formatCountBase, formatNumber } from "./number-utils";
+import { NumberValue, parseNumber, formatCurrency, formatCount, formatNumber, parseFinancialAmount } from "./number-utils";
 
 export function printCurrency(amount: NumberValue, currencySign: string): string {
-  return formatCurrencyBase(amount, currencySign, {
-    decimals: 2,
+  return formatCurrency(amount, currencySign, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
     useGrouping: true,
     currencyPosition: "after",
     currencySpacing: " ",
@@ -11,7 +12,7 @@ export function printCurrency(amount: NumberValue, currencySign: string): string
 }
 
 export function printCount(amount: NumberValue): string {
-  return formatCountBase(amount, {
+  return formatCount(amount, {
     useGrouping: true,
   });
 }
@@ -20,7 +21,7 @@ export function printPercentage(amount: NumberValue): string {
   if (amount === null || amount === undefined) return "0.00%";
   try {
     const number = parseNumber(amount);
-    return `${formatNumber(number, { decimals: 2, useGrouping: true })}%`;
+    return `${formatNumber(number, { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true })}%`;
   } catch {
     return "0.00%";
   }
@@ -32,7 +33,8 @@ export function printAmount(amount: NumberValue, currencyId: string | null | und
   }
 
   return currencyFormatService.getPrintableAmountWithCurrencyAndConfiguration(asAmount(amount), currencyId, {
-    decimals: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
     useGrouping: true,
     currencyPosition: "after",
     currencySpacing: " ",
@@ -49,7 +51,7 @@ export function printAmount(amount: NumberValue, currencyId: string | null | und
 export function asAmount(amount: NumberValue): number {
   if (amount === null || amount === undefined) return 0;
   try {
-    return parseNumber(amount);
+    return parseFinancialAmount(amount, 2);
   } catch {
     return 0;
   }

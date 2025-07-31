@@ -3,11 +3,14 @@ import { NUMBER_CONFIG } from "src/constants/number-constants";
 export type NumberValue = number | string | null | undefined;
 
 export interface NumberFormatOptions {
-  decimals?: number;
+  minimumFractionDigits?: number;
+  maximumFractionDigits?: number;
   useGrouping?: boolean;
   locale?: string;
   fallback?: number;
 }
+
+export type NumberFormatOptionsWithoutDecimals = Omit<NumberFormatOptions, "minimumFractionDigits" | "maximumFractionDigits">;
 
 export interface CurrencyFormatOptions extends NumberFormatOptions {
   currencyPosition?: "before" | "after";
@@ -19,8 +22,8 @@ const defaultLocale = NUMBER_CONFIG.DEFAULT_LOCALE;
 const defaultUseGrouping = NUMBER_CONFIG.USE_GROUPING;
 const defaultCurrencyPosition = NUMBER_CONFIG.CURRENCY_POSITION;
 const defaultCurrencySpacing = NUMBER_CONFIG.CURRENCY_SPACING;
-const financialPrecision = NUMBER_CONFIG.FINANCIAL_PRECISION;
-const percentagePrecision = NUMBER_CONFIG.PERCENTAGE_PRECISION;
+const defaultFinancialPrecision = NUMBER_CONFIG.FINANCIAL_PRECISION;
+const defaultPercentagePrecision = NUMBER_CONFIG.PERCENTAGE_PRECISION;
 
 // Use to parse any number value. Will throw an error if the value is not a number.
 export function parseNumber(value: NumberValue): number {
@@ -43,12 +46,19 @@ export function parseNumber(value: NumberValue): number {
 // Use to parse financial amounts. Will round the value to the given precision.
 export function parseFinancialAmount(value: NumberValue, precision: number): number {
   const parsed = parseNumber(value);
-  return Math.round(parsed * Math.pow(10, precision)) / Math.pow(10, precision);
+  const operand = Math.pow(10, precision);
+  return Math.round(parsed * operand) / operand;
 }
 
 // Formatting functions
 export function formatNumber(value: any, options: NumberFormatOptions = {}): string {
-  const { decimals, useGrouping = defaultUseGrouping, locale = defaultLocale, fallback = 0 } = options;
+  const {
+    minimumFractionDigits = defaultFinancialPrecision,
+    maximumFractionDigits = defaultFinancialPrecision,
+    useGrouping = defaultUseGrouping,
+    locale = defaultLocale,
+    fallback = 0,
+  } = options;
 
   const number = parseNumber(value);
 
@@ -56,33 +66,27 @@ export function formatNumber(value: any, options: NumberFormatOptions = {}): str
     useGrouping,
   };
 
-  if (decimals !== undefined) {
-    formatOptions.minimumFractionDigits = decimals;
-    formatOptions.maximumFractionDigits = decimals;
-  }
+  formatOptions.minimumFractionDigits = minimumFractionDigits;
+  formatOptions.maximumFractionDigits = maximumFractionDigits;
 
   return number.toLocaleString(locale, formatOptions);
-}
-
-export function formatFinancialAmount(value: NumberValue, options: Omit<NumberFormatOptions, "decimals"> = {}): string {
-  return formatNumber(value, { ...options, decimals: financialPrecision });
-}
-
-export function formatCount(value: NumberValue, options: Omit<NumberFormatOptions, "decimals"> = {}): string {
-  return formatNumber(value, { ...options, decimals: 0 });
 }
 
 export function formatCurrency(amount: NumberValue, currencySign: string, options: CurrencyFormatOptions = {}): string {
   const { currencyPosition = defaultCurrencyPosition, currencySpacing = defaultCurrencySpacing, ...numberOptions } = options;
 
-  const formattedAmount = formatFinancialAmount(amount, numberOptions);
+  const formattedAmount = formatNumber(amount, numberOptions);
 
   return currencyPosition === "before" ? `${currencySign}${currencySpacing}${formattedAmount}` : `${formattedAmount}${currencySpacing}${currencySign}`;
 }
 
-export function formatPercentage(value: NumberValue, decimals = percentagePrecision): string {
+export function formatCount(value: NumberValue, options: NumberFormatOptionsWithoutDecimals = {}): string {
+  return formatNumber(value, { ...options, minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+export function formatPercentage(value: NumberValue, options: NumberFormatOptionsWithoutDecimals = {}): string {
   const number = parseNumber(value);
-  return `${formatNumber(number, { decimals })}%`;
+  return `${formatNumber(number, { ...options, minimumFractionDigits: defaultPercentagePrecision, maximumFractionDigits: defaultPercentagePrecision })}%`;
 }
 
 // Validation functions
