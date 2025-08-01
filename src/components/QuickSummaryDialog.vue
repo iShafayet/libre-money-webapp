@@ -41,46 +41,24 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { printAmount } from "src/utils/de-facto-utils";
 import { ref } from "vue";
 
-export default {
-  props: {
-    quickSummaryList: {
-      type: Object,
-      required: true,
-    },
-  },
+const props = defineProps<{
+  quickSummaryList: any;
+}>();
 
-  components: {},
+const emit = defineEmits([...useDialogPluginComponent.emits]);
 
-  emits: [...useDialogPluginComponent.emits],
+const isLoading = ref(false);
 
-  setup(props) {
-    const isLoading = ref(false);
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
-
-    isLoading.value = true;
-
-    isLoading.value = false;
-
-    async function okClicked() {
-      onDialogOK();
-    }
-
-    return {
-      dialogRef,
-      onDialogHide,
-      okClicked,
-      cancelClicked: onDialogCancel,
-      isLoading,
-      printAmount,
-    };
-  },
-};
+async function okClicked() {
+  onDialogOK();
+}
 </script>
 <style scoped lang="scss">
 @import url(./../css/table.scss);

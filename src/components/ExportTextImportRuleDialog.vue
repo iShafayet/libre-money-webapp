@@ -19,61 +19,49 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { TextImportRules } from "src/models/text-import-rules";
 
-export default {
-  props: {
-    rule: {
-      type: Object as () => Partial<TextImportRules>,
-      required: true,
-    },
-  },
+// Props
+const props = defineProps<{
+  rule: Partial<TextImportRules>;
+}>();
 
-  emits: [...useDialogPluginComponent.emits],
+// Emits
+const emit = defineEmits([...useDialogPluginComponent.emits]);
 
-  setup(props) {
-    const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
-    const $q = useQuasar();
+// Dialog plugin
+const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
+const $q = useQuasar();
 
-    // Create clean export data (remove internal fields)
-    const createExportData = (rule: Partial<TextImportRules>) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { _id, _rev, $collection, ...exportData } = rule;
-      return exportData;
-    };
+// Create clean export data (remove internal fields)
+function createExportData(rule: Partial<TextImportRules>) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { _id, _rev, $collection, ...exportData } = rule;
+  return exportData;
+}
 
-    const exportedCode = ref(JSON.stringify(createExportData(props.rule), null, 2));
+const exportedCode = computed(() => JSON.stringify(createExportData(props.rule), null, 2));
 
-    const copyToClipboard = async () => {
-      try {
-        await navigator.clipboard.writeText(exportedCode.value);
-        $q.notify({
-          type: "positive",
-          message: "Rule code copied to clipboard!",
-          position: "top",
-        });
-      } catch (error) {
-        console.error("Failed to copy to clipboard:", error);
-        $q.notify({
-          type: "negative",
-          message: "Failed to copy to clipboard",
-          position: "top",
-        });
-      }
-    };
-
-    return {
-      dialogRef,
-      onDialogHide,
-      onDialogCancel,
-      exportedCode,
-      copyToClipboard,
-    };
-  },
-};
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(exportedCode.value);
+    $q.notify({
+      type: "positive",
+      message: "Rule code copied to clipboard!",
+      position: "top",
+    });
+  } catch (error) {
+    console.error("Failed to copy to clipboard:", error);
+    $q.notify({
+      type: "negative",
+      message: "Failed to copy to clipboard",
+      position: "top",
+    });
+  }
+}
 </script>
 
 <style scoped lang="scss"></style>

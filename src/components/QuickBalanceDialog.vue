@@ -59,7 +59,7 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { printAmount } from "src/utils/de-facto-utils";
 import { Ref, onMounted, ref } from "vue";
@@ -68,8 +68,6 @@ import { computationService } from "src/services/computation-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
 import { Overview } from "src/models/inferred/overview";
-import { lockService } from "src/services/lock-service";
-import { dialogService } from "src/services/dialog-service";
 import { CodedError } from "src/utils/error-utils";
 import { Collection } from "src/constants/constants";
 import { pouchdbService } from "src/services/pouchdb-service";
@@ -77,82 +75,72 @@ import { Currency } from "src/models/currency";
 import WalletCalibrationDialog from "./WalletCalibrationDialog.vue";
 import { enforceNonNegativeZero } from "src/utils/number-utils";
 
-export default {
-  props: {
-    intent: {
-      type: String,
-      default: "balances",
-      validator: (value: string) => ["balances", "calibration"].includes(value),
-    },
+// Props
+const props = defineProps({
+  intent: {
+    type: String,
+    default: "balances",
+    validator: (value: string) => ["balances", "calibration"].includes(value),
   },
+});
 
-  components: { LoadingIndicator },
+// Emits
+const emit = defineEmits([...useDialogPluginComponent.emits]);
 
-  emits: [...useDialogPluginComponent.emits],
+// Dialog plugin
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-  setup(props) {
-    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const $q = useQuasar();
+const settingsStore = useSettingsStore();
 
-    const $q = useQuasar();
-    const settingsStore = useSettingsStore();
+const isLoading = ref(true);
+const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 
-    const isLoading = ref(true);
-    const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
+const startEpoch: Ref<number> = ref(setDateToTheFirstDateOfMonth(Date.now()));
+const endEpoch: Ref<number> = ref(Date.now());
 
-    const startEpoch: Ref<number> = ref(setDateToTheFirstDateOfMonth(Date.now()));
-    const endEpoch: Ref<number> = ref(Date.now());
+const overviewAndCurrencyList: Ref<{ overview: Overview | null; currency: Currency }[]> = ref([]);
 
-    const overviewAndCurrencyList: Ref<{ overview: Overview | null; currency: Currency }[]> = ref([]);
+async function loadOverview() {
+  isLoading.value = true;
 
-    async function loadOverview() {
-      isLoading.value = true;
-
-      const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
-      overviewAndCurrencyList.value = await Promise.all(
-        currencyList.map(async (currency) => {
-          let newOverview = await computationService.computeOverview(startEpoch.value, endEpoch.value, currency._id!);
-          if (newOverview) {
-            newOverview.wallets.list.sort((a, b) => a.wallet.name.localeCompare(b.wallet.name));
-          }
-          return { overview: newOverview, currency };
-        })
-      );
-
-      isLoading.value = false;
-    }
-
-    async function onCalibrateClick(walletId: string, balance: number) {
-      const wallet = overviewAndCurrencyList.value.flatMap((oc) => oc.overview?.wallets.list || []).find((w) => w.walletId === walletId)?.wallet;
-
-      if (!wallet) {
-        throw new CodedError("WALLET_NOT_FOUND", "Wallet not found");
+  const currencyList = (await pouchdbService.listByCollection(Collection.CURRENCY)).docs as Currency[];
+  overviewAndCurrencyList.value = await Promise.all(
+    currencyList.map(async (currency) => {
+      let newOverview = await computationService.computeOverview(startEpoch.value, endEpoch.value, currency._id!);
+      if (newOverview) {
+        newOverview.wallets.list.sort((a, b) => a.wallet.name.localeCompare(b.wallet.name));
       }
+      return { overview: newOverview, currency };
+    })
+  );
 
-      $q.dialog({ component: WalletCalibrationDialog, componentProps: { wallet, balance } })
-        .onOk(() => {
-          onDialogOK();
-        })
-        .onCancel(() => {
-          onDialogCancel();
-        });
-    }
+  isLoading.value = false;
+}
 
-    onMounted(() => {
-      loadOverview();
+async function onCalibrateClick(walletId: string, balance: number) {
+  const wallet = overviewAndCurrencyList.value.flatMap((oc) => oc.overview?.wallets.list || []).find((w) => w.walletId === walletId)?.wallet;
+
+  if (!wallet) {
+    throw new CodedError("WALLET_NOT_FOUND", "Wallet not found");
+  }
+
+  $q.dialog({ component: WalletCalibrationDialog, componentProps: { wallet, balance } })
+    .onOk(() => {
+      onDialogOK();
+    })
+    .onCancel(() => {
+      onDialogCancel();
     });
+}
 
-    return {
-      dialogRef,
-      onDialogHide,
-      cancelClicked: onDialogCancel,
-      isLoading,
-      printAmount,
-      enforceNonNegativeZero,
-      overviewAndCurrencyList,
-      onCalibrateClick,
-    };
-  },
-};
+onMounted(() => {
+  loadOverview();
+});
+
+function cancelClicked() {
+  onDialogCancel();
+}
 </script>
 <style scoped lang="scss">
 @import url(./../css/table.scss);

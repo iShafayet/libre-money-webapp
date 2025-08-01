@@ -62,7 +62,7 @@
       </q-card-section>
 
       <q-card-actions class="row justify-start std-bottom-action-row">
-        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
+        <q-btn color="blue-grey" label="Cancel" @click="onDialogCancel" />
         <div class="spacer"></div>
         <q-btn color="primary" label="Save" @click="saveClicked" />
       </q-card-actions>
@@ -70,9 +70,9 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { ref, Ref, watch, computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { entityService } from "src/services/entity-service";
 import { useSettingsStore } from "src/stores/settings";
 import { printAmount, asAmount } from "src/utils/de-facto-utils";
@@ -83,6 +83,22 @@ import { Collection, fixtureCode, RecordType } from "src/constants/constants";
 import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
 
+// Props
+const props = defineProps<{
+  wallet: any;
+  balance: number;
+}>();
+
+// Emits
+const emit = defineEmits([...useDialogPluginComponent.emits]);
+
+// Dialog plugin
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+
+// Store
+const settingsStore = useSettingsStore();
+
+// Types
 type WalletCalibration = {
   walletId: string;
   currencyId: string;
@@ -97,216 +113,172 @@ type BreakdownRow = {
   amount: number;
 };
 
-export default {
-  props: {
-    wallet: {
-      type: Object,
-      required: true,
-    },
-    balance: {
-      type: Number,
-      required: true,
-    },
-  },
+// State
+const calibration = ref<WalletCalibration | null>(null);
+const newBalance = ref(0);
+const breakdownRows = ref<BreakdownRow[]>([]);
 
-  components: {
-    SelectExpenseAvenue,
-    SelectIncomeSource,
-  },
+const stepSize = computed(() => settingsStore.walletCalibrationStepSize);
+const breakdownTypes = [
+  { label: "Expense Avenue", value: "expense" },
+  { label: "Income Source", value: "income" },
+];
 
-  emits: [...useDialogPluginComponent.emits],
+const balanceDifference = computed(() => {
+  if (!calibration.value) return 0;
+  return newBalance.value - calibration.value.currentBalance;
+});
 
-  setup(props) {
-    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
-    const settingsStore = useSettingsStore();
+const totalBreakdownAmount = computed(() => {
+  return breakdownRows.value.reduce((sum, row) => {
+    return sum + (row.type === "income" ? row.amount : -row.amount);
+  }, 0);
+});
 
-    const calibration: Ref<WalletCalibration | null> = ref(null);
-    const newBalance = ref(0);
-    const breakdownRows = ref<BreakdownRow[]>([]);
+const remainingAmount = computed(() => {
+  return balanceDifference.value - totalBreakdownAmount.value;
+});
 
-    const stepSize = computed(() => settingsStore.walletCalibrationStepSize);
-    const breakdownTypes = [
-      { label: "Expense Avenue", value: "expense" },
-      { label: "Income Source", value: "income" },
-    ];
+function incrementBalance() {
+  newBalance.value += stepSize.value;
+}
 
-    const balanceDifference = computed(() => {
-      if (!calibration.value) return 0;
-      return newBalance.value - calibration.value.currentBalance;
-    });
+function decrementBalance() {
+  newBalance.value -= stepSize.value;
+}
 
-    const totalBreakdownAmount = computed(() => {
-      return breakdownRows.value.reduce((sum, row) => {
-        return sum + (row.type === "income" ? row.amount : -row.amount);
-      }, 0);
-    });
+function addBreakdownRow() {
+  breakdownRows.value.push({
+    type: "expense",
+    expenseAvenueId: "",
+    incomeSourceId: "",
+    amount: 0,
+  });
+}
 
-    const remainingAmount = computed(() => {
-      return balanceDifference.value - totalBreakdownAmount.value;
-    });
+function removeBreakdownRow(index: number) {
+  breakdownRows.value.splice(index, 1);
+}
 
-    function incrementBalance() {
-      newBalance.value += stepSize.value;
-    }
+async function loadCalibration() {
+  let currency = await entityService.getCurrency(props.wallet.currencyId!);
 
-    function decrementBalance() {
-      newBalance.value -= stepSize.value;
-    }
+  calibration.value = {
+    walletId: props.wallet._id!,
+    currencyId: props.wallet.currencyId!,
+    currencySign: currency.sign,
+    currentBalance: props.balance,
+  };
 
-    function addBreakdownRow() {
-      breakdownRows.value.push({
-        type: "expense",
-        expenseAvenueId: "",
-        incomeSourceId: "",
-        amount: 0,
-      });
-    }
+  newBalance.value = props.balance;
+}
 
-    function removeBreakdownRow(index: number) {
-      breakdownRows.value.splice(index, 1);
-    }
+async function saveClicked() {
+  console.debug({ calibration: JSON.parse(JSON.stringify(calibration.value)) });
+  console.debug({ breakdownRows: JSON.parse(JSON.stringify(breakdownRows.value)) });
+  console.debug({ newBalance: newBalance.value });
+  console.debug({ balanceDifference: balanceDifference.value });
+  console.debug({ totalBreakdownAmount: totalBreakdownAmount.value });
+  console.debug({ remainingAmount: remainingAmount.value });
 
-    async function loadCalibration() {
-      let currency = await entityService.getCurrency(props.wallet.currencyId!);
+  const autoCalibratedExpenseAvenue = await entityService.getExpenseAvenueByFixtureCode(fixtureCode.AUTO_CALIBRATED_EXPENSE);
+  const autoCalibratedIncomeSource = await entityService.getIncomeSourceByFixtureCode(fixtureCode.AUTO_CALIBRATED_INCOME);
 
-      calibration.value = {
-        walletId: props.wallet._id!,
-        currencyId: props.wallet.currencyId!,
-        currencySign: currency.sign,
-        currentBalance: props.balance,
+  if (!autoCalibratedExpenseAvenue || !autoCalibratedIncomeSource) {
+    await dialogService.alert("Error", "Auto-calibrated expense avenue or income source not found. Please sync your database and try again.");
+    return;
+  }
+
+  // Create records for each breakdown row
+  for (const row of breakdownRows.value) {
+    let record: Record;
+    if (row.type === "income") {
+      record = {
+        $collection: Collection.RECORD,
+        notes: `Added during wallet calibration for ${props.wallet.name}`,
+        type: RecordType.INCOME,
+        tagIdList: [],
+        transactionEpoch: Date.now(),
+        income: {
+          incomeSourceId: row.incomeSourceId,
+          amount: asAmount(row.amount),
+          currencyId: calibration.value!.currencyId,
+          walletId: calibration.value!.walletId,
+          amountPaid: asAmount(row.amount),
+          amountUnpaid: 0,
+          partyId: null,
+        },
       };
-
-      newBalance.value = props.balance;
+    } else {
+      record = {
+        $collection: Collection.RECORD,
+        notes: `Added during wallet calibration for ${props.wallet.name}`,
+        type: RecordType.EXPENSE,
+        tagIdList: [],
+        transactionEpoch: Date.now(),
+        expense: {
+          expenseAvenueId: row.expenseAvenueId,
+          amount: asAmount(row.amount),
+          currencyId: calibration.value!.currencyId,
+          walletId: calibration.value!.walletId,
+          amountPaid: asAmount(row.amount),
+          amountUnpaid: 0,
+          partyId: null,
+        },
+      };
     }
 
-    async function saveClicked() {
-      console.debug({ calibration: JSON.parse(JSON.stringify(calibration.value)) });
-      console.debug({ breakdownRows: JSON.parse(JSON.stringify(breakdownRows.value)) });
-      console.debug({ newBalance: newBalance.value });
-      console.debug({ balanceDifference: balanceDifference.value });
-      console.debug({ totalBreakdownAmount: totalBreakdownAmount.value });
-      console.debug({ remainingAmount: remainingAmount.value });
+    await pouchdbService.upsertDoc(record);
+  }
 
-      const autoCalibratedExpenseAvenue = await entityService.getExpenseAvenueByFixtureCode(fixtureCode.AUTO_CALIBRATED_EXPENSE);
-      const autoCalibratedIncomeSource = await entityService.getIncomeSourceByFixtureCode(fixtureCode.AUTO_CALIBRATED_INCOME);
-
-      if (!autoCalibratedExpenseAvenue || !autoCalibratedIncomeSource) {
-        await dialogService.alert("Error", "Auto-calibrated expense avenue or income source not found. Please sync your database and try again.");
-        return;
-      }
-
-      // Create records for each breakdown row
-      for (const row of breakdownRows.value) {
-        let record: Record;
-        if (row.type === "income") {
-          record = {
-            $collection: Collection.RECORD,
-            notes: `Added during wallet calibration for ${props.wallet.name}`,
-            type: RecordType.INCOME,
-            tagIdList: [],
-            transactionEpoch: Date.now(),
-            income: {
-              incomeSourceId: row.incomeSourceId,
-              amount: asAmount(row.amount),
-              currencyId: calibration.value!.currencyId,
-              walletId: calibration.value!.walletId,
-              amountPaid: asAmount(row.amount),
-              amountUnpaid: 0,
-              partyId: null,
-            },
-          };
-        } else {
-          record = {
-            $collection: Collection.RECORD,
-            notes: `Added during wallet calibration for ${props.wallet.name}`,
-            type: RecordType.EXPENSE,
-            tagIdList: [],
-            transactionEpoch: Date.now(),
-            expense: {
-              expenseAvenueId: row.expenseAvenueId,
-              amount: asAmount(row.amount),
-              currencyId: calibration.value!.currencyId,
-              walletId: calibration.value!.walletId,
-              amountPaid: asAmount(row.amount),
-              amountUnpaid: 0,
-              partyId: null,
-            },
-          };
-        }
-
-        await pouchdbService.upsertDoc(record);
-      }
-
-      // Create auto-calibrated record for remaining amount if any
-      if (remainingAmount.value !== 0) {
-        let record: Record;
-        if (remainingAmount.value > 0) {
-          record = {
-            $collection: Collection.RECORD,
-            notes: `Auto-calibrated adjustment for ${props.wallet.name}`,
-            type: RecordType.INCOME,
-            tagIdList: [],
-            transactionEpoch: Date.now(),
-            income: {
-              incomeSourceId: autoCalibratedIncomeSource!._id!,
-              amount: asAmount(Math.abs(remainingAmount.value)),
-              currencyId: calibration.value!.currencyId,
-              walletId: calibration.value!.walletId,
-              amountPaid: asAmount(Math.abs(remainingAmount.value)),
-              amountUnpaid: 0,
-              partyId: null,
-            },
-          };
-        } else {
-          record = {
-            $collection: Collection.RECORD,
-            notes: `Auto-calibrated adjustment for ${props.wallet.name}`,
-            type: RecordType.EXPENSE,
-            tagIdList: [],
-            transactionEpoch: Date.now(),
-            expense: {
-              expenseAvenueId: autoCalibratedExpenseAvenue!._id!,
-              amount: asAmount(Math.abs(remainingAmount.value)),
-              currencyId: calibration.value!.currencyId,
-              walletId: calibration.value!.walletId,
-              amountPaid: asAmount(Math.abs(remainingAmount.value)),
-              amountUnpaid: 0,
-              partyId: null,
-            },
-          };
-        }
-
-        await pouchdbService.upsertDoc(record);
-      }
-
-      onDialogOK();
+  // Create auto-calibrated record for remaining amount if any
+  if (remainingAmount.value !== 0) {
+    let record: Record;
+    if (remainingAmount.value > 0) {
+      record = {
+        $collection: Collection.RECORD,
+        notes: `Auto-calibrated adjustment for ${props.wallet.name}`,
+        type: RecordType.INCOME,
+        tagIdList: [],
+        transactionEpoch: Date.now(),
+        income: {
+          incomeSourceId: autoCalibratedIncomeSource!._id!,
+          amount: asAmount(Math.abs(remainingAmount.value)),
+          currencyId: calibration.value!.currencyId,
+          walletId: calibration.value!.walletId,
+          amountPaid: asAmount(Math.abs(remainingAmount.value)),
+          amountUnpaid: 0,
+          partyId: null,
+        },
+      };
+    } else {
+      record = {
+        $collection: Collection.RECORD,
+        notes: `Auto-calibrated adjustment for ${props.wallet.name}`,
+        type: RecordType.EXPENSE,
+        tagIdList: [],
+        transactionEpoch: Date.now(),
+        expense: {
+          expenseAvenueId: autoCalibratedExpenseAvenue!._id!,
+          amount: asAmount(Math.abs(remainingAmount.value)),
+          currencyId: calibration.value!.currencyId,
+          walletId: calibration.value!.walletId,
+          amountPaid: asAmount(Math.abs(remainingAmount.value)),
+          amountUnpaid: 0,
+          partyId: null,
+        },
+      };
     }
 
-    onMounted(() => {
-      loadCalibration();
-    });
+    await pouchdbService.upsertDoc(record);
+  }
 
-    return {
-      dialogRef,
-      onDialogHide,
-      saveClicked,
-      cancelClicked: onDialogCancel,
-      calibration,
-      newBalance,
-      breakdownRows,
-      stepSize,
-      breakdownTypes,
-      balanceDifference,
-      remainingAmount,
-      incrementBalance,
-      decrementBalance,
-      addBreakdownRow,
-      removeBreakdownRow,
-      printAmount,
-      totalBreakdownAmount,
-    };
-  },
-};
+  onDialogOK();
+}
+
+onMounted(() => {
+  loadCalibration();
+});
 </script>
 
 <style scoped lang="scss">

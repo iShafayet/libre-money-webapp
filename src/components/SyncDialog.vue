@@ -78,7 +78,7 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { authService } from "src/services/auth-service";
 import { credentialService } from "src/services/credential-service";
@@ -88,168 +88,139 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import { useUserStore } from "src/stores/user";
 import { sleep } from "src/utils/misc-utils";
 import { validators } from "src/utils/validators";
-import { Ref, ref, computed } from "vue";
+import { ref, computed } from "vue";
 
-export default {
-  props: {
-    bidirectional: {
-      type: Boolean,
-      required: false,
-      default: true,
-    },
-    reloadWindowAfterSync: {
-      type: Boolean,
-      required: false,
-      default: true,
-    },
-    invocationOrigin: {
-      type: String,
-      required: false,
-      default: "unknown",
-    },
-  },
+// Props
+const props = defineProps<{
+  bidirectional?: boolean;
+  reloadWindowAfterSync?: boolean;
+  invocationOrigin?: string;
+}>();
 
-  components: {},
+// Emits
+const emit = defineEmits([...useDialogPluginComponent.emits]);
 
-  emits: [...useDialogPluginComponent.emits],
+// Dialog plugin
+const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
+const $q = useQuasar();
 
-  setup(props) {
-    const userStore = useUserStore();
-    const { dialogRef, onDialogHide, onDialogCancel } = useDialogPluginComponent();
-    const $q = useQuasar();
+// State
+const userStore = useUserStore();
+const needsPasswordInput = ref(false);
+const username = ref<string | null>(null);
+const password = ref<string | null>(null);
+const syncStatusMessage = ref("Initializing sync...");
+const syncDetailMessage = ref("Please wait while we prepare your data");
+const isLoading = ref(false);
 
-    // Reactive state
-    const needsPasswordInput = ref(false);
-    const username: Ref<string | null> = ref(null);
-    const password: Ref<string | null> = ref(null);
-    const syncStatusMessage = ref("Initializing sync...");
-    const syncDetailMessage = ref("Please wait while we prepare your data");
-    const isLoading = ref(false);
+// Computed properties for contextual messaging
+const dialogTitle = computed(() => {
+  switch (props.invocationOrigin) {
+    case "LoginPage":
+      return "Welcome to Cash Keeper";
+    case "MainLayout":
+      return "Syncing Data";
+    default:
+      return "Syncing Data";
+  }
+});
 
-    // Computed properties for contextual messaging
-    const dialogTitle = computed(() => {
-      switch (props.invocationOrigin) {
-        case "LoginPage":
-          return "Welcome to Cash Keeper";
-        case "MainLayout":
-          return "Syncing Data";
-        default:
-          return "Syncing Data";
-      }
-    });
+const dialogSubtitle = computed(() => {
+  switch (props.invocationOrigin) {
+    case "LoginPage":
+      return "Setting up your account and syncing your data";
+    case "MainLayout":
+      return "Please wait while we sync your data";
+    default:
+      return "Please wait while we sync your data";
+  }
+});
 
-    const dialogSubtitle = computed(() => {
-      switch (props.invocationOrigin) {
-        case "LoginPage":
-          return "Setting up your account and syncing your data";
-        case "MainLayout":
-          return "Please wait while we sync your data";
-        default:
-          return "Please wait while we sync your data";
-      }
-    });
+const showWelcomeMessage = computed(() => {
+  return props.invocationOrigin === "LoginPage";
+});
 
-    const showWelcomeMessage = computed(() => {
-      return props.invocationOrigin === "LoginPage";
-    });
+const welcomeMessage = computed(() => {
+  switch (props.invocationOrigin) {
+    case "LoginPage":
+      return "We're setting up your account and downloading your data from the server. This may take a few moments.";
+    default:
+      return "";
+  }
+});
 
-    const welcomeMessage = computed(() => {
-      switch (props.invocationOrigin) {
-        case "LoginPage":
-          return "We're setting up your account and downloading your data from the server. This may take a few moments.";
-        default:
-          return "";
-      }
-    });
+// Sync logic with better status updates
+async function updateSyncStatus(message: string, detail = "") {
+  syncStatusMessage.value = message;
+  syncDetailMessage.value = detail;
+}
 
-    // Sync logic with better status updates
-    async function updateSyncStatus(message: string, detail = "") {
-      syncStatusMessage.value = message;
-      syncDetailMessage.value = detail;
+async function sync() {
+  needsPasswordInput.value = false;
+
+  // Check credentials
+  if (!credentialService.hasCredentials()) {
+    if (!userStore.isUserLoggedIn) {
+      window.location.reload();
+      return;
+    }
+    username.value = userStore.currentUser!.username;
+    needsPasswordInput.value = true;
+    console.debug("Asking user to input password again");
+    return;
+  }
+
+  try {
+    await updateSyncStatus("Connecting to server...", "Establishing secure connection");
+
+    await updateSyncStatus("Synchronizing data...", "This may take a few moments depending on the size of your data");
+    let errorCount = (await pouchdbService.sync()) as number;
+
+    if (errorCount > 0) {
+      await updateSyncStatus("Sync completed with warnings", `${errorCount} non-fatal errors occurred`);
+      await dialogService.alert("Sync Ended", `Sync ended with ${errorCount} non-fatal errors. Please inform administrator to avoid data loss.`);
+    } else {
+      await updateSyncStatus("Finalizing setup...", "Running post-sync operations");
     }
 
-    async function sync() {
-      needsPasswordInput.value = false;
+    await migrationService.migrateDefaultExpenseAvenueAndIncomeSource($q);
+    await sleep(500);
+    await updateSyncStatus("Complete!", "Your data is now up to date");
 
-      // Check credentials
-      if (!credentialService.hasCredentials()) {
-        if (!userStore.isUserLoggedIn) {
-          window.location.reload();
-          return;
-        }
-        username.value = userStore.currentUser!.username;
-        needsPasswordInput.value = true;
-        console.debug("Asking user to input password again");
-        return;
-      }
-
-      try {
-        await updateSyncStatus("Connecting to server...", "Establishing secure connection");
-
-        await updateSyncStatus("Synchronizing data...", "This may take a few moments depending on the size of your data");
-        let errorCount = (await pouchdbService.sync()) as number;
-
-        if (errorCount > 0) {
-          await updateSyncStatus("Sync completed with warnings", `${errorCount} non-fatal errors occurred`);
-          await dialogService.alert("Sync Ended", `Sync ended with ${errorCount} non-fatal errors. Please inform administrator to avoid data loss.`);
-        } else {
-          await updateSyncStatus("Finalizing setup...", "Running post-sync operations");
-        }
-
-        await migrationService.migrateDefaultExpenseAvenueAndIncomeSource($q);
-        await sleep(500);
-        await updateSyncStatus("Complete!", "Your data is now up to date");
-
-        if (props.reloadWindowAfterSync) {
-          await sleep(1000);
-          window.location.reload();
-        } else {
-          onDialogCancel();
-        }
-      } catch (error) {
-        console.error("Sync error:", error);
-        await updateSyncStatus("Sync failed", "Please check your internet connection");
-        await dialogService.alert("Sync Error", "Encountered error while trying to sync with remote. Ensure you have working internet connection");
-      }
+    if (props.reloadWindowAfterSync ?? true) {
+      await sleep(1000);
+      window.location.reload();
+    } else {
+      onDialogCancel();
     }
+  } catch (error) {
+    console.error("Sync error:", error);
+    await updateSyncStatus("Sync failed", "Please check your internet connection");
+    await dialogService.alert("Sync Error", "Encountered error while trying to sync with remote. Ensure you have working internet connection");
+  }
+}
 
-    async function onSubmit() {
-      isLoading.value = true;
-      let [successful, failureReason] = await authService.updateAndTestCredentials(username.value!, password.value!);
+async function onSubmit() {
+  isLoading.value = true;
+  let [successful, failureReason] = await authService.updateAndTestCredentials(username.value!, password.value!);
 
-      if (!successful) {
-        isLoading.value = false;
-        await dialogService.alert("Credentials Error", failureReason as string);
-        return;
-      }
+  if (!successful) {
+    isLoading.value = false;
+    await dialogService.alert("Credentials Error", failureReason as string);
+    return;
+  }
 
-      console.debug("Loaded new credentials. Reinitating sync.");
-      isLoading.value = false;
-      await sync();
-    }
+  console.debug("Loaded new credentials. Reinitating sync.");
+  isLoading.value = false;
+  await sync();
+}
 
-    // Start sync process
-    sync();
+// Start sync process
+sync();
 
-    return {
-      dialogRef,
-      onDialogHide,
-      cancelClicked: onDialogCancel,
-      validators,
-      username,
-      password,
-      onSubmit,
-      needsPasswordInput,
-      syncStatusMessage,
-      syncDetailMessage,
-      dialogTitle,
-      dialogSubtitle,
-      showWelcomeMessage,
-      welcomeMessage,
-      isLoading,
-    };
-  },
-};
+function cancelClicked() {
+  onDialogCancel();
+}
 </script>
 <style scoped lang="scss">
 .sync-dialog-card {

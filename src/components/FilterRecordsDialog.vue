@@ -63,7 +63,7 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import DateInput from "src/components/lib/DateInput.vue";
 import { dateRangePresetList, partyTypeList, sortByTypeList } from "src/constants/constants";
@@ -76,96 +76,74 @@ import SelectRecordType from "./SelectRecordType.vue";
 import SelectTag from "./SelectTag.vue";
 import SelectWallet from "./SelectWallet.vue";
 
-export default {
-  props: {
-    inputFilters: {
-      type: Object,
-      required: false,
-      default: null,
-    },
-  },
+// Props
+const props = defineProps<{
+  inputFilters?: RecordFilters | null;
+}>();
 
-  components: { DateInput, SelectRecordType, SelectParty, SelectTag, SelectWallet },
+// Emits
+const emit = defineEmits([...useDialogPluginComponent.emits]);
 
-  emits: [...useDialogPluginComponent.emits],
+// Dialog plugin
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-  setup(props) {
-    const isLoading = ref(false);
-    const moreOptionsExpanded = ref(false);
+const isLoading = ref(false);
+const moreOptionsExpanded = ref(false);
 
-    const recordFilters: Ref<RecordFilters | null> = ref(null);
+const recordFilters: Ref<RecordFilters | null> = ref(null);
 
-    const defaultPreset = props.inputFilters?._preset || "current-year";
-    const selectedPreset: Ref<string> = ref(defaultPreset);
+const defaultPreset = props.inputFilters?._preset || "current-year";
+const selectedPreset: Ref<string> = ref(defaultPreset);
 
-    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+isLoading.value = true;
+if (props.inputFilters) {
+  recordFilters.value = props.inputFilters as RecordFilters;
+} else {
+  recordFilters.value = {
+    startEpoch: Date.now(),
+    endEpoch: Date.now(),
+    recordTypeList: [],
+    tagIdWhiteList: [],
+    tagIdBlackList: [],
+    partyId: null,
+    walletId: null,
+    searchString: "",
+    deepSearchString: "",
+    sortBy: "transactionEpochDesc",
+    highlightDuplicates: false,
+    type: "standard",
+  };
+}
+isLoading.value = false;
 
-    isLoading.value = true;
-    if (props.inputFilters) {
-      recordFilters.value = props.inputFilters as RecordFilters;
-    } else {
-      recordFilters.value = {
-        startEpoch: Date.now(),
-        endEpoch: Date.now(),
-        recordTypeList: [],
-        tagIdWhiteList: [],
-        tagIdBlackList: [],
-        partyId: null,
-        walletId: null,
-        searchString: "",
-        deepSearchString: "",
-        sortBy: "transactionEpochDesc",
-        highlightDuplicates: false,
-        type: "standard",
-      };
-    }
-    isLoading.value = false;
+async function okClicked() {
+  recordFilters.value!.type = "standard";
+  recordFilters.value!._preset = selectedPreset.value;
+  onDialogOK(recordFilters.value);
+}
 
-    async function okClicked() {
-      recordFilters.value!.type = "standard";
-      recordFilters.value!._preset = selectedPreset.value;
-      onDialogOK(recordFilters.value);
-    }
+async function startEpochChanged() {
+  selectedPreset.value = "custom";
+}
 
-    async function startEpochChanged() {
-      selectedPreset.value = "custom";
-    }
+async function endEpochChanged() {
+  selectedPreset.value = "custom";
+}
 
-    async function endEpochChanged() {
-      selectedPreset.value = "custom";
-    }
+function applyPreset(newPreset: string) {
+  const range = getStartAndEndEpochFromPreset(newPreset);
+  if (range) {
+    const { startEpoch, endEpoch } = range;
+    [recordFilters.value!.startEpoch, recordFilters.value!.endEpoch] = [startEpoch, endEpoch];
+  }
+}
 
-    function applyPreset(newPreset: string) {
-      const range = getStartAndEndEpochFromPreset(newPreset);
-      if (range) {
-        const { startEpoch, endEpoch } = range;
-        [recordFilters.value!.startEpoch, recordFilters.value!.endEpoch] = [startEpoch, endEpoch];
-      }
-    }
+watch(selectedPreset, (newPreset: any) => {
+  applyPreset(newPreset);
+});
 
-    watch(selectedPreset, async (newPreset: any) => {
-      applyPreset(newPreset);
-    });
+applyPreset(selectedPreset.value!);
 
-    applyPreset(selectedPreset.value!);
-
-    return {
-      dialogRef,
-      onDialogHide,
-      okClicked,
-      cancelClicked: onDialogCancel,
-      isLoading,
-      partyTypeList,
-      validators,
-      recordFilters,
-      dateRangePresetList,
-      selectedPreset,
-      startEpochChanged,
-      endEpochChanged,
-      sortByTypeList,
-      moreOptionsExpanded,
-    };
-  },
-};
+const cancelClicked = onDialogCancel;
 </script>
 <style scoped lang="scss"></style>

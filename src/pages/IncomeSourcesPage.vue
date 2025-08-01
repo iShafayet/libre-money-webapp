@@ -49,14 +49,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, type Ref } from "vue";
-import { Collection, rowsPerPageOptions } from "./../constants/constants";
 import { useQuasar } from "quasar";
-import AddIncomeSource from "./../components/AddIncomeSource.vue";
-import { pouchdbService } from "src/services/pouchdb-service";
 import { IncomeSource } from "src/models/income-source";
 import { dialogService } from "src/services/dialog-service";
+import { pouchdbService } from "src/services/pouchdb-service";
 import { usePaginationSizeStore } from "src/stores/pagination";
+import { ref, watch, type Ref } from "vue";
+import AddIncomeSource from "./../components/AddIncomeSource.vue";
+import { Collection, rowsPerPageOptions } from "./../constants/constants";
 
 const $q = useQuasar();
 

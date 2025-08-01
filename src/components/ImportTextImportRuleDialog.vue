@@ -69,71 +69,54 @@
   </q-dialog>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
 import { ref } from "vue";
 import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
 
-export default {
-  emits: [...useDialogPluginComponent.emits],
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const $q = useQuasar();
 
-  setup() {
-    const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
-    const $q = useQuasar();
+const importCode = ref("");
+const validationErrors = ref<string[]>([]);
+const previewData = ref<Partial<TextImportRules> | null>(null);
 
-    const importCode = ref("");
-    const validationErrors = ref<string[]>([]);
-    const previewData = ref<Partial<TextImportRules> | null>(null);
+function validateJson(val: string) {
+  if (!val.trim()) {
+    validationErrors.value = ["JSON code is required"];
+    previewData.value = null;
+    return "JSON code is required";
+  }
 
-    const validateJson = (val: string) => {
-      if (!val.trim()) {
-        validationErrors.value = ["JSON code is required"];
-        previewData.value = null;
-        return "JSON code is required";
-      }
+  try {
+    const parsed = JSON.parse(val);
+    const validation = TextImportRulesValidator.validate(parsed);
+    validationErrors.value = validation.errors;
 
-      try {
-        const parsed = JSON.parse(val);
-        const validation = TextImportRulesValidator.validate(parsed);
-        validationErrors.value = validation.errors;
+    if (validation.isValid) {
+      previewData.value = parsed;
+      return true;
+    } else {
+      previewData.value = null;
+      return "Invalid rule configuration";
+    }
+  } catch (e) {
+    validationErrors.value = ["Invalid JSON format"];
+    previewData.value = null;
+    return "Invalid JSON format";
+  }
+}
 
-        if (validation.isValid) {
-          previewData.value = parsed;
-          return true;
-        } else {
-          previewData.value = null;
-          return "Invalid rule configuration";
-        }
-      } catch (e) {
-        validationErrors.value = ["Invalid JSON format"];
-        previewData.value = null;
-        return "Invalid JSON format";
-      }
-    };
-
-    const importClicked = () => {
-      if (validationErrors.value.length === 0 && previewData.value) {
-        onDialogOK(previewData.value);
-      } else {
-        $q.notify({
-          type: "negative",
-          message: "Please fix validation errors before importing",
-        });
-      }
-    };
-
-    return {
-      dialogRef,
-      onDialogHide,
-      onDialogCancel,
-      importCode,
-      validationErrors,
-      previewData,
-      validateJson,
-      importClicked,
-    };
-  },
-};
+function importClicked() {
+  if (validationErrors.value.length === 0 && previewData.value) {
+    onDialogOK(previewData.value);
+  } else {
+    $q.notify({
+      type: "negative",
+      message: "Please fix validation errors before importing",
+    });
+  }
+}
 </script>
 
 <style scoped lang="scss"></style>
