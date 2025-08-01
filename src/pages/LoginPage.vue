@@ -325,15 +325,7 @@ async function resumePreviousSession() {
 }
 
 function useDifferentCredentialsClicked() {
-  previousSession.value = null;
-  selectedServer.value = serverOptions[0];
-  customServerUrl.value = configService.getRemoteServerUrl() || "";
-  domain.value = configService.getDomainName() || "";
-  username.value = null;
-  password.value = null;
-  shouldRememberPassword.value = false;
-  resumePassword.value = null;
-  currentStep.value = 1;
+  localDataService.removeLocalData();
 }
 </script>
 
