@@ -32,17 +32,17 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, watch, onMounted } from "vue";
-import { validators } from "src/utils/validators";
 import { Collection, RecordType } from "src/constants/constants";
 import { Record } from "src/models/record";
+import { entityService } from "src/services/entity-service";
 import { pouchdbService } from "src/services/pouchdb-service";
-import SelectWallet from "./SelectWallet.vue";
+import { asAmount } from "src/utils/de-facto-utils";
+import { validators } from "src/utils/validators";
+import { onMounted, ref, watch } from "vue";
+import DateTimeInput from "./lib/DateTimeInput.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
-import { asAmount } from "src/utils/de-facto-utils";
-import { entityService } from "src/services/entity-service";
-import DateTimeInput from "./lib/DateTimeInput.vue";
+import SelectWallet from "./SelectWallet.vue";
 
 // Props
 const props = defineProps<{

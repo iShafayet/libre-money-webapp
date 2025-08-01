@@ -46,7 +46,7 @@ import { Currency } from "src/models/currency";
 import { QuickExpenseSummary } from "src/models/inferred/quick-expense-summary";
 import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
-import { asAmount, printCount } from "src/utils/de-facto-utils";
+import { printCount } from "src/utils/de-facto-utils";
 import { Ref, onMounted, ref } from "vue";
 
 // defineProps and defineEmits for script setup

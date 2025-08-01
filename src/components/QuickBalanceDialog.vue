@@ -61,19 +61,19 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { printAmount } from "src/utils/de-facto-utils";
-import { Ref, onMounted, ref } from "vue";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
+import { Collection } from "src/constants/constants";
+import { Currency } from "src/models/currency";
+import { Overview } from "src/models/inferred/overview";
 import { computationService } from "src/services/computation-service";
+import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
-import { Overview } from "src/models/inferred/overview";
+import { printAmount } from "src/utils/de-facto-utils";
 import { CodedError } from "src/utils/error-utils";
-import { Collection } from "src/constants/constants";
-import { pouchdbService } from "src/services/pouchdb-service";
-import { Currency } from "src/models/currency";
-import WalletCalibrationDialog from "./WalletCalibrationDialog.vue";
 import { enforceNonNegativeZero } from "src/utils/number-utils";
+import { Ref, onMounted, ref } from "vue";
+import WalletCalibrationDialog from "./WalletCalibrationDialog.vue";
 
 // Props
 const props = defineProps({

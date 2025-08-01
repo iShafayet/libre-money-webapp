@@ -21,11 +21,10 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import DateInput from "src/components/lib/DateInput.vue";
-import { dateRangePresetList, partyTypeList } from "src/constants/constants";
+import { dateRangePresetList } from "src/constants/constants";
 import { AccJournalFilters } from "src/models/accounting/acc-journal-filters";
 import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
-import { validators } from "src/utils/validators";
-import { ref, watch, defineProps, defineEmits } from "vue";
+import { defineEmits, defineProps, ref, watch } from "vue";
 
 // Props
 const props = defineProps<{

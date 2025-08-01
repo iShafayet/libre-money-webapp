@@ -72,16 +72,16 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { ref, computed, onMounted } from "vue";
-import { entityService } from "src/services/entity-service";
-import { useSettingsStore } from "src/stores/settings";
-import { printAmount, asAmount } from "src/utils/de-facto-utils";
-import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
-import SelectIncomeSource from "./SelectIncomeSource.vue";
-import { pouchdbService } from "src/services/pouchdb-service";
 import { Collection, fixtureCode, RecordType } from "src/constants/constants";
 import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
+import { entityService } from "src/services/entity-service";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { useSettingsStore } from "src/stores/settings";
+import { asAmount, printAmount } from "src/utils/de-facto-utils";
+import { computed, onMounted, ref } from "vue";
+import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";
+import SelectIncomeSource from "./SelectIncomeSource.vue";
 
 // Props
 const props = defineProps<{

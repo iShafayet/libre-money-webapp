@@ -66,10 +66,9 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import DateInput from "src/components/lib/DateInput.vue";
-import { dateRangePresetList, partyTypeList, sortByTypeList } from "src/constants/constants";
+import { dateRangePresetList, sortByTypeList } from "src/constants/constants";
 import { RecordFilters } from "src/models/inferred/record-filters";
 import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
-import { validators } from "src/utils/validators";
 import { Ref, ref, watch } from "vue";
 import SelectParty from "./SelectParty.vue";
 import SelectRecordType from "./SelectRecordType.vue";

@@ -51,22 +51,22 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, watch, onMounted } from "vue";
-import { validators } from "src/utils/validators";
 import { Collection, RecordType } from "src/constants/constants";
 import { Record } from "src/models/record";
+import { NotificationType, dialogService } from "src/services/dialog-service";
+import { entityService } from "src/services/entity-service";
 import { pouchdbService } from "src/services/pouchdb-service";
+import { useSettingsStore } from "src/stores/settings";
+import { asAmount } from "src/utils/de-facto-utils";
+import { deepClone } from "src/utils/misc-utils";
+import { validators } from "src/utils/validators";
+import { onMounted, ref, watch } from "vue";
+import DateTimeInput from "./lib/DateTimeInput.vue";
 import SelectCurrency from "./SelectCurrency.vue";
 import SelectIncomeSource from "./SelectIncomeSource.vue";
-import SelectWallet from "./SelectWallet.vue";
 import SelectParty from "./SelectParty.vue";
 import SelectTag from "./SelectTag.vue";
-import { NotificationType, dialogService } from "src/services/dialog-service";
-import { deepClone } from "src/utils/misc-utils";
-import { asAmount } from "src/utils/de-facto-utils";
-import DateTimeInput from "./lib/DateTimeInput.vue";
-import { entityService } from "src/services/entity-service";
-import { useSettingsStore } from "src/stores/settings";
+import SelectWallet from "./SelectWallet.vue";
 
 // Props
 const props = defineProps<{

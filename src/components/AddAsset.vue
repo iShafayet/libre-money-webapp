@@ -31,11 +31,11 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, Ref, onMounted } from "vue";
-import { validators } from "src/utils/validators";
-import { Collection, defaultAssetType, assetTypeList, assetLiquidityList, defaultAssetLiquidity } from "src/constants/constants";
+import { assetLiquidityList, assetTypeList, Collection, defaultAssetLiquidity, defaultAssetType } from "src/constants/constants";
 import { Asset } from "src/models/asset";
 import { pouchdbService } from "src/services/pouchdb-service";
+import { validators } from "src/utils/validators";
+import { onMounted, ref, Ref } from "vue";
 import SelectCurrency from "./SelectCurrency.vue";
 
 // Props

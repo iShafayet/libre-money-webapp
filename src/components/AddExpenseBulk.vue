@@ -59,7 +59,7 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { asAmount } from "src/utils/de-facto-utils";
 import { validators } from "src/utils/validators";
-import { ref, type Ref } from "vue";
+import { ref } from "vue";
 import DateInput from "./lib/DateInput.vue";
 import SelectCurrency from "./SelectCurrency.vue";
 import SelectExpenseAvenue from "./SelectExpenseAvenue.vue";

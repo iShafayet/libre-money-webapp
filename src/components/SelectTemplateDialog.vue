@@ -35,13 +35,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { validators } from "src/utils/validators";
-import { Collection, partyTypeList } from "src/constants/constants";
-import { pouchdbService } from "src/services/pouchdb-service";
+import { Collection } from "src/constants/constants";
 import { Record } from "src/models/record";
 import { dialogService } from "src/services/dialog-service";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 
 // Props

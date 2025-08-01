@@ -76,15 +76,14 @@
 
 <script lang="ts" setup>
 import { debounce, useQuasar } from "quasar";
-import { RollingBudget } from "src/models/rolling-budget";
-import { RecordFilters } from "src/models/inferred/record-filters";
 import BudgetHighlightsDetailsDialog from "src/components/BudgetHighlightsDetailsDialog.vue";
+import { RecordFilters } from "src/models/inferred/record-filters";
+import { RollingBudget } from "src/models/rolling-budget";
 import { rollingBudgetService } from "src/services/rolling-budget-service";
 import { normalizeEpochRange } from "src/utils/date-utils";
+import { asAmount, printAmount } from "src/utils/de-facto-utils";
 import { deepClone, prettifyDate } from "src/utils/misc-utils";
-import { printAmount } from "src/utils/de-facto-utils";
 import { Ref, ref } from "vue";
-import { asAmount } from "src/utils/de-facto-utils";
 
 // Props
 interface Props {

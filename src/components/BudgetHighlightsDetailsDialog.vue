@@ -122,14 +122,14 @@
 
 <script lang="ts" setup>
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { RollingBudget } from "src/models/rolling-budget";
 import AddRollingBudget from "src/components/AddRollingBudget.vue";
+import { RollingBudget } from "src/models/rolling-budget";
 import { rollingBudgetService } from "src/services/rolling-budget-service";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import { printAmount } from "src/utils/de-facto-utils";
 import { prettifyDate } from "src/utils/misc-utils";
-import { useRouter } from "vue-router";
 import { computed, PropType } from "vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   rollingBudget: {

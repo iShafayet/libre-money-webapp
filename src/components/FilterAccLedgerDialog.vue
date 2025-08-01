@@ -22,11 +22,10 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import DateInput from "src/components/lib/DateInput.vue";
-import { dateRangePresetList, partyTypeList } from "src/constants/constants";
+import { dateRangePresetList } from "src/constants/constants";
 import { AccLedgerFilters } from "src/models/accounting/acc-ledger-filters";
 import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
-import { validators } from "src/utils/validators";
-import { ref, watch, toRef } from "vue";
+import { ref, watch } from "vue";
 import SelectCurrency from "./SelectCurrency.vue";
 
 // Props

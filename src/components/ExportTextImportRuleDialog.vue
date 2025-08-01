@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { ref, computed } from "vue";
 import { TextImportRules } from "src/models/text-import-rules";
+import { computed } from "vue";
 
 // Props
 const props = defineProps<{

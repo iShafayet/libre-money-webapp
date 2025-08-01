@@ -71,8 +71,8 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
-import { ref } from "vue";
 import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
+import { ref } from "vue";
 
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 const $q = useQuasar();

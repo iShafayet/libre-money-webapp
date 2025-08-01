@@ -20,11 +20,11 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, onMounted } from "vue";
-import { validators } from "src/utils/validators";
+import { Collection } from "src/constants/constants";
 import { IncomeSource } from "src/models/income-source";
 import { pouchdbService } from "src/services/pouchdb-service";
-import { Collection } from "src/constants/constants";
+import { validators } from "src/utils/validators";
+import { onMounted, ref } from "vue";
 
 // Props
 const props = defineProps<{

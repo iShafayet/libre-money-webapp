@@ -21,11 +21,11 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, onMounted, watch } from "vue";
-import { validators } from "src/utils/validators";
 import { Collection } from "src/constants/constants";
 import { Currency } from "src/models/currency";
 import { pouchdbService } from "src/services/pouchdb-service";
+import { validators } from "src/utils/validators";
+import { ref } from "vue";
 
 const props = defineProps<{
   existingCurrencyId?: string | null;

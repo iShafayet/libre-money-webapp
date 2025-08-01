@@ -28,9 +28,9 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, onMounted } from "vue";
-import { validators } from "src/utils/validators";
 import { pouchdbService } from "src/services/pouchdb-service";
+import { validators } from "src/utils/validators";
+import { onMounted, ref } from "vue";
 
 // Props
 const props = defineProps<{

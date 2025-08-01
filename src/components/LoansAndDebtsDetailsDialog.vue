@@ -60,10 +60,8 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { partyTypeList } from "src/constants/constants";
 import { LoanAndDebtSummary } from "src/models/inferred/loan-and-debt-summary";
 import { printAmount as printAmountUtil } from "src/utils/de-facto-utils";
-import { validators } from "src/utils/validators";
 import { ref, Ref } from "vue";
 
 // Props

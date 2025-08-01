@@ -79,22 +79,22 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, watch, onMounted } from "vue";
-import { validators } from "src/utils/validators";
 import { Collection, RecordType } from "src/constants/constants";
 import { Record } from "src/models/record";
-import { pouchdbService } from "src/services/pouchdb-service";
-import SelectAsset from "./SelectAsset.vue";
-import SelectWallet from "./SelectWallet.vue";
-import SelectParty from "./SelectParty.vue";
-import SelectTag from "./SelectTag.vue";
-import { NotificationType, dialogService } from "src/services/dialog-service";
-import { deepClone, isNullOrUndefined } from "src/utils/misc-utils";
-import { asAmount, printAmount as printAmountUtil } from "src/utils/de-facto-utils";
-import DateTimeInput from "./lib/DateTimeInput.vue";
-import { entityService } from "src/services/entity-service";
 import { WalletWithPotentialBalance } from "src/models/wallet";
 import { computationService } from "src/services/computation-service";
+import { NotificationType, dialogService } from "src/services/dialog-service";
+import { entityService } from "src/services/entity-service";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { asAmount, printAmount as printAmountUtil } from "src/utils/de-facto-utils";
+import { deepClone, isNullOrUndefined } from "src/utils/misc-utils";
+import { validators } from "src/utils/validators";
+import { onMounted, ref, watch } from "vue";
+import DateTimeInput from "./lib/DateTimeInput.vue";
+import SelectAsset from "./SelectAsset.vue";
+import SelectParty from "./SelectParty.vue";
+import SelectTag from "./SelectTag.vue";
+import SelectWallet from "./SelectWallet.vue";
 
 // Props
 const props = defineProps<{

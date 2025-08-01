@@ -59,16 +59,16 @@
 </template>
 
 <script setup lang="ts">
-import { QForm, useDialogPluginComponent, useQuasar, date } from "quasar";
-import { ref, onMounted } from "vue";
-import { validators } from "src/utils/validators";
-import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
-import { pouchdbService } from "src/services/pouchdb-service";
-import { Collection } from "src/constants/constants";
+import { date, QForm, useDialogPluginComponent, useQuasar } from "quasar";
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
-import { Wallet } from "src/models/wallet";
+import { Collection } from "src/constants/constants";
 import { ExpenseAvenue } from "src/models/expense-avenue";
 import { ExpenseRecordSuggestion } from "src/models/inferred/expense-record-suggestion";
+import { TextImportRules, TextImportRulesValidator } from "src/models/text-import-rules";
+import { Wallet } from "src/models/wallet";
+import { pouchdbService } from "src/services/pouchdb-service";
+import { validators } from "src/utils/validators";
+import { onMounted, ref } from "vue";
 
 // Dialog plugin API
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
