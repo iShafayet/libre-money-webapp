@@ -10,7 +10,7 @@
         <div class="step-title">{{ stepTitle }}</div>
         <div class="step-indicator">
           <q-linear-progress :value="stepProgress" color="primary" size="4px" class="q-mt-sm" />
-          <div class="text-caption text-center q-mt-xs">Step {{ currentStep }} of 3</div>
+          <div class="text-caption text-center q-mt-xs">Step {{ currentStep }} of 4</div>
         </div>
       </div>
 
@@ -138,8 +138,66 @@
         </div>
       </q-card-section>
 
-      <!-- Step 3: Setup Progress -->
+      <!-- Step 3: Currency Selection -->
       <q-card-section v-if="currentStep === 3" class="step-content">
+        <div class="currency-section">
+          <div class="text-h6 q-mb-md">Select Your Currency</div>
+          <div class="text-body2 text-grey-7 q-mb-lg">Choose the currency you'll use for tracking your finances.</div>
+
+          <q-form class="currency-form">
+            <q-select
+              filled
+              v-model="selectedCurrency"
+              :options="currencyOptions"
+              label="Currency"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
+              :rules="[(v) => !!v || 'Please select a currency']"
+            >
+              <template v-slot:prepend>
+                <q-icon name="attach_money" />
+              </template>
+            </q-select>
+
+            <!-- Custom Currency Input -->
+            <div v-if="selectedCurrency === 'custom'" class="custom-currency-section q-mt-md">
+              <div class="text-subtitle2 q-mb-md">Custom Currency Details</div>
+
+              <q-input
+                filled
+                v-model="customCurrencyName"
+                label="Currency Name"
+                placeholder="e.g., Euro, Bitcoin"
+                hint="Full name of your currency"
+                :rules="customCurrencyRules"
+                class="q-mb-md"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="label" />
+                </template>
+              </q-input>
+
+              <q-input
+                filled
+                v-model="customCurrencySign"
+                label="Currency Sign/Abbreviation"
+                placeholder="e.g., EUR, BTC"
+                hint="Short symbol or abbreviation"
+                :rules="customCurrencyRules"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="code" />
+                </template>
+              </q-input>
+            </div>
+          </q-form>
+        </div>
+      </q-card-section>
+
+      <!-- Step 4: Setup Progress -->
+      <q-card-section v-if="currentStep === 4" class="step-content">
         <div class="setup-section">
           <template v-if="!setupComplete">
             <div class="text-h6 q-mb-md">Setting Up Your Account</div>
@@ -179,7 +237,7 @@
               <div class="summary-grid">
                 <div class="summary-item">
                   <q-icon name="attach_money" color="green" />
-                  <span>Default currency (USD)</span>
+                  <span>Selected currency ({{ selectedCurrency === "custom" ? customCurrencySign : selectedCurrency }})</span>
                 </div>
                 <div class="summary-item">
                   <q-icon name="category" color="blue" />
@@ -212,7 +270,7 @@
         <q-btn v-if="currentStep > 1 && !setupComplete && !isCreatingAccount" flat label="Back" color="grey-7" @click="goBack" />
         <div class="spacer"></div>
 
-        <!-- Step 1 & 2 Next Buttons -->
+        <!-- Step 1, 2, 3 Next Buttons -->
         <q-btn v-if="currentStep === 1" unelevated color="primary" label="Get Started" @click="nextStep" icon-right="arrow_forward" />
         <q-btn
           v-if="currentStep === 2"
@@ -224,8 +282,17 @@
           :loading="isCreatingAccount"
           icon-right="arrow_forward"
         />
+        <q-btn
+          v-if="currentStep === 3"
+          unelevated
+          color="primary"
+          label="Continue"
+          @click="proceedToSetup"
+          :disabled="!isCurrencyValid"
+          icon-right="arrow_forward"
+        />
 
-        <!-- Step 3 Dashboard Button -->
+        <!-- Step 4 Dashboard Button -->
         <q-btn v-if="setupComplete" unelevated color="primary" label="Go to Dashboard" @click="goToDashboard" icon-right="dashboard" size="md" />
       </q-card-actions>
     </q-card>
@@ -237,6 +304,9 @@ import { defineComponent, ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import { onboardingService, OnboardingProgress } from "src/services/onboarding-service";
 import { dialogService } from "src/services/dialog-service";
+import { Currency } from "src/models/currency";
+import { Collection } from "src/constants/constants";
+import { CURRENCY_OPTIONS, CURRENCY_MAP } from "src/constants/onboarding-constants";
 
 export default defineComponent({
   name: "OfflineOnboardingPage",
@@ -248,6 +318,14 @@ export default defineComponent({
     const username = ref("");
     const usernameError = ref("");
     const isCreatingAccount = ref(false);
+
+    // Currency selection
+    const selectedCurrency = ref("");
+    const customCurrencyName = ref("");
+    const customCurrencySign = ref("");
+
+    // Currency options
+    const currencyOptions = CURRENCY_OPTIONS;
 
     // Progress tracking
     const progressValue = ref(0);
@@ -262,6 +340,8 @@ export default defineComponent({
         case 2:
           return "Create Your Account";
         case 3:
+          return "Select Currency";
+        case 4:
           return "Account Setup";
         default:
           return "Cash Keeper";
@@ -269,7 +349,7 @@ export default defineComponent({
     });
 
     const stepProgress = computed(() => {
-      return currentStep.value / 3;
+      return currentStep.value / 4;
     });
 
     function validateUsername(username: string): string | null {
@@ -289,12 +369,23 @@ export default defineComponent({
       return validateUsername(username.value) === null;
     });
 
+    const isCurrencyValid = computed(() => {
+      if (!selectedCurrency.value) return false;
+      if (selectedCurrency.value === "custom") {
+        return customCurrencyName.value.trim() !== "" && customCurrencySign.value.trim() !== "";
+      }
+      return true;
+    });
+
     // Username validation rules
     const usernameRules = [(val: string) => validateUsername(val) || true];
 
+    // Custom currency validation rules
+    const customCurrencyRules = [(val: string) => (val && val.trim()) || "This field is required"];
+
     // Methods
     function nextStep() {
-      if (currentStep.value < 3) {
+      if (currentStep.value < 4) {
         currentStep.value++;
       }
     }
@@ -309,6 +400,28 @@ export default defineComponent({
       usernameError.value = "";
     }
 
+    function createCurrencyObject(): Currency {
+      if (selectedCurrency.value === "custom") {
+        return {
+          $collection: Collection.CURRENCY,
+          name: customCurrencyName.value.trim(),
+          sign: customCurrencySign.value.trim(),
+          precisionMinimum: 2,
+          precisionMaximum: 2,
+        };
+      } else {
+        // Map predefined currencies
+        const currency = CURRENCY_MAP[selectedCurrency.value];
+        return {
+          $collection: Collection.CURRENCY,
+          name: currency.name,
+          sign: currency.sign,
+          precisionMinimum: 2,
+          precisionMaximum: 2,
+        };
+      }
+    }
+
     async function createAccount() {
       const validation = validateUsername(username.value);
       if (validation) {
@@ -321,12 +434,30 @@ export default defineComponent({
       try {
         // Create offline user
         await onboardingService.createOfflineUser(username.value);
-
-        // Move to setup step
+        // Move to currency selection step
         currentStep.value = 3;
+      } catch (error) {
+        console.error("Error during account creation:", error);
+        await dialogService.alert("Account Creation Error", "There was an error creating your account. Please try again.");
+      } finally {
+        isCreatingAccount.value = false;
+      }
+    }
+
+    async function proceedToSetup() {
+      if (!isCurrencyValid.value) {
+        return;
+      }
+
+      try {
+        // Move to setup step
+        currentStep.value = 4;
+
+        // Create currency object
+        const currency = createCurrencyObject();
 
         // Start setup process with progress tracking
-        await onboardingService.setupDefaultAccounts((progress: OnboardingProgress) => {
+        await onboardingService.setupDefaultAccounts(currency, (progress: OnboardingProgress) => {
           progressValue.value = progress.progress;
           progressMessage.value = progress.message;
         });
@@ -335,11 +466,9 @@ export default defineComponent({
         setupComplete.value = true;
         progressMessage.value = "Setup complete!";
       } catch (error) {
-        console.error("Error during account creation:", error);
+        console.error("Error during setup:", error);
         await dialogService.alert("Setup Error", "There was an error setting up your account. Please try again.");
-        currentStep.value = 2; // Go back to username step
-      } finally {
-        isCreatingAccount.value = false;
+        currentStep.value = 3; // Go back to currency step
       }
     }
 
@@ -353,17 +482,24 @@ export default defineComponent({
       username,
       usernameError,
       isCreatingAccount,
+      selectedCurrency,
+      customCurrencyName,
+      customCurrencySign,
+      currencyOptions,
       progressValue,
       progressMessage,
       setupComplete,
       stepTitle,
       stepProgress,
       isUsernameValid,
+      isCurrencyValid,
       usernameRules,
+      customCurrencyRules,
       nextStep,
       goBack,
       clearUsernameError,
       createAccount,
+      proceedToSetup,
       goToDashboard,
     };
   },
@@ -493,7 +629,34 @@ export default defineComponent({
   }
 }
 
-// Step 3 - Setup
+// Step 3 - Currency Selection
+.currency-section {
+  max-width: 500px;
+  margin: 0 auto;
+
+  .currency-form {
+    .q-select {
+      margin-bottom: 16px;
+    }
+  }
+
+  .custom-currency-section {
+    padding: 16px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid var(--q-primary);
+
+    .q-input {
+      margin-bottom: 16px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// Step 4 - Setup
 .setup-section {
   text-align: center;
 

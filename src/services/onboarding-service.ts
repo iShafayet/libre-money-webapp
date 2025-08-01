@@ -40,7 +40,7 @@ class OnboardingService {
   /**
    * Sets up default accounts and entities for offline user
    */
-  async setupDefaultAccounts(progressCallback?: (progress: OnboardingProgress) => void): Promise<void> {
+  async setupDefaultAccounts(selectedCurrency?: Currency, progressCallback?: (progress: OnboardingProgress) => void): Promise<void> {
     const steps = [
       { message: "Creating default currency...", weight: 10 },
       { message: "Setting up expense categories...", weight: 15 },
@@ -69,7 +69,7 @@ class OnboardingService {
 
       switch (i) {
         case 0:
-          await this.createDefaultCurrency();
+          await this.createDefaultCurrency(selectedCurrency);
           break;
         case 1:
           await this.createDefaultExpenseAvenues();
@@ -107,16 +107,21 @@ class OnboardingService {
   }
 
   /**
-   * Creates default currency (USD)
+   * Creates default currency or uses provided currency
    */
-  private async createDefaultCurrency(): Promise<void> {
-    const defaultCurrency: Currency = {
+  private async createDefaultCurrency(providedCurrency?: Currency): Promise<void> {
+    const defaultCurrency: Currency = providedCurrency || {
       $collection: Collection.CURRENCY,
       name: "US Dollar",
       sign: "USD",
       precisionMinimum: 2,
       precisionMaximum: 2,
     };
+
+    // Ensure collection property is set
+    if (!defaultCurrency.$collection) {
+      defaultCurrency.$collection = Collection.CURRENCY;
+    }
 
     const result = await pouchdbService.upsertDoc(defaultCurrency);
 

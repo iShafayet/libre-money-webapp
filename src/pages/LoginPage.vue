@@ -31,7 +31,7 @@
         <q-separator class="q-mb-md" />
 
         <div class="text-center q-mb-md">
-          <div class="text-h6 q-mb-sm">Try Without Account</div>
+          <div class="text-h6 q-mb-sm">Try Offline</div>
           <div class="text-body2 text-grey-7">Start using Cash Keeper immediately with unlimited offline access</div>
         </div>
 
