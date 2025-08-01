@@ -299,211 +299,180 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref, computed } from "vue";
-import { useRouter } from "vue-router";
-import { onboardingService, OnboardingProgress } from "src/services/onboarding-service";
-import { dialogService } from "src/services/dialog-service";
-import { Currency } from "src/models/currency";
+<script setup lang="ts">
 import { Collection } from "src/constants/constants";
-import { CURRENCY_OPTIONS, CURRENCY_MAP } from "src/constants/onboarding-constants";
+import { CURRENCY_MAP, CURRENCY_OPTIONS } from "src/constants/onboarding-constants";
+import { Currency } from "src/models/currency";
+import { dialogService } from "src/services/dialog-service";
+import { OnboardingProgress, onboardingService } from "src/services/onboarding-service";
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
 
-export default defineComponent({
-  name: "OfflineOnboardingPage",
-  setup() {
-    const router = useRouter();
+const router = useRouter();
 
-    // Step management
-    const currentStep = ref(1);
-    const username = ref("");
-    const usernameError = ref("");
-    const isCreatingAccount = ref(false);
+// Step management
+const currentStep = ref(1);
+const username = ref("");
+const usernameError = ref("");
+const isCreatingAccount = ref(false);
 
-    // Currency selection
-    const selectedCurrency = ref("");
-    const customCurrencyName = ref("");
-    const customCurrencySign = ref("");
+// Currency selection
+const selectedCurrency = ref("");
+const customCurrencyName = ref("");
+const customCurrencySign = ref("");
 
-    // Currency options
-    const currencyOptions = CURRENCY_OPTIONS;
+// Currency options
+const currencyOptions = CURRENCY_OPTIONS;
 
-    // Progress tracking
-    const progressValue = ref(0);
-    const progressMessage = ref("Initializing...");
-    const setupComplete = ref(false);
+// Progress tracking
+const progressValue = ref(0);
+const progressMessage = ref("Initializing...");
+const setupComplete = ref(false);
 
-    // Computed properties
-    const stepTitle = computed(() => {
-      switch (currentStep.value) {
-        case 1:
-          return "Welcome to Cash Keeper";
-        case 2:
-          return "Create Your Account";
-        case 3:
-          return "Select Currency";
-        case 4:
-          return "Account Setup";
-        default:
-          return "Cash Keeper";
-      }
-    });
-
-    const stepProgress = computed(() => {
-      return currentStep.value / 4;
-    });
-
-    function validateUsername(username: string): string | null {
-      if (!username || username.length < 6) {
-        return "Username must be at least 6 characters long";
-      }
-      if (username.length > 20) {
-        return "Username cannot be longer than 20 characters";
-      }
-      if (!/^[a-zA-Z0-9]+$/.test(username)) {
-        return "Username can only contain letters and numbers";
-      }
-      return null;
-    }
-
-    const isUsernameValid = computed(() => {
-      return validateUsername(username.value) === null;
-    });
-
-    const isCurrencyValid = computed(() => {
-      if (!selectedCurrency.value) return false;
-      if (selectedCurrency.value === "custom") {
-        return customCurrencyName.value.trim() !== "" && customCurrencySign.value.trim() !== "";
-      }
-      return true;
-    });
-
-    // Username validation rules
-    const usernameRules = [(val: string) => validateUsername(val) || true];
-
-    // Custom currency validation rules
-    const customCurrencyRules = [(val: string) => (val && val.trim()) || "This field is required"];
-
-    // Methods
-    function nextStep() {
-      if (currentStep.value < 4) {
-        currentStep.value++;
-      }
-    }
-
-    function goBack() {
-      if (currentStep.value > 1) {
-        currentStep.value--;
-      }
-    }
-
-    function clearUsernameError() {
-      usernameError.value = "";
-    }
-
-    function createCurrencyObject(): Currency {
-      if (selectedCurrency.value === "custom") {
-        return {
-          $collection: Collection.CURRENCY,
-          name: customCurrencyName.value.trim(),
-          sign: customCurrencySign.value.trim(),
-          precisionMinimum: 2,
-          precisionMaximum: 2,
-        };
-      } else {
-        // Map predefined currencies
-        const currency = CURRENCY_MAP[selectedCurrency.value];
-        return {
-          $collection: Collection.CURRENCY,
-          name: currency.name,
-          sign: currency.sign,
-          precisionMinimum: 2,
-          precisionMaximum: 2,
-        };
-      }
-    }
-
-    async function createAccount() {
-      const validation = validateUsername(username.value);
-      if (validation) {
-        usernameError.value = validation;
-        return;
-      }
-
-      isCreatingAccount.value = true;
-
-      try {
-        // Create offline user
-        await onboardingService.createOfflineUser(username.value);
-        // Move to currency selection step
-        currentStep.value = 3;
-      } catch (error) {
-        console.error("Error during account creation:", error);
-        await dialogService.alert("Account Creation Error", "There was an error creating your account. Please try again.");
-      } finally {
-        isCreatingAccount.value = false;
-      }
-    }
-
-    async function proceedToSetup() {
-      if (!isCurrencyValid.value) {
-        return;
-      }
-
-      try {
-        // Move to setup step
-        currentStep.value = 4;
-
-        // Create currency object
-        const currency = createCurrencyObject();
-
-        // Start setup process with progress tracking
-        await onboardingService.setupDefaultAccounts(currency, (progress: OnboardingProgress) => {
-          progressValue.value = progress.progress;
-          progressMessage.value = progress.message;
-        });
-
-        // Mark setup as complete
-        setupComplete.value = true;
-        progressMessage.value = "Setup complete!";
-      } catch (error) {
-        console.error("Error during setup:", error);
-        await dialogService.alert("Setup Error", "There was an error setting up your account. Please try again.");
-        currentStep.value = 3; // Go back to currency step
-      }
-    }
-
-    async function goToDashboard() {
-      await onboardingService.completeOnboarding();
-      await router.push({ name: "overview" });
-    }
-
-    return {
-      currentStep,
-      username,
-      usernameError,
-      isCreatingAccount,
-      selectedCurrency,
-      customCurrencyName,
-      customCurrencySign,
-      currencyOptions,
-      progressValue,
-      progressMessage,
-      setupComplete,
-      stepTitle,
-      stepProgress,
-      isUsernameValid,
-      isCurrencyValid,
-      usernameRules,
-      customCurrencyRules,
-      nextStep,
-      goBack,
-      clearUsernameError,
-      createAccount,
-      proceedToSetup,
-      goToDashboard,
-    };
-  },
+// Computed properties
+const stepTitle = computed(() => {
+  switch (currentStep.value) {
+    case 1:
+      return "Welcome to Cash Keeper";
+    case 2:
+      return "Create Your Account";
+    case 3:
+      return "Select Currency";
+    case 4:
+      return "Account Setup";
+    default:
+      return "Cash Keeper";
+  }
 });
+
+const stepProgress = computed(() => {
+  return currentStep.value / 4;
+});
+
+function validateUsername(username: string): string | null {
+  if (!username || username.length < 6) {
+    return "Username must be at least 6 characters long";
+  }
+  if (username.length > 20) {
+    return "Username cannot be longer than 20 characters";
+  }
+  if (!/^[a-zA-Z0-9]+$/.test(username)) {
+    return "Username can only contain letters and numbers";
+  }
+  return null;
+}
+
+const isUsernameValid = computed(() => {
+  return validateUsername(username.value) === null;
+});
+
+const isCurrencyValid = computed(() => {
+  if (!selectedCurrency.value) return false;
+  if (selectedCurrency.value === "custom") {
+    return customCurrencyName.value.trim() !== "" && customCurrencySign.value.trim() !== "";
+  }
+  return true;
+});
+
+// Username validation rules
+const usernameRules = [(val: string) => validateUsername(val) || true];
+
+// Custom currency validation rules
+const customCurrencyRules = [(val: string) => (val && val.trim()) || "This field is required"];
+
+// Methods
+function nextStep() {
+  if (currentStep.value < 4) {
+    currentStep.value++;
+  }
+}
+
+function goBack() {
+  if (currentStep.value > 1) {
+    currentStep.value--;
+  }
+}
+
+function clearUsernameError() {
+  usernameError.value = "";
+}
+
+function createCurrencyObject(): Currency {
+  if (selectedCurrency.value === "custom") {
+    return {
+      $collection: Collection.CURRENCY,
+      name: customCurrencyName.value.trim(),
+      sign: customCurrencySign.value.trim(),
+      precisionMinimum: 2,
+      precisionMaximum: 2,
+    };
+  } else {
+    // Map predefined currencies
+    const currency = CURRENCY_MAP[selectedCurrency.value];
+    return {
+      $collection: Collection.CURRENCY,
+      name: currency.name,
+      sign: currency.sign,
+      precisionMinimum: 2,
+      precisionMaximum: 2,
+    };
+  }
+}
+
+async function createAccount() {
+  const validation = validateUsername(username.value);
+  if (validation) {
+    usernameError.value = validation;
+    return;
+  }
+
+  isCreatingAccount.value = true;
+
+  try {
+    // Create offline user
+    await onboardingService.createOfflineUser(username.value);
+    // Move to currency selection step
+    currentStep.value = 3;
+  } catch (error) {
+    console.error("Error during account creation:", error);
+    await dialogService.alert("Account Creation Error", "There was an error creating your account. Please try again.");
+  } finally {
+    isCreatingAccount.value = false;
+  }
+}
+
+async function proceedToSetup() {
+  if (!isCurrencyValid.value) {
+    return;
+  }
+
+  try {
+    // Move to setup step
+    currentStep.value = 4;
+
+    // Create currency object
+    const currency = createCurrencyObject();
+
+    // Start setup process with progress tracking
+    await onboardingService.setupDefaultAccounts(currency, (progress: OnboardingProgress) => {
+      progressValue.value = progress.progress;
+      progressMessage.value = progress.message;
+    });
+
+    // Mark setup as complete
+    setupComplete.value = true;
+    progressMessage.value = "Setup complete!";
+  } catch (error) {
+    console.error("Error during setup:", error);
+    await dialogService.alert("Setup Error", "There was an error setting up your account. Please try again.");
+    currentStep.value = 3; // Go back to currency step
+  }
+}
+
+async function goToDashboard() {
+  await onboardingService.completeOnboarding();
+  await router.push({ name: "overview" });
+}
 </script>
 
 <style scoped lang="scss">

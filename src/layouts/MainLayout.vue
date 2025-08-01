@@ -24,9 +24,6 @@
               <q-item clickable v-close-popup @click="fullSyncClicked" :disable="syncService.isSyncing()">
                 <q-item-section>Sync</q-item-section>
               </q-item>
-              <!-- <q-item clickable v-close-popup @click="backgroundSyncClicked" :disable="syncService.isSyncing()">
-                <q-item-section>Background Sync</q-item-section>
-              </q-item> -->
               <q-separator />
               <q-item clickable v-close-popup @click="logoutClicked">
                 <q-item-section>Logout</q-item-section>
@@ -87,8 +84,8 @@
   </q-layout>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
 import { useUserStore } from "src/stores/user";
 import EssentialLink from "components/sidebar/EssentialLink.vue";
 import { authService } from "src/services/auth-service";
@@ -255,90 +252,56 @@ const miscList = [
   },
 ];
 
-export default defineComponent({
-  name: "MainLayout",
+const leftDrawerOpen = ref(false);
+const isDevDatabase = ref(false);
+const isDevMachine = ref(false);
 
-  components: {
-    EssentialLink,
-  },
+const userStore = useUserStore();
+const $q = useQuasar();
+const router = useRouter();
 
-  setup() {
-    const isLeftDrawerOpen = ref(false);
-    const isDevDatabase = ref(false);
-    const isDevMachine = ref(false);
+function checkIfInDevMode() {
+  isDevDatabase.value = false;
+  isDevMachine.value = false;
+  if (userStore.user && userStore.user.domain.indexOf("test") > -1) {
+    isDevDatabase.value = true;
+  }
 
-    const userStore = useUserStore();
-    const $q = useQuasar();
-    const router = useRouter();
+  if (window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1) {
+    isDevMachine.value = true;
+  }
+}
 
-    function checkIfInDevMode() {
-      isDevDatabase.value = false;
-      isDevMachine.value = false;
-      if (userStore.user && userStore.user.domain.indexOf("test") > -1) {
-        isDevDatabase.value = true;
-      }
-
-      if (window.location.host.indexOf("localhost") > -1 || window.location.host.indexOf("127.0.0.1") > -1) {
-        isDevMachine.value = true;
-      }
-    }
-    userStore.$subscribe(checkIfInDevMode);
-    checkIfInDevMode();
-
-    async function logoutClicked() {
-      let [successful, failureReason] = await authService.logout();
-      if (!successful) {
-        await dialogService.alert("Logout Error", failureReason as string);
-        return;
-      }
-
-      // Navigate to post-logout page instead of reloading
-      await router.push({ name: "post-logout" });
-    }
-
-    function fullSyncClicked() {
-      syncService.doFullSync($q, true, "MainLayout");
-    }
-
-    function backgroundSyncClicked() {
-      syncService.doBackgroundSync();
-    }
-
-    async function verionClicked() {
-      const title = `Version ${APP_VERSION}`;
-      const body = `Internal Build: ${APP_BUILD_VERSION}, Release Date: ${APP_BUILD_DATE}`;
-      await dialogService.alert(title, body);
-    }
-
-    currencyFormatService.init();
-    syncService.setUpPouchdbListener();
-
-    return {
-      operationList,
-      entityList,
-      reportList,
-      accountingList,
-
-      leftDrawerOpen: isLeftDrawerOpen,
-      toggleLeftDrawer() {
-        isLeftDrawerOpen.value = !isLeftDrawerOpen.value;
-      },
-      APP_VERSION,
-
-      miscList,
-      advancedList,
-      userStore,
-      logoutClicked,
-      fullSyncClicked,
-      backgroundSyncClicked,
-      verionClicked,
-      syncService,
-
-      isDevDatabase,
-      isDevMachine,
-    };
-  },
+userStore.$subscribe(checkIfInDevMode);
+onMounted(() => {
+  checkIfInDevMode();
+  currencyFormatService.init();
+  syncService.setUpPouchdbListener();
 });
+
+async function logoutClicked() {
+  let [successful, failureReason] = await authService.logout();
+  if (!successful) {
+    await dialogService.alert("Logout Error", failureReason as string);
+    return;
+  }
+  // Navigate to post-logout page instead of reloading
+  await router.push({ name: "post-logout" });
+}
+
+function fullSyncClicked() {
+  syncService.doFullSync($q, true, "MainLayout");
+}
+
+async function verionClicked() {
+  const title = `Version ${APP_VERSION}`;
+  const body = `Internal Build: ${APP_BUILD_VERSION}, Release Date: ${APP_BUILD_DATE}`;
+  await dialogService.alert(title, body);
+}
+
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+}
 </script>
 
 <style scoped lang="scss">

@@ -67,20 +67,16 @@
 import { useQuasar } from "quasar";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import SelectCurrency from "src/components/SelectCurrency.vue";
-import { Collection } from "src/constants/constants";
 
 import { Overview } from "src/models/inferred/overview";
-import { Record } from "src/models/record";
 import { computationService } from "src/services/computation-service";
 import { dialogService } from "src/services/dialog-service";
 import { errorService } from "src/services/error-service";
 import { lockService } from "src/services/lock-service";
-import { pouchdbService } from "src/services/pouchdb-service";
 import { useSettingsStore } from "src/stores/settings";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
-import { CodedError } from "src/utils/error-utils";
-import { sleep } from "src/utils/misc-utils";
 import { printAmount as printAmountUtil } from "src/utils/de-facto-utils";
+import { CodedError } from "src/utils/error-utils";
 import { Ref, onMounted, ref, watch } from "vue";
 
 const $q = useQuasar();

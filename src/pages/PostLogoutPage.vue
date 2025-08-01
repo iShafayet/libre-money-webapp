@@ -80,57 +80,44 @@
   </q-page>
 </template>
 
-<script lang="ts">
-import { defineComponent } from "vue";
-import { useRouter } from "vue-router";
+<script setup lang="ts">
+import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
 import { dialogService } from "src/services/dialog-service";
 import { localDataService } from "src/services/local-data-service";
-import { APP_VERSION, APP_BUILD_VERSION, APP_BUILD_DATE } from "src/constants/config-constants";
+import { useRouter } from "vue-router";
 
-export default defineComponent({
-  name: "PostLogoutPage",
-  setup() {
-    const router = useRouter();
+const router = useRouter();
 
-    async function goToLogin() {
-      await router.push({ name: "login" });
-    }
+async function goToLogin() {
+  await router.push({ name: "login" });
+}
 
-    async function clearLocalData() {
-      const confirmed = await dialogService.confirm(
-        "Clear All Local Data",
-        "Are you sure you want to remove all local data from this device? This action cannot be undone. All your transactions, wallets, and settings will be permanently deleted from this device. However, no data will be deleted from the remote server."
-      );
-      if (!confirmed) return;
-      try {
-        await localDataService.removeLocalData();
-      } catch (error) {
-        console.error("Error clearing local data:", error);
-        await dialogService.alert("Error", "There was an error clearing local data. Please try again or contact support.");
-        router.push({ name: "login" }).catch(() => {
-          // ignore
-        });
-      }
-    }
+async function clearLocalData() {
+  const confirmed = await dialogService.confirm(
+    "Clear All Local Data",
+    "Are you sure you want to remove all local data from this device? This action cannot be undone. All your transactions, wallets, and settings will be permanently deleted from this device. However, no data will be deleted from the remote server."
+  );
+  if (!confirmed) return;
+  try {
+    await localDataService.removeLocalData();
+  } catch (error) {
+    console.error("Error clearing local data:", error);
+    await dialogService.alert("Error", "There was an error clearing local data. Please try again or contact support.");
+    router.push({ name: "login" }).catch(() => {
+      // ignore
+    });
+  }
+}
 
-    async function goToAbout() {
-      await router.push({ name: "about" });
-    }
+async function goToAbout() {
+  await router.push({ name: "about" });
+}
 
-    async function showVersionInfo() {
-      const title = `Cash Keeper v${APP_VERSION}`;
-      const body = `Build: ${APP_BUILD_VERSION}\nRelease Date: ${APP_BUILD_DATE}`;
-      await dialogService.alert(title, body);
-    }
-
-    return {
-      goToLogin,
-      clearLocalData,
-      goToAbout,
-      showVersionInfo,
-    };
-  },
-});
+async function showVersionInfo() {
+  const title = `Cash Keeper v${APP_VERSION}`;
+  const body = `Build: ${APP_BUILD_VERSION}\nRelease Date: ${APP_BUILD_DATE}`;
+  await dialogService.alert(title, body);
+}
 </script>
 
 <style scoped lang="scss">

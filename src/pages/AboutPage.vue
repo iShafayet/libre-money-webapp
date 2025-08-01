@@ -35,66 +35,47 @@
   </q-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
 import { dialogService } from "src/services/dialog-service";
 import { getCurrentYear, sleep } from "src/utils/misc-utils";
-import { defineComponent, ref } from "vue";
+import { ref } from "vue";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { useRouter } from "vue-router";
 
-export default defineComponent({
-  name: "AboutPage",
-  components: { LoadingIndicator },
-  setup() {
-    const router = useRouter();
-    const isLoading = ref(false);
-    const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
+const router = useRouter();
+const isLoading = ref(false);
+const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 
-    async function forceUpdateClicked() {
-      isLoading.value = true;
-      try {
-        loadingIndicator.value?.startPhase({ phase: 1, weight: 100, label: "Checking for updates" });
+async function forceUpdateClicked() {
+  isLoading.value = true;
+  try {
+    loadingIndicator.value?.startPhase({ phase: 1, weight: 100, label: "Checking for updates" });
 
-        for (const key of await caches.keys()) {
-          await caches.delete(key);
-        }
-
-        const regList = await navigator.serviceWorker.getRegistrations();
-        for (const reg of regList) {
-          console.debug(reg);
-          await reg.update();
-        }
-
-        await sleep(1000);
-        // @ts-ignore
-        window.location.reload(true);
-      } catch (ex) {
-        console.warn(ex);
-        const message = ex && ex instanceof Error ? ex.message : JSON.stringify(ex);
-        await dialogService.alert("Update Error", "Unable to check for or to complete update. Reason: " + message);
-      }
-      isLoading.value = false;
+    for (const key of await caches.keys()) {
+      await caches.delete(key);
     }
 
-    function backToHomeClicked() {
-      router.push("/");
+    const regList = await navigator.serviceWorker.getRegistrations();
+    for (const reg of regList) {
+      console.debug(reg);
+      await reg.update();
     }
 
-    // -----
+    await sleep(1000);
+    // @ts-ignore
+    window.location.reload(true);
+  } catch (ex) {
+    console.warn(ex);
+    const message = ex && ex instanceof Error ? ex.message : JSON.stringify(ex);
+    await dialogService.alert("Update Error", "Unable to check for or to complete update. Reason: " + message);
+  }
+  isLoading.value = false;
+}
 
-    return {
-      isLoading,
-      loadingIndicator,
-      APP_VERSION,
-      APP_BUILD_DATE,
-      APP_BUILD_VERSION,
-      getCurrentYear,
-      forceUpdateClicked,
-      backToHomeClicked,
-    };
-  },
-});
+function backToHomeClicked() {
+  router.push("/");
+}
 </script>
 
 <style scoped lang="scss">

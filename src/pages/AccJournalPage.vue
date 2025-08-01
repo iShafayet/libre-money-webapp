@@ -37,7 +37,7 @@
               {{ prettifyDate(journalEntry.entryEpoch) }}
             </div>
             <div class="particulars-container">
-              <div class="fin-presentation-row debit-row row" v-for="debit in journalEntry.debitList" v-bind:key="debit.account">
+              <div class="fin-presentation-row debit-row row" v-for="debit in journalEntry.debitList" v-bind:key="debit.account?.code">
                 <div class="fin-presentation-item-textual debit-text">
                   {{ debit.account.name }}
                   <span v-if="journalEntry.modality === 'opening'">({{ debit.account.type }})</span>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="fin-presentation-item-numeric column-spacer"></div>
               </div>
-              <div class="fin-presentation-row credit-row row" v-for="credit in journalEntry.creditList" v-bind:key="credit.account">
+              <div class="fin-presentation-row credit-row row" v-for="credit in journalEntry.creditList" v-bind:key="credit.account?.code">
                 <div class="fin-presentation-item-textual credit-text">
                   {{ credit.account.name }}
                   <span v-if="journalEntry.modality === 'opening'">({{ credit.account.type }})</span>

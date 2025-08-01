@@ -147,17 +147,17 @@
 
 <script setup lang="ts">
 import { QForm, useQuasar } from "quasar";
+import { DEFAULT_REMOTE_SERVER_URL, ServerOption, serverOptions } from "src/constants/auth-constants";
+import { authService } from "src/services/auth-service";
 import { configService } from "src/services/config-service";
 import { NotificationType, dialogService } from "src/services/dialog-service";
 import { localDataService } from "src/services/local-data-service";
-import { authService } from "src/services/auth-service";
-import { syncService } from "src/services/sync-service";
 import { previousSessionService } from "src/services/previous-session-service";
+import { syncService } from "src/services/sync-service";
 import { useUserStore } from "src/stores/user";
 import { validators } from "src/utils/validators";
-import { ref, computed } from "vue";
+import { computed, ref } from "vue";
 import { RouteLocationRaw, useRoute, useRouter } from "vue-router";
-import { DEFAULT_REMOTE_SERVER_URL, serverOptions, ServerOption } from "src/constants/auth-constants";
 
 type LoginPageMode = "login" | "resume";
 
