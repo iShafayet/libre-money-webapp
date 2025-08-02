@@ -45,12 +45,7 @@
                 <q-item-label>Import Text</q-item-label>
               </q-item-section>
             </q-item>
-            <q-separator inset />
-            <q-item clickable v-close-popup @click="addBulkExpensesClicked">
-              <q-item-section>
-                <q-item-label>Add Expenses (Bulk)</q-item-label>
-              </q-item-section>
-            </q-item>
+
             <q-item clickable v-close-popup @click="showQuickBalanceCalibrationClicked">
               <q-item-section>
                 <q-item-label>Calibrate Balances</q-item-label>
@@ -237,7 +232,7 @@ import AddAssetAppreciationDepreciationRecord from "src/components/AddAssetAppre
 import AddAssetPurchaseRecord from "src/components/AddAssetPurchaseRecord.vue";
 import AddAssetSaleRecord from "src/components/AddAssetSaleRecord.vue";
 import AddBorrowingRecord from "src/components/AddBorrowingRecord.vue";
-import AddExpenseBulk from "src/components/AddExpenseBulk.vue";
+
 import AddExpenseRecord from "src/components/AddExpenseRecord.vue";
 import AddIncomeRecord from "src/components/AddIncomeRecord.vue";
 import AddLendingRecord from "src/components/AddLendingRecord.vue";
@@ -399,19 +394,6 @@ async function addExpenseClicked() {
       }
     : {};
   $q.dialog({ component: AddExpenseRecord, componentProps }).onOk(() => {
-    paginationCurrentPage.value = 1;
-    loadData();
-  });
-}
-
-async function addBulkExpensesClicked() {
-  const componentProps = recordFilters.value?.walletId
-    ? {
-        suggestedWalletId: recordFilters.value.walletId,
-        suggestedCurrencyId: ((await pouchdbService.getDocById(recordFilters.value.walletId)) as Wallet)?.currencyId,
-      }
-    : {};
-  $q.dialog({ component: AddExpenseBulk, componentProps }).onOk(() => {
     paginationCurrentPage.value = 1;
     loadData();
   });
