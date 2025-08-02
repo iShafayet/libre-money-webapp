@@ -13,23 +13,30 @@
 
     <!-- Pro Mode Content -->
     <div v-else class="pro-mode-container">
-      <!-- Header Controls -->
-      <q-card class="std-card pro-mode-header-card">
-        <div class="title-row q-pa-md q-gutter-sm">
-          <q-icon name="grid_view" size="24px" color="primary" />
-          <div class="title">Pro Mode</div>
+      <!-- Spreadsheet -->
+      <q-card class="std-card pro-mode-table-card">
+        <!-- Header - Start -->
+        <div class="title-row q-pa-md q-gutter-sm" style="margin-bottom: -12px">
+          <q-select
+            v-model="pageSize"
+            :options="[25, 50, 100, 200]"
+            label="Rows per page"
+            dense
+            outlined
+            style="min-width: 200px"
+            @update:model-value="handlePageSizeChange"
+          />
           <div class="spacer"></div>
           <q-btn color="secondary" icon="refresh" :label="hasUnsavedChanges ? 'Discard Changes' : 'Reload'" @click="loadData" :disable="isLoading" />
           <q-btn color="positive" icon="save" label="Save Changes" @click="saveAllChanges" :disable="!hasUnsavedChanges" :loading="isSaving" />
+
           <q-chip v-if="hasUnsavedChanges" color="orange" text-color="white" icon="edit">
             {{ changedRecords.size }} edit{{ changedRecords.size !== 1 ? "s" : ""
             }}{{ deletedRecords.size > 0 ? ", " + deletedRecords.size + " deletion" + (deletedRecords.size !== 1 ? "s" : "") : "" }}
           </q-chip>
         </div>
-      </q-card>
+        <!-- Header - End -->
 
-      <!-- Spreadsheet -->
-      <q-card class="std-card pro-mode-table-card">
         <div class="q-pa-md">
           <loading-indicator :is-loading="isLoading" :phases="3" ref="loadingIndicator"></loading-indicator>
 
@@ -231,6 +238,14 @@
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination Controls - Bottom -->
+          <div v-if="!isLoading && totalPages > 1" class="pagination-controls q-mt-md">
+            <div class="pagination-info">
+              Showing {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalRecords) }} of {{ totalRecords }} records
+            </div>
+            <q-pagination v-model="currentPage" :max="totalPages" :max-pages="7" boundary-numbers @update:model-value="handlePageChange" :disable="isLoading" />
+          </div>
         </div>
       </q-card>
     </div>
@@ -251,7 +266,7 @@ import { Tag } from "src/models/tag";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { recordService } from "src/services/record-service";
 import { dialogService } from "src/services/dialog-service";
-import { guessFontColorCode, deepClone, sleep } from "src/utils/misc-utils";
+import { guessFontColorCode, deepClone } from "src/utils/misc-utils";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { Ref, onMounted, ref, computed } from "vue";
 
@@ -266,6 +281,13 @@ const records: Ref<InferredRecord[]> = ref([]);
 const originalRecords: Ref<Map<string, InferredRecord>> = ref(new Map());
 const changedRecords: Ref<Map<string, InferredRecord>> = ref(new Map());
 const deletedRecords: Ref<Set<string>> = ref(new Set<string>());
+
+// Pagination
+const currentPage = ref(1);
+const pageSize = ref(50);
+const totalRecords = ref(0);
+const totalPages = computed(() => Math.ceil(totalRecords.value / pageSize.value));
+const allRawRecords: Ref<Record[]> = ref([]);
 
 // Reference data
 const currencies: Ref<Currency[]> = ref([]);
@@ -283,19 +305,18 @@ async function loadData() {
   isLoading.value = true;
 
   try {
-    loadingIndicator.value?.startPhase({ phase: 1, weight: 20, label: "Loading reference data" });
+    loadingIndicator.value?.startPhase({ phase: 1, weight: 30, label: "Loading reference data" });
 
-    // Load reference data
-    const [currencyDocs, walletDocs, expenseAvenueDocs, incomeSourceDocs, partyDocs, tagDocs] = await Promise.all([
+    // Load reference data in parallel with records for better performance
+    const [currencyDocs, walletDocs, expenseAvenueDocs, incomeSourceDocs, partyDocs, tagDocs, recordDocs] = await Promise.all([
       pouchdbService.listByCollection(Collection.CURRENCY),
       pouchdbService.listByCollection(Collection.WALLET),
       pouchdbService.listByCollection(Collection.EXPENSE_AVENUE),
       pouchdbService.listByCollection(Collection.INCOME_SOURCE),
       pouchdbService.listByCollection(Collection.PARTY),
       pouchdbService.listByCollection(Collection.TAG),
+      pouchdbService.listByCollection(Collection.RECORD),
     ]);
-
-    await sleep(10);
 
     currencies.value = currencyDocs.docs as Currency[];
     wallets.value = walletDocs.docs as Wallet[];
@@ -304,44 +325,62 @@ async function loadData() {
     parties.value = partyDocs.docs as Party[];
     tags.value = tagDocs.docs as Tag[];
 
-    loadingIndicator.value?.startPhase({ phase: 2, weight: 25, label: "Loading records" });
+    loadingIndicator.value?.startPhase({ phase: 2, weight: 40, label: "Processing records" });
 
-    // Load records
-    const recordDocs = await pouchdbService.listByCollection(Collection.RECORD);
-    const rawRecords = (recordDocs.docs as Record[]).slice(0, 100);
+    // Store all raw records and sort them
+    allRawRecords.value = recordDocs.docs as Record[];
+    allRawRecords.value.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
 
-    await sleep(10);
+    totalRecords.value = allRawRecords.value.length;
 
-    // Sort by transaction date (newest first)
-    rawRecords.sort((a, b) => (b.transactionEpoch || 0) - (a.transactionEpoch || 0));
+    // Reset to first page when reloading data
+    currentPage.value = 1;
 
-    loadingIndicator.value?.startPhase({ phase: 3, weight: 30, label: "Processing records" });
-
-    // Convert to inferred records
-    const inferredRecords = await recordService.inferInBatch(rawRecords);
-
-    loadingIndicator.value?.startPhase({ phase: 3, weight: 15, label: "Re-inferring records" });
-
-    records.value = inferredRecords;
-
-    // Store original copies for change tracking
+    // Clear all tracking when reloading
     originalRecords.value.clear();
     changedRecords.value.clear();
     deletedRecords.value.clear();
 
-    loadingIndicator.value?.startPhase({ phase: 4, weight: 10, label: "Finalizing records" });
-
-    inferredRecords.forEach((record) => {
-      if (record._id) {
-        originalRecords.value.set(record._id, deepClone(record));
-      }
-    });
+    // Load current page
+    await loadCurrentPage();
   } catch (error) {
     console.error("Error loading data:", error);
     await dialogService.alert("Error", "Failed to load data for Pro Mode.");
   } finally {
     isLoading.value = false;
   }
+}
+
+async function loadCurrentPage() {
+  if (allRawRecords.value.length === 0) return;
+
+  loadingIndicator.value?.startPhase({ phase: 3, weight: 30, label: "Loading page data" });
+
+  // Calculate pagination
+  const startIndex = (currentPage.value - 1) * pageSize.value;
+  const endIndex = Math.min(startIndex + pageSize.value, allRawRecords.value.length);
+  const pageRecords = allRawRecords.value.slice(startIndex, endIndex);
+
+  // Convert to inferred records for current page only
+  const inferredRecords = await recordService.inferInBatch(pageRecords);
+
+  // Preserve changes: replace fresh records with modified versions if they exist
+  const finalRecords = inferredRecords.map((record) => {
+    if (record._id && changedRecords.value.has(record._id)) {
+      // Use the modified version instead of the fresh inferred version
+      return changedRecords.value.get(record._id)!;
+    }
+    return record;
+  });
+
+  records.value = finalRecords;
+
+  // Store original copies for change tracking (only for records we haven't seen before)
+  inferredRecords.forEach((record) => {
+    if (record._id && !originalRecords.value.has(record._id)) {
+      originalRecords.value.set(record._id, deepClone(record));
+    }
+  });
 }
 
 // ----- Field Update Functions
@@ -605,7 +644,16 @@ function markRecordChanged(recordId: string) {
   // Don't track changes for records marked for deletion
   if (deletedRecords.value.has(recordId)) return;
 
+  // Store the modified record in the changes map
   changedRecords.value.set(recordId, deepClone(record));
+
+  // Also update the raw record in allRawRecords to maintain data consistency
+  const rawRecordIndex = allRawRecords.value.findIndex((r) => r._id === recordId);
+  if (rawRecordIndex > -1) {
+    // Strip inference data and update the raw record
+    const cleanRecord = stripInferenceData(record);
+    allRawRecords.value[rawRecordIndex] = cleanRecord;
+  }
 }
 
 function isRowChanged(recordId: string): boolean {
@@ -625,17 +673,42 @@ function revertRecord(recordId: string) {
     records.value[index] = deepClone(original);
   }
 
+  // Remove from changed records
   changedRecords.value.delete(recordId);
+
+  // Also revert the raw record in allRawRecords
+  const rawRecordIndex = allRawRecords.value.findIndex((r) => r._id === recordId);
+  if (rawRecordIndex > -1) {
+    const cleanOriginal = stripInferenceData(original);
+    allRawRecords.value[rawRecordIndex] = cleanOriginal;
+  }
 }
 
 function markForDeletion(recordId: string) {
   deletedRecords.value.add(recordId);
   // Remove from changed records since deletion takes precedence
   changedRecords.value.delete(recordId);
+
+  // Also revert any changes to the raw record since it's being deleted
+  const original = originalRecords.value.get(recordId);
+  if (original) {
+    const rawRecordIndex = allRawRecords.value.findIndex((r) => r._id === recordId);
+    if (rawRecordIndex > -1) {
+      const cleanOriginal = stripInferenceData(original);
+      allRawRecords.value[rawRecordIndex] = cleanOriginal;
+    }
+  }
 }
 
 function unmarkForDeletion(recordId: string) {
   deletedRecords.value.delete(recordId);
+
+  // If the record had changes before being marked for deletion, we should restore them
+  // Note: The changes are preserved in the UI, so we just need to re-sync with allRawRecords
+  const record = records.value.find((r) => r._id === recordId);
+  if (record) {
+    markRecordChanged(recordId);
+  }
 }
 
 // ----- Save Functions
@@ -663,20 +736,29 @@ async function saveAllChanges() {
       }
     }
 
-    // Remove deleted records from local state
+    // Remove deleted records from local state and original data
     records.value = records.value.filter((record) => !deletedRecords.value.has(record._id || ""));
+
+    // Remove from allRawRecords as well to keep pagination accurate
+    allRawRecords.value = allRawRecords.value.filter((record) => !deletedRecords.value.has(record._id || ""));
+    totalRecords.value = allRawRecords.value.length;
 
     // Clear change tracking
     changedRecords.value.clear();
     deletedRecords.value.clear();
 
     // Update original records for remaining records
-    originalRecords.value.clear();
     records.value.forEach((record) => {
       if (record._id) {
         originalRecords.value.set(record._id, deepClone(record));
       }
     });
+
+    // Refresh current page if needed (in case records were deleted and page is now empty)
+    if (records.value.length === 0 && currentPage.value > 1) {
+      currentPage.value = Math.max(1, currentPage.value - 1);
+      await loadCurrentPage();
+    }
 
     let message = "";
     if (recordsToSave.length > 0 && recordsToDelete.length > 0) {
@@ -756,6 +838,24 @@ function stripInferenceData(inferredRecord: InferredRecord): Record {
 
 // Note: deleteRecord function removed as we now use markForDeletion
 
+// ----- Pagination Functions
+async function handlePageChange(newPage: number) {
+  if (isLoading.value) return;
+
+  currentPage.value = newPage;
+  await loadCurrentPage();
+}
+
+async function handlePageSizeChange() {
+  if (isLoading.value) return;
+
+  // Recalculate current page to maintain position as much as possible
+  const currentFirstRecordIndex = (currentPage.value - 1) * pageSize.value;
+  currentPage.value = Math.floor(currentFirstRecordIndex / pageSize.value) + 1;
+
+  await loadCurrentPage();
+}
+
 // ----- Lifecycle
 onMounted(() => {
   loadData();
@@ -790,8 +890,19 @@ onMounted(() => {
 .pro-mode-table-container {
   overflow-x: auto;
   overflow-y: auto;
-  max-height: 70vh;
+  max-height: 60vh;
   min-width: 1000px;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .pagination-info {
+    font-size: 14px;
+    color: #666;
+  }
 }
 
 .pro-mode-table {
