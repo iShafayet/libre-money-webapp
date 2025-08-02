@@ -119,8 +119,8 @@ export function isPositiveInteger(value: NumberValue): boolean {
 }
 
 export function enforceNonNegativeZero(value: NumberValue): number {
-  console.log("enforceNonNegativeZero", value);
   if (value === null || value === undefined || value === "") return 0;
-  const parsed = parseNumber(value);
-  return parsed > 0 ? parsed : 0;
+  const parsed = parseFinancialAmount(value, 3);
+  if (parsed === 0) return 0;
+  return parsed;
 }
