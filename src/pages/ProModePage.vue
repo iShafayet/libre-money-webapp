@@ -50,7 +50,7 @@
                   <th class="amount-col">Amount</th>
                   <th class="currency-col">Currency</th>
                   <th class="wallet-col">Wallet</th>
-                  <th class="avenue-source-col">Avenue/Source</th>
+                  <th class="avenue-source-col">Avenue/Source/Asset</th>
                   <th class="party-col">Party</th>
                   <th class="notes-col">Notes</th>
                   <th class="tags-col">Tags</th>
@@ -96,6 +96,7 @@
                       <option value="money-transfer">Money Transfer</option>
                       <option value="asset-purchase">Asset Purchase</option>
                       <option value="asset-sale">Asset Sale</option>
+                      <option value="asset-appreciation-depreciation">Asset Appreciation/Depreciation</option>
                       <option value="lending">Lending</option>
                       <option value="borrowing">Borrowing</option>
                       <option value="repayment-given">Repayment Given</option>
@@ -105,40 +106,125 @@
 
                   <!-- Amount Column -->
                   <td class="amount-col">
-                    <input
-                      type="number"
-                      step="0.01"
-                      :value="getRecordAmount(record)"
-                      @input="updateRecordAmount(record._id!, ($event.target as HTMLInputElement).value)"
-                      class="cell-input number-input"
-                    />
+                    <template v-if="record.type === 'money-transfer'">
+                      <div class="money-transfer-amounts">
+                        <div class="amount-row">
+                          <label class="amount-label">From:</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            :value="record.moneyTransfer?.fromAmount || 0"
+                            @input="updateMoneyTransferField(record._id!, 'fromAmount', ($event.target as HTMLInputElement).value)"
+                            class="cell-input number-input money-transfer-input"
+                          />
+                        </div>
+                        <div class="amount-row">
+                          <label class="amount-label">To:</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            :value="record.moneyTransfer?.toAmount || 0"
+                            @input="updateMoneyTransferField(record._id!, 'toAmount', ($event.target as HTMLInputElement).value)"
+                            class="cell-input number-input money-transfer-input"
+                          />
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <input
+                        type="number"
+                        step="0.01"
+                        :value="getRecordAmount(record)"
+                        @input="updateRecordAmount(record._id!, ($event.target as HTMLInputElement).value)"
+                        class="cell-input number-input"
+                      />
+                    </template>
                   </td>
 
                   <!-- Currency Column -->
                   <td class="currency-col">
-                    <select
-                      :value="getRecordCurrency(record)"
-                      @change="updateRecordCurrency(record._id!, ($event.target as HTMLSelectElement).value)"
-                      class="cell-input select-input"
-                    >
-                      <option v-for="currency in currencies" :key="currency._id" :value="currency._id">{{ currency.sign }} {{ currency.name }}</option>
-                    </select>
+                    <template v-if="record.type === 'money-transfer'">
+                      <div class="money-transfer-currencies">
+                        <div class="currency-row">
+                          <label class="currency-label">From:</label>
+                          <select
+                            :value="record.moneyTransfer?.fromCurrencyId"
+                            @change="updateMoneyTransferField(record._id!, 'fromCurrencyId', ($event.target as HTMLSelectElement).value)"
+                            class="cell-input select-input money-transfer-select"
+                          >
+                            <option v-for="currency in currencies" :key="currency._id" :value="currency._id">{{ currency.sign }}</option>
+                          </select>
+                        </div>
+                        <div class="currency-row">
+                          <label class="currency-label">To:</label>
+                          <select
+                            :value="record.moneyTransfer?.toCurrencyId"
+                            @change="updateMoneyTransferField(record._id!, 'toCurrencyId', ($event.target as HTMLSelectElement).value)"
+                            class="cell-input select-input money-transfer-select"
+                          >
+                            <option v-for="currency in currencies" :key="currency._id" :value="currency._id">{{ currency.sign }}</option>
+                          </select>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else>
+                      <select
+                        :value="getRecordCurrency(record)"
+                        @change="updateRecordCurrency(record._id!, ($event.target as HTMLSelectElement).value)"
+                        class="cell-input select-input"
+                      >
+                        <option v-for="currency in currencies" :key="currency._id" :value="currency._id">{{ currency.sign }} {{ currency.name }}</option>
+                      </select>
+                    </template>
                   </td>
 
                   <!-- Wallet Column -->
                   <td class="wallet-col">
-                    <select
-                      :value="getRecordWallet(record)"
-                      @change="updateRecordWallet(record._id!, ($event.target as HTMLSelectElement).value)"
-                      class="cell-input select-input"
-                    >
-                      <option v-for="wallet in wallets" :key="wallet._id" :value="wallet._id">
-                        {{ wallet.name }}
-                      </option>
-                    </select>
+                    <template v-if="record.type === 'money-transfer'">
+                      <div class="money-transfer-wallets">
+                        <div class="wallet-row">
+                          <label class="wallet-label">From:</label>
+                          <select
+                            :value="record.moneyTransfer?.fromWalletId"
+                            @change="updateMoneyTransferField(record._id!, 'fromWalletId', ($event.target as HTMLSelectElement).value)"
+                            class="cell-input select-input money-transfer-select"
+                          >
+                            <option v-for="wallet in getFilteredWallets(record.moneyTransfer?.fromCurrencyId)" :key="wallet._id" :value="wallet._id">
+                              {{ wallet.name }}
+                            </option>
+                          </select>
+                        </div>
+                        <div class="wallet-row">
+                          <label class="wallet-label">To:</label>
+                          <select
+                            :value="record.moneyTransfer?.toWalletId"
+                            @change="updateMoneyTransferField(record._id!, 'toWalletId', ($event.target as HTMLSelectElement).value)"
+                            class="cell-input select-input money-transfer-select"
+                          >
+                            <option v-for="wallet in getFilteredWallets(record.moneyTransfer?.toCurrencyId)" :key="wallet._id" :value="wallet._id">
+                              {{ wallet.name }}
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                    </template>
+                    <template v-else-if="record.type === 'asset-appreciation-depreciation'">
+                      <span class="text-grey-6">-</span>
+                    </template>
+                    <template v-else>
+                      <select
+                        :value="getRecordWallet(record)"
+                        @change="updateRecordWallet(record._id!, ($event.target as HTMLSelectElement).value)"
+                        class="cell-input select-input"
+                      >
+                        <option v-for="wallet in getFilteredWallets(getRecordCurrency(record))" :key="wallet._id" :value="wallet._id">
+                          {{ wallet.name }}
+                        </option>
+                      </select>
+                    </template>
                   </td>
 
-                  <!-- Avenue/Source Column -->
+                  <!-- Avenue/Source/Asset Column -->
                   <td class="avenue-source-col">
                     <select
                       v-if="record.type === 'expense'"
@@ -158,6 +244,16 @@
                     >
                       <option v-for="source in incomeSources" :key="source._id" :value="source._id">
                         {{ source.name }}
+                      </option>
+                    </select>
+                    <select
+                      v-else-if="record.type === 'asset-purchase' || record.type === 'asset-sale' || record.type === 'asset-appreciation-depreciation'"
+                      :value="getRecordAsset(record)"
+                      @change="updateRecordAsset(record._id!, ($event.target as HTMLSelectElement).value)"
+                      class="cell-input select-input"
+                    >
+                      <option v-for="asset in assets" :key="asset._id" :value="asset._id">
+                        {{ asset.name }}
                       </option>
                     </select>
                     <span v-else class="text-grey-6">-</span>
@@ -263,6 +359,7 @@ import { ExpenseAvenue } from "src/models/expense-avenue";
 import { IncomeSource } from "src/models/income-source";
 import { Party } from "src/models/party";
 import { Tag } from "src/models/tag";
+import { Asset } from "src/models/asset";
 import { pouchdbService } from "src/services/pouchdb-service";
 import { recordService } from "src/services/record-service";
 import { dialogService } from "src/services/dialog-service";
@@ -296,6 +393,7 @@ const expenseAvenues: Ref<ExpenseAvenue[]> = ref([]);
 const incomeSources: Ref<IncomeSource[]> = ref([]);
 const parties: Ref<Party[]> = ref([]);
 const tags: Ref<Tag[]> = ref([]);
+const assets: Ref<Asset[]> = ref([]);
 
 // ----- Computed
 const hasUnsavedChanges = computed(() => changedRecords.value.size > 0 || deletedRecords.value.size > 0);
@@ -308,13 +406,14 @@ async function loadData() {
     loadingIndicator.value?.startPhase({ phase: 1, weight: 30, label: "Loading reference data" });
 
     // Load reference data in parallel with records for better performance
-    const [currencyDocs, walletDocs, expenseAvenueDocs, incomeSourceDocs, partyDocs, tagDocs, recordDocs] = await Promise.all([
+    const [currencyDocs, walletDocs, expenseAvenueDocs, incomeSourceDocs, partyDocs, tagDocs, assetDocs, recordDocs] = await Promise.all([
       pouchdbService.listByCollection(Collection.CURRENCY),
       pouchdbService.listByCollection(Collection.WALLET),
       pouchdbService.listByCollection(Collection.EXPENSE_AVENUE),
       pouchdbService.listByCollection(Collection.INCOME_SOURCE),
       pouchdbService.listByCollection(Collection.PARTY),
       pouchdbService.listByCollection(Collection.TAG),
+      pouchdbService.listByCollection(Collection.ASSET),
       pouchdbService.listByCollection(Collection.RECORD),
     ]);
 
@@ -324,6 +423,7 @@ async function loadData() {
     incomeSources.value = incomeSourceDocs.docs as IncomeSource[];
     parties.value = partyDocs.docs as Party[];
     tags.value = tagDocs.docs as Tag[];
+    assets.value = assetDocs.docs as Asset[];
 
     loadingIndicator.value?.startPhase({ phase: 2, weight: 40, label: "Processing records" });
 
@@ -445,6 +545,55 @@ function updateRecordAmount(recordId: string, value: string) {
   markRecordChanged(recordId);
 }
 
+function updateMoneyTransferField(recordId: string, field: string, value: string) {
+  const record = records.value.find((r) => r._id === recordId);
+  if (!record) return;
+
+  // Initialize moneyTransfer structure if it doesn't exist
+  if (!record.moneyTransfer) {
+    const defaultWallet = wallets.value[0];
+    const fromWalletId = defaultWallet?._id || "";
+    const toWalletId = defaultWallet?._id || "";
+    const defaultCurrency = defaultWallet?.currencyId || "";
+
+    record.moneyTransfer = {
+      fromWalletId: fromWalletId,
+      fromCurrencyId: defaultCurrency,
+      fromAmount: 0,
+      toWalletId: toWalletId,
+      toCurrencyId: defaultCurrency,
+      toAmount: 0,
+    } as any;
+  }
+
+  if (field === "fromAmount" || field === "toAmount") {
+    (record.moneyTransfer as any)[field] = parseFloat(value) || 0;
+  } else {
+    (record.moneyTransfer as any)[field] = value;
+
+    // If currency changes, update wallet to match currency if current wallet doesn't match
+    if (field === "fromCurrencyId" && record.moneyTransfer) {
+      const currentWallet = wallets.value.find((w) => w._id === record.moneyTransfer?.fromWalletId);
+      if (!currentWallet || currentWallet.currencyId !== value) {
+        const matchingWallet = wallets.value.find((w) => w.currencyId === value);
+        if (matchingWallet && record.moneyTransfer) {
+          record.moneyTransfer.fromWalletId = matchingWallet._id!;
+        }
+      }
+    } else if (field === "toCurrencyId" && record.moneyTransfer) {
+      const currentWallet = wallets.value.find((w) => w._id === record.moneyTransfer?.toWalletId);
+      if (!currentWallet || currentWallet.currencyId !== value) {
+        const matchingWallet = wallets.value.find((w) => w.currencyId === value);
+        if (matchingWallet && record.moneyTransfer) {
+          record.moneyTransfer.toWalletId = matchingWallet._id!;
+        }
+      }
+    }
+  }
+
+  markRecordChanged(recordId);
+}
+
 function updateRecordCurrency(recordId: string, currencyId: string) {
   const record = records.value.find((r) => r._id === recordId);
   if (!record) return;
@@ -452,22 +601,80 @@ function updateRecordCurrency(recordId: string, currencyId: string) {
   // Update currency based on record type
   if (record.expense) {
     record.expense.currencyId = currencyId;
+    // Auto-update wallet to match currency if current wallet doesn't match
+    const currentWallet = wallets.value.find((w) => w._id === record.expense?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.expense) {
+        record.expense.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.income) {
     record.income.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.income?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.income) {
+        record.income.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.lending) {
     record.lending.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.lending?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.lending) {
+        record.lending.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.borrowing) {
     record.borrowing.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.borrowing?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.borrowing) {
+        record.borrowing.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.repaymentGiven) {
     record.repaymentGiven.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.repaymentGiven?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.repaymentGiven) {
+        record.repaymentGiven.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.repaymentReceived) {
     record.repaymentReceived.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.repaymentReceived?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.repaymentReceived) {
+        record.repaymentReceived.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.assetPurchase) {
     record.assetPurchase.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.assetPurchase?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.assetPurchase) {
+        record.assetPurchase.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.assetSale) {
     record.assetSale.currencyId = currencyId;
+    const currentWallet = wallets.value.find((w) => w._id === record.assetSale?.walletId);
+    if (!currentWallet || currentWallet.currencyId !== currencyId) {
+      const matchingWallet = wallets.value.find((w) => w.currencyId === currencyId);
+      if (matchingWallet && record.assetSale) {
+        record.assetSale.walletId = matchingWallet._id!;
+      }
+    }
   } else if (record.assetAppreciationDepreciation) {
     record.assetAppreciationDepreciation.currencyId = currencyId;
+    // No wallet update needed for asset appreciation/depreciation
   }
 
   markRecordChanged(recordId);
@@ -497,6 +704,13 @@ function updateRecordWallet(recordId: string, walletId: string) {
   }
 
   markRecordChanged(recordId);
+}
+
+function getFilteredWallets(currencyId?: string): Wallet[] {
+  if (!currencyId) {
+    return wallets.value;
+  }
+  return wallets.value.filter((wallet) => wallet.currencyId === currencyId);
 }
 
 function updateRecordParty(recordId: string, partyId: string | null) {
@@ -563,6 +777,7 @@ function getRecordWallet(record: InferredRecord): string {
   if (record.repaymentReceived) return record.repaymentReceived.walletId;
   if (record.assetPurchase) return record.assetPurchase.walletId;
   if (record.assetSale) return record.assetSale.walletId;
+  // Asset appreciation/depreciation doesn't have a wallet
   return "";
 }
 
@@ -589,6 +804,29 @@ function supportsParty(recordType: string): boolean {
     RecordType.ASSET_PURCHASE,
     RecordType.ASSET_SALE,
   ].includes(recordType);
+}
+
+function getRecordAsset(record: InferredRecord): string {
+  if (record.assetPurchase) return record.assetPurchase.assetId;
+  if (record.assetSale) return record.assetSale.assetId;
+  if (record.assetAppreciationDepreciation) return record.assetAppreciationDepreciation.assetId;
+  return "";
+}
+
+function updateRecordAsset(recordId: string, assetId: string) {
+  const record = records.value.find((r) => r._id === recordId);
+  if (!record) return;
+
+  // Update asset based on record type
+  if (record.assetPurchase) {
+    record.assetPurchase.assetId = assetId;
+  } else if (record.assetSale) {
+    record.assetSale.assetId = assetId;
+  } else if (record.assetAppreciationDepreciation) {
+    record.assetAppreciationDepreciation.assetId = assetId;
+  }
+
+  markRecordChanged(recordId);
 }
 
 function formatDateForInput(epoch: number): string {
@@ -972,6 +1210,50 @@ onMounted(() => {
     &.actions-col {
       width: 80px;
     }
+  }
+
+  // Money transfer specific styling
+  .money-transfer-amounts,
+  .money-transfer-currencies,
+  .money-transfer-wallets {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .amount-row,
+  .currency-row,
+  .wallet-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .amount-label,
+  .currency-label,
+  .wallet-label {
+    font-size: 10px;
+    min-width: 30px;
+    color: #666;
+  }
+
+  .money-transfer-input,
+  .money-transfer-select {
+    flex: 1;
+    min-width: 60px;
+  }
+
+  // Adjust column widths for money transfers
+  .amount-col {
+    min-width: 120px;
+  }
+
+  .currency-col {
+    min-width: 100px;
+  }
+
+  .wallet-col {
+    min-width: 160px;
   }
 
   .row-even {
