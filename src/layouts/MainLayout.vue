@@ -92,16 +92,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
-import { useUserStore } from "src/stores/user";
 import EssentialLink from "components/sidebar/EssentialLink.vue";
-import { authService } from "src/services/auth-service";
-import { dialogService } from "src/services/dialog-service";
-import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
-import { currencyFormatService } from "src/services/currency-format-service";
-import { syncService } from "src/services/sync-service";
 import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
+import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
+import { authService } from "src/services/auth-service";
+import { currencyFormatService } from "src/services/currency-format-service";
+import { dialogService } from "src/services/dialog-service";
+import { syncService } from "src/services/sync-service";
+import { useUserStore } from "src/stores/user";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
 
 const operationList = [
   {
@@ -301,6 +303,7 @@ onMounted(() => {
   checkIfInDevMode();
   currencyFormatService.init();
   syncService.setUpPouchdbListener();
+  handleRouteChange(route.fullPath, null);
 });
 
 async function logoutClicked() {
@@ -334,6 +337,18 @@ function toggleLeftDrawer() {
 async function goToOnlinePage() {
   await router.push({ name: "go-online" });
 }
+
+function handleRouteChange(newPath: string, oldPath: string | null) {
+  const newRoute = route;
+  const oldRoute = router.resolve(oldPath || "/");
+  if (newRoute.meta && newRoute.meta.preferLeftDrawerClosed) {
+    leftDrawerOpen.value = false;
+  } else if (oldRoute.meta && oldRoute.meta.preferLeftDrawerClosed) {
+    leftDrawerOpen.value = true;
+  }
+}
+
+watch(() => route.fullPath, handleRouteChange);
 </script>
 
 <style scoped lang="scss">
