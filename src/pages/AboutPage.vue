@@ -29,6 +29,8 @@
       </div>
 
       <div :hidden="isLoading" class="q-pa-md" style="display: flex; justify-content: end">
+        <q-btn color="red" text-color="white" label="Remove All Local Data" @click="removeLocalDataClicked" />
+        <div class="spacer"></div>
         <q-btn color="grey-7" text-color="white" label="Back to Home" @click="backToHomeClicked" />
       </div>
     </q-card>
@@ -39,6 +41,7 @@
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
 import { dialogService } from "src/services/dialog-service";
+import { localDataService } from "src/services/local-data-service";
 import { getCurrentYear, sleep } from "src/utils/misc-utils";
 import { ref } from "vue";
 import { useRouter } from "vue-router";
@@ -71,6 +74,10 @@ async function forceUpdateClicked() {
     await dialogService.alert("Update Error", "Unable to check for or to complete update. Reason: " + message);
   }
   isLoading.value = false;
+}
+
+function removeLocalDataClicked() {
+  localDataService.removeLocalData();
 }
 
 function backToHomeClicked() {

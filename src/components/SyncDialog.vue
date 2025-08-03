@@ -29,15 +29,27 @@
         <!-- Sync Progress -->
         <div v-if="!needsPasswordInput" class="sync-progress">
           <div class="text-center q-mb-md">
-            <q-spinner-dots color="primary" size="48px" />
+            <q-spinner-dots v-if="syncProgress.percentage === 0" color="primary" size="48px" />
+            <q-circular-progress v-else :value="syncProgress.percentage" size="64px" :thickness="0.1" color="primary" track-color="grey-3" class="text-primary">
+              <div class="text-body2 text-weight-bold">{{ syncProgress.percentage }}%</div>
+            </q-circular-progress>
           </div>
 
           <div class="sync-status text-center">
             <div class="text-body1 q-mb-sm">{{ syncStatusMessage }}</div>
             <div class="text-caption text-grey-6">{{ syncDetailMessage }}</div>
+
+            <!-- Progress Details -->
+            <div v-if="syncProgress.totalDocs > 0" class="progress-details q-mt-sm">
+              <div class="text-caption text-grey-7">
+                {{ syncProgress.docsSynced }} of {{ syncProgress.totalDocs }} documents
+                <span v-if="syncProgress.bytesTransferred > 0"> • {{ formatBytes(syncProgress.bytesTransferred) }} transferred </span>
+              </div>
+              <div v-if="syncProgress.errorCount > 0" class="text-caption text-negative">{{ syncProgress.errorCount }} error(s) encountered</div>
+            </div>
           </div>
 
-          <q-linear-progress :indeterminate="true" color="primary" class="q-mt-md" rounded />
+          <q-linear-progress :value="syncProgress.percentage" :indeterminate="syncProgress.percentage === 0" color="primary" class="q-mt-md" rounded />
         </div>
 
         <!-- Password Input Form -->
@@ -71,7 +83,7 @@
       <!-- Actions -->
       <q-card-actions class="sync-actions">
         <q-btn flat label="Cancel" color="grey-7" @click="cancelClicked" class="q-mr-sm" />
-        <q-spacer />
+        <div class="spacer"></div>
         <q-btn v-if="needsPasswordInput" unelevated label="Continue" color="primary" @click="onSubmit" icon="sync" />
       </q-card-actions>
     </q-card>
@@ -84,11 +96,11 @@ import { authService } from "src/services/auth-service";
 import { credentialService } from "src/services/credential-service";
 import { dialogService } from "src/services/dialog-service";
 import { migrationService } from "src/services/migration-service";
-import { pouchdbService } from "src/services/pouchdb-service";
+import { pouchdbService, type SyncProgress } from "src/services/pouchdb-service";
 import { useUserStore } from "src/stores/user";
 import { sleep } from "src/utils/misc-utils";
 import { validators } from "src/utils/validators";
-import { computed, ref } from "vue";
+import { computed, ref, reactive } from "vue";
 
 // Props
 const props = defineProps<{
@@ -112,6 +124,16 @@ const password = ref<string | null>(null);
 const syncStatusMessage = ref("Initializing sync...");
 const syncDetailMessage = ref("Please wait while we prepare your data");
 const isLoading = ref(false);
+
+// Progress tracking
+const syncProgress = reactive<SyncProgress>({
+  phase: "connecting",
+  totalDocs: 0,
+  docsSynced: 0,
+  bytesTransferred: 0,
+  percentage: 0,
+  errorCount: 0,
+});
 
 // Computed properties for contextual messaging
 const dialogTitle = computed(() => {
@@ -149,10 +171,46 @@ const welcomeMessage = computed(() => {
   }
 });
 
+// Utility functions
+function formatBytes(bytes: number): string {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
 // Sync logic with better status updates
 async function updateSyncStatus(message: string, detail = "") {
   syncStatusMessage.value = message;
   syncDetailMessage.value = detail;
+}
+
+// Progress callback handler
+function onSyncProgress(progress: SyncProgress) {
+  Object.assign(syncProgress, progress);
+
+  // Update status messages based on sync phase
+  switch (progress.phase) {
+    case "connecting":
+      updateSyncStatus("Connecting to server...", "Establishing secure connection");
+      break;
+    case "downloading":
+      updateSyncStatus(
+        "Downloading data...",
+        progress.totalDocs > 0 ? `Syncing ${progress.docsSynced} of ${progress.totalDocs} documents` : "Receiving data from server"
+      );
+      break;
+    case "uploading":
+      updateSyncStatus(
+        "Uploading data...",
+        progress.totalDocs > 0 ? `Syncing ${progress.docsSynced} of ${progress.totalDocs} documents` : "Sending data to server"
+      );
+      break;
+    case "finalizing":
+      updateSyncStatus("Finalizing sync...", "Processing final changes");
+      break;
+  }
 }
 
 async function sync() {
@@ -173,8 +231,18 @@ async function sync() {
   try {
     await updateSyncStatus("Connecting to server...", "Establishing secure connection");
 
+    // Reset progress state
+    Object.assign(syncProgress, {
+      phase: "connecting",
+      totalDocs: 0,
+      docsSynced: 0,
+      bytesTransferred: 0,
+      percentage: 0,
+      errorCount: 0,
+    });
+
     await updateSyncStatus("Synchronizing data...", "This may take a few moments depending on the size of your data");
-    let errorCount = (await pouchdbService.sync()) as number;
+    let errorCount = (await pouchdbService.sync(onSyncProgress)) as number;
 
     if (errorCount > 0) {
       await updateSyncStatus("Sync completed with warnings", `${errorCount} non-fatal errors occurred`);
