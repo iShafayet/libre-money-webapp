@@ -57,26 +57,39 @@
           </template>
 
           <template v-slot:body-cell-documentData="props">
-            <q-td :props="props" style="min-width: 100px">
+            <q-td :props="props" style="min-width: 120px">
               <div v-if="props.row.action === 'upsert' && (props.row.oldDocumentData || props.row.newDocumentData)" class="q-gutter-xs">
-                <q-btn
-                  v-if="props.row.oldDocumentData"
-                  flat
-                  dense
-                  color="orange"
-                  label="Old"
-                  @click="viewDocumentData(props.row.oldDocumentData, 'Old Document')"
-                  size="sm"
-                />
-                <q-btn
-                  v-if="props.row.newDocumentData"
-                  flat
-                  dense
-                  color="green"
-                  label="New"
-                  @click="viewDocumentData(props.row.newDocumentData, 'New Document')"
-                  size="sm"
-                />
+                <div class="row q-gutter-xs">
+                  <q-btn
+                    v-if="props.row.oldDocumentData"
+                    flat
+                    dense
+                    color="orange"
+                    label="Old"
+                    @click="viewDocumentData(props.row.oldDocumentData, 'Old Document')"
+                    size="sm"
+                  />
+                  <q-btn
+                    v-if="props.row.newDocumentData"
+                    flat
+                    dense
+                    color="green"
+                    label="New"
+                    @click="viewDocumentData(props.row.newDocumentData, 'New Document')"
+                    size="sm"
+                  />
+                </div>
+                <div v-if="props.row.oldDocumentData && props.row.newDocumentData" class="q-mt-xs">
+                  <q-btn
+                    flat
+                    dense
+                    color="purple"
+                    label="Diff"
+                    icon="compare"
+                    @click="showDiff(props.row.oldDocumentData, props.row.newDocumentData)"
+                    size="sm"
+                  />
+                </div>
               </div>
               <q-btn v-else-if="props.value" flat dense color="primary" label="View" @click="viewDocumentData(props.value, 'Document Data')" />
               <span v-else>-</span>
@@ -138,18 +151,21 @@
 <script setup lang="ts">
 import { auditLogService, AuditLogEntry } from "src/services/audit-log-service";
 import { computed, onMounted, ref } from "vue";
-import { date } from "quasar";
+import { date, useQuasar } from "quasar";
 import { usePaginationSizeStore } from "src/stores/pagination";
 import { Collection, rowsPerPageOptions } from "src/constants/constants";
 import { dialogService } from "src/services/dialog-service";
 import { recordService } from "src/services/record-service";
 import { Record } from "src/models/record";
+import DocumentDiffViewer from "src/components/DocumentDiffViewer.vue";
 
 const isLoading = ref(false);
 const rows = ref<AuditLogEntry[]>([]);
 const showDocumentDialog = ref(false);
 const selectedDocumentData = ref<unknown>(null);
 const selectedDocumentTitle = ref<string>("Document Data");
+
+// Diff dialog state - no longer needed since we use $q.dialog()
 
 // Filters
 const selectedAction = ref<string | null>(null);
@@ -163,6 +179,7 @@ const actionOptions = [
   { label: "Sync", value: "sync" },
 ];
 
+const $q = useQuasar();
 const paginationSizeStore = usePaginationSizeStore();
 const pagination = ref({
   sortBy: "timestamp",
@@ -381,6 +398,40 @@ async function viewDocumentData(documentData: any, title = "Document Data") {
   selectedDocumentData.value = documentData;
   selectedDocumentTitle.value = title;
   showDocumentDialog.value = true;
+}
+
+async function showDiff(oldDoc: any, newDoc: any) {
+  try {
+    // Process documents similar to viewDocumentData
+    let processedOldDoc = JSON.parse(JSON.stringify(oldDoc));
+    let processedNewDoc = JSON.parse(JSON.stringify(newDoc));
+
+    // Infer records if they are record documents
+    if ("$collection" in processedOldDoc && processedOldDoc.$collection === Collection.RECORD) {
+      processedOldDoc = await recordService.inferRecord(processedOldDoc as Record);
+    }
+    if ("$collection" in processedNewDoc && processedNewDoc.$collection === Collection.RECORD) {
+      processedNewDoc = await recordService.inferRecord(processedNewDoc as Record);
+    }
+
+    $q.dialog({
+      component: DocumentDiffViewer,
+      componentProps: {
+        oldDocument: processedOldDoc,
+        newDocument: processedNewDoc,
+      },
+    });
+  } catch (ex) {
+    console.warn("Failed to process documents for diff:", ex);
+    // Fallback to raw documents
+    $q.dialog({
+      component: DocumentDiffViewer,
+      componentProps: {
+        oldDocument: oldDoc,
+        newDocument: newDoc,
+      },
+    });
+  }
 }
 
 function syncAuditLogs() {
