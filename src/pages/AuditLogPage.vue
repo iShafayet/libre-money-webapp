@@ -193,6 +193,7 @@ const actionOptions = [
   { label: "Remove", value: "remove" },
   { label: "Sync", value: "sync" },
   { label: "Sync Error", value: "sync-error" },
+  { label: "Uncaught Error", value: "uncaught-error" },
 ];
 
 const $q = useQuasar();
@@ -394,6 +395,8 @@ function getActionColor(action: string): string {
     case "sync":
       return "blue";
     case "sync-error":
+      return "red";
+    case "uncaught-error":
       return "red";
     default:
       return "grey";

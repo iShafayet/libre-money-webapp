@@ -99,9 +99,10 @@ import { auditLogService } from "src/services/audit-log-service";
 import { authService } from "src/services/auth-service";
 import { currencyFormatService } from "src/services/currency-format-service";
 import { dialogService } from "src/services/dialog-service";
+import { globalErrorService } from "src/services/global-error-service";
 import { syncService } from "src/services/sync-service";
 import { useUserStore } from "src/stores/user";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -311,6 +312,7 @@ onMounted(() => {
   currencyFormatService.init();
   syncService.setUpPouchdbListener();
   auditLogService.engineInit("MainLayout");
+  globalErrorService.setupSubscription();
   handleRouteChange(route.fullPath, null);
 });
 
@@ -357,6 +359,10 @@ function handleRouteChange(newPath: string, oldPath: string | null) {
 }
 
 watch(() => route.fullPath, handleRouteChange);
+
+onUnmounted(() => {
+  globalErrorService.cancelSubscription();
+});
 </script>
 
 <style scoped lang="scss">

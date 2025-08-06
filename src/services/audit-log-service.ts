@@ -8,14 +8,14 @@ export interface AuditLogEntry {
   _id?: string;
   _rev?: string;
   timestamp: number;
-  action: "upsert" | "remove" | "sync" | "sync-error";
+  action: "upsert" | "remove" | "sync" | "sync-error" | "uncaught-error";
   documentId?: string;
   documentCollection?: string;
   documentData?: any; // For backward compatibility and remove/sync actions
   oldDocumentData?: any; // For upsert actions - the document before changes
   newDocumentData?: any; // For upsert actions - the document after changes
-  errorMessage?: string; // For sync-error actions
-  errorDetails?: any; // For sync-error actions - additional error context
+  errorMessage?: string; // For sync-error and uncaught-error actions
+  errorDetails?: any; // For sync-error and uncaught-error actions - additional error context
   username: string;
   domain: string;
   userAgent: string;
@@ -207,6 +207,38 @@ class AuditLogService {
       console.debug("Audit log: Sync error logged", error.message);
     } catch (logError) {
       console.error("Failed to log audit entry for sync error:", logError);
+      // Don't throw - audit logging should not break main functionality
+    }
+  }
+
+  /**
+   * Log an uncaught error
+   */
+  async logUncaughtError(error: Error, context?: any): Promise<void> {
+    try {
+      const userStore = useUserStore();
+      const currentUser = userStore.currentUser;
+
+      // Log even if no user is logged in (for early app errors)
+      const auditEntry: AuditLogEntry = {
+        timestamp: Date.now(),
+        action: "uncaught-error",
+        errorMessage: error.message,
+        errorDetails: {
+          name: error.name,
+          stack: error.stack,
+          context: context,
+        },
+        username: currentUser?.username || "unknown",
+        domain: currentUser?.domain || "unknown",
+        userAgent: navigator.userAgent,
+        sessionId: this.sessionId,
+      };
+
+      await this.auditDb.post(auditEntry);
+      console.debug("Audit log: Uncaught error logged", error.message);
+    } catch (logError) {
+      console.error("Failed to log audit entry for uncaught error:", logError);
       // Don't throw - audit logging should not break main functionality
     }
   }
