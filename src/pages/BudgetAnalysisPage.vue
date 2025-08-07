@@ -240,6 +240,10 @@ onMounted(() => {
 
     .item-header {
       min-width: 200px;
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      background-color: #f5f5f5;
     }
 
     .type-header {
@@ -259,6 +263,10 @@ onMounted(() => {
 
     .item-name {
       font-weight: 500;
+      position: sticky;
+      left: 0;
+      z-index: 10;
+      background-color: white;
     }
 
     .item-type {
@@ -301,6 +309,14 @@ onMounted(() => {
 
     .item-row:hover {
       background-color: #f8f9fa;
+
+      .item-name {
+        background-color: #f8f9fa;
+      }
+
+      .item-type {
+        background-color: #f8f9fa;
+      }
     }
 
     .summary-row {
@@ -310,10 +326,17 @@ onMounted(() => {
       .summary-label {
         font-weight: 700;
         color: #1976d2;
+        position: sticky;
+        left: 0;
+        z-index: 10;
+        background-color: #e3f2fd;
       }
 
       .summary-type {
         background-color: #e3f2fd;
+        position: sticky;
+        left: 200px;
+        z-index: 10;
       }
 
       .period-total {
