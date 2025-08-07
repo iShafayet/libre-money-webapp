@@ -3,6 +3,7 @@ import { configService } from "./config-service";
 import { useUserStore } from "src/stores/user";
 import { deepClone } from "src/utils/misc-utils";
 import axios from "axios";
+import { lockService } from "./lock-service";
 
 export interface AuditLogEntry {
   _id?: string;
@@ -25,11 +26,12 @@ export interface AuditLogEntry {
 const IS_AUDIT_LOG_FEATURE_ENABLED = true;
 const MAX_AUDIT_LOG_INCLUDED_DOCUMENT_SIZE_BYTES = 100_000; // 100KB
 const LOCAL_DB_NAME = "cash-keeper-audit-log";
-const BACKGROUND_SYNC_INTERVAL_MS = 10_000;
+const DEBOUNCE_SYNC_DELAY_MS = 2000; // 2 seconds delay before syncing
 
 class AuditLogService {
   private auditDb: PouchDB.Database = new PouchDB(LOCAL_DB_NAME);
   private sessionId: string = this.generateSessionId();
+  private syncDebounceTimer: NodeJS.Timeout | null = null;
 
   private generateSessionId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -44,32 +46,26 @@ class AuditLogService {
     return IS_AUDIT_LOG_FEATURE_ENABLED && configService.getAuditLogRemoteEnabled();
   }
 
-  private performBackgroundSync() {
-    if (this.isRemoteEnabled() && credentialService.hasCredentials()) {
-      this.performBackgroundSyncImpl();
+  private triggerDebouncedSync(): void {
+    if (this.syncDebounceTimer) {
+      clearTimeout(this.syncDebounceTimer);
     }
-    this.setupNextBackgroundSync();
+
+    this.syncDebounceTimer = setTimeout(() => {
+      this.performDebouncedSync();
+    }, DEBOUNCE_SYNC_DELAY_MS);
   }
 
-  private async performBackgroundSyncImpl(): Promise<void> {
+  private async performDebouncedSync(): Promise<void> {
     if (!this.isRemoteEnabled() || !credentialService.hasCredentials()) {
       return;
     }
 
     try {
-      const result = await this.syncAuditLogs();
-      if (result.success) {
-        console.debug(`Background audit log sync completed: ${result.syncedCount} entries synced`);
-      } else {
-        console.warn("Background audit log sync failed:", result.error);
-      }
+      await this.syncAuditLogs();
     } catch (error) {
-      console.error("Background audit log sync error:", error);
+      console.error("Debounced audit log sync error:", error);
     }
-  }
-
-  private setupNextBackgroundSync() {
-    setTimeout(() => this.performBackgroundSync(), BACKGROUND_SYNC_INTERVAL_MS);
   }
 
   public async engineInit(origin: "LoginPage" | "GoOnlinePage" | "MainLayout") {
@@ -79,8 +75,6 @@ class AuditLogService {
       const isRemoteEnabled = await this.checkRemoteAvailability();
       configService.setAuditLogRemoteEnabled(isRemoteEnabled);
     }
-
-    this.setupNextBackgroundSync();
   }
 
   /**
@@ -134,6 +128,9 @@ class AuditLogService {
 
       await this.auditDb.post(auditEntry);
       console.debug("Audit log: Document upsert logged", newDoc._id, oldDoc ? "with old document" : "as new document");
+
+      // Trigger debounced sync
+      this.triggerDebouncedSync();
     } catch (error) {
       console.error("Failed to log audit entry for upsert:", error);
       // Don't throw - audit logging should not break main functionality
@@ -161,6 +158,9 @@ class AuditLogService {
 
       await this.auditDb.post(auditEntry);
       console.debug("Audit log: Document removal logged", doc._id);
+
+      // Trigger debounced sync
+      this.triggerDebouncedSync();
     } catch (error) {
       console.error("Failed to log audit entry for removal:", error);
       // Don't throw - audit logging should not break main functionality
@@ -188,6 +188,9 @@ class AuditLogService {
 
       await this.auditDb.post(auditEntry);
       console.debug("Audit log: Sync operation logged");
+
+      // Trigger debounced sync
+      this.triggerDebouncedSync();
     } catch (error) {
       console.error("Failed to log audit entry for sync:", error);
       // Don't throw - audit logging should not break main functionality
@@ -221,6 +224,9 @@ class AuditLogService {
 
       await this.auditDb.post(auditEntry);
       console.debug("Audit log: Sync error logged", error.message);
+
+      // Trigger debounced sync
+      this.triggerDebouncedSync();
     } catch (logError) {
       console.error("Failed to log audit entry for sync error:", logError);
       // Don't throw - audit logging should not break main functionality
@@ -253,6 +259,9 @@ class AuditLogService {
 
       await this.auditDb.post(auditEntry);
       console.debug("Audit log: Uncaught error logged", error.message);
+
+      // Trigger debounced sync
+      this.triggerDebouncedSync();
     } catch (logError) {
       console.error("Failed to log audit entry for uncaught error:", logError);
       // Don't throw - audit logging should not break main functionality
@@ -287,6 +296,12 @@ class AuditLogService {
   }
 
   async cleanup(): Promise<void> {
+    // Clear any pending sync timer
+    if (this.syncDebounceTimer) {
+      clearTimeout(this.syncDebounceTimer);
+      this.syncDebounceTimer = null;
+    }
+
     if (this.auditDb) {
       try {
         await this.auditDb.destroy();
@@ -349,6 +364,12 @@ class AuditLogService {
   async syncAuditLogs(): Promise<{ success: boolean; syncedCount: number; error?: string }> {
     if (!this.isRemoteEnabled() || !credentialService.hasCredentials()) {
       return { success: false, syncedCount: 0, error: "Remote sync not enabled or no credentials" };
+    }
+
+    const lockAcquired = lockService.acquireLock("audit-log-sync", 10_000);
+    if (!lockAcquired) {
+      console.debug("Audit log sync already in progress");
+      return { success: false, syncedCount: 0, error: "Audit log sync already in progress" };
     }
 
     try {
@@ -426,6 +447,8 @@ class AuditLogService {
     } catch (error) {
       console.error("Failed to sync audit logs:", error);
       return { success: false, syncedCount: 0, error: (error as Error).message };
+    } finally {
+      lockService.releaseLock("audit-log-sync");
     }
   }
 
