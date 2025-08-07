@@ -9,6 +9,7 @@ export interface AuditLogEntry {
   _id?: string;
   _rev?: string;
   timestamp: number;
+  dateTime: string; // Human readable date time for debugging
   action: "upsert" | "remove" | "sync" | "sync-error" | "uncaught-error";
   documentId?: string;
   documentCollection?: string;
@@ -35,6 +36,10 @@ class AuditLogService {
 
   private generateSessionId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private generateDateTime(): string {
+    return new Date().toISOString();
   }
 
   private getAuditDbUrl(): string {
@@ -112,6 +117,7 @@ class AuditLogService {
 
       const auditEntry: AuditLogEntry = {
         timestamp: Date.now(),
+        dateTime: this.generateDateTime(),
         action: "upsert",
         documentId: newDoc._id || "new-document",
         documentCollection: newDoc.$collection,
@@ -146,6 +152,7 @@ class AuditLogService {
 
       const auditEntry: AuditLogEntry = {
         timestamp: Date.now(),
+        dateTime: this.generateDateTime(),
         action: "remove",
         documentId: doc._id,
         documentCollection: doc.$collection,
@@ -179,6 +186,7 @@ class AuditLogService {
 
       const auditEntry: AuditLogEntry = {
         timestamp: Date.now(),
+        dateTime: this.generateDateTime(),
         action: "sync",
         username: currentUser.username,
         domain: currentUser.domain,
@@ -209,6 +217,7 @@ class AuditLogService {
 
       const auditEntry: AuditLogEntry = {
         timestamp: Date.now(),
+        dateTime: this.generateDateTime(),
         action: "sync-error",
         errorMessage: error.message,
         errorDetails: {
@@ -244,6 +253,7 @@ class AuditLogService {
       // Log even if no user is logged in (for early app errors)
       const auditEntry: AuditLogEntry = {
         timestamp: Date.now(),
+        dateTime: this.generateDateTime(),
         action: "uncaught-error",
         errorMessage: error.message,
         errorDetails: {
