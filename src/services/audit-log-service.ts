@@ -379,18 +379,34 @@ class AuditLogService {
         const batch = auditEntries.slice(i, i + batchSize);
 
         try {
-          // Prepare batch for remote sync (remove _id and _rev for new documents)
-          const batchForSync = batch.map((entry) => {
-            const { _id, _rev, ...entryWithoutId } = entry;
-            return entryWithoutId;
-          });
+          // For each entry, try to sync individually to handle conflicts properly
+          for (const entry of batch) {
+            try {
+              // Create a unique ID for the audit entry based on timestamp and session
+              const uniqueId = `audit_${entry.timestamp}_${entry.sessionId}_${entry.username}`;
 
-          // Bulk upsert to remote database
-          const bulkResult = await remoteDB.bulkDocs(batchForSync, { new_edits: false });
+              // Check if document already exists on remote
+              try {
+                const existingDoc = await remoteDB.get(uniqueId);
+                // Document exists, skip it to avoid conflicts
+                console.debug(`Audit entry already exists on remote: ${uniqueId}`);
+                continue;
+              } catch (error) {
+                // Document doesn't exist, safe to create
+                const entryForSync = {
+                  ...entry,
+                  _id: uniqueId,
+                };
+                delete entryForSync._rev;
 
-          // Count successful syncs
-          syncedCount += bulkResult.filter((result) => !("error" in result)).length;
-          errorCount += bulkResult.filter((result) => "error" in result).length;
+                await remoteDB.put(entryForSync);
+                syncedCount++;
+              }
+            } catch (entryError) {
+              console.error("Error syncing individual audit entry:", entryError);
+              errorCount++;
+            }
+          }
 
           console.debug(
             `Synced batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(auditEntries.length / batchSize)}: ${syncedCount} successful, ${errorCount} errors`
@@ -402,14 +418,13 @@ class AuditLogService {
       }
 
       if (errorCount > 0) {
-        await this.logSyncError(new Error(`Sync completed with ${errorCount} errors`), { syncedCount, errorCount });
+        console.error(`Sync completed with ${errorCount} errors`);
       }
 
       console.debug(`Audit log sync completed: ${syncedCount} synced, ${errorCount} errors`);
       return { success: true, syncedCount, error: errorCount > 0 ? `${errorCount} errors occurred` : undefined };
     } catch (error) {
       console.error("Failed to sync audit logs:", error);
-      await this.logSyncError(error as Error, { operation: "syncAuditLogs" });
       return { success: false, syncedCount: 0, error: (error as Error).message };
     }
   }

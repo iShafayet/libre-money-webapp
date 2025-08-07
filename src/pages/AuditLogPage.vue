@@ -4,7 +4,7 @@
       <div class="title-row q-pa-md q-gutter-sm">
         <div class="title">Audit Log</div>
         <div class="row items-center q-gutter-sm">
-          <q-btn color="secondary" text-color="white" label="Sync" icon="sync" @click="syncAuditLogs" :loading="isSyncing" :disable="!isRemoteEnabled" />
+          <q-btn color="secondary" text-color="white" label="Sync Logs" icon="sync" @click="syncAuditLogs" :loading="isSyncing" />
           <q-btn color="primary" text-color="white" label="Refresh" icon="refresh" @click="loadData" :loading="isLoading" />
         </div>
       </div>
@@ -120,31 +120,6 @@
             </q-td>
           </template>
         </q-table>
-      </div>
-
-      <!-- Statistics -->
-      <div class="q-pa-md" v-if="rows.length > 0">
-        <q-separator class="q-mb-md" />
-        <div class="row q-gutter-md">
-          <q-card flat bordered class="col">
-            <q-card-section class="text-center">
-              <div class="text-h6">{{ rows.length }}</div>
-              <div class="text-caption">Total Entries</div>
-            </q-card-section>
-          </q-card>
-          <q-card flat bordered class="col">
-            <q-card-section class="text-center">
-              <div class="text-h6">{{ uniqueUsers.size }}</div>
-              <div class="text-caption">Unique Users</div>
-            </q-card-section>
-          </q-card>
-          <q-card flat bordered class="col">
-            <q-card-section class="text-center">
-              <div class="text-h6">{{ uniqueSessions.size }}</div>
-              <div class="text-caption">Unique Sessions</div>
-            </q-card-section>
-          </q-card>
-        </div>
       </div>
     </q-card>
 
@@ -279,24 +254,6 @@ const columns = [
   //   sortable: true,
   // },
 ];
-
-// Computed properties
-
-const uniqueUsers = computed(() => {
-  const users = new Set<string>();
-  rows.value.forEach((row) => {
-    if (row.username) users.add(row.username);
-  });
-  return users;
-});
-
-const uniqueSessions = computed(() => {
-  const sessions = new Set<string>();
-  rows.value.forEach((row) => {
-    if (row.sessionId) sessions.add(row.sessionId);
-  });
-  return sessions;
-});
 
 function applyOrdering(docList: AuditLogEntry[], sortBy: string, descending: boolean) {
   if (sortBy === "timestamp") {
