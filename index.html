@@ -26,7 +26,22 @@
   <body>
     <script src="pouchdb_8_0_1.min.js"></script>
     <script src="pouchdb_8_0_1.find.min.js"></script>
-
+    <script type="text/javascript">
+      const FAILSAFE_RELOAD_DELAY = 5_000;
+      if (!("__ck__hasLoaded" in window)) {
+        window.__ck__hasLoaded = false;
+      }
+      setTimeout(() => {
+        console.debug("window.__ck__hasLoaded", window.__ck__hasLoaded);
+        if (!window.__ck__hasLoaded) {
+          const message = "The application is taking longer to load than expected. An unexpected issue may have occurred. The application will now reload.";
+          alert(message);
+          console.debug(message);
+          window.location.href = "/";
+          window.location.reload(true);
+        }
+      }, FAILSAFE_RELOAD_DELAY);
+    </script>
     <!-- quasar:entry-point -->
   </body>
 </html>

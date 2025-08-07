@@ -5,6 +5,7 @@ import routes from "./routes";
 import { useUserStore } from "src/stores/user";
 import { useSettingsStore } from "src/stores/settings";
 import { dialogService } from "src/services/dialog-service";
+import { sleep } from "src/utils/misc-utils";
 
 /*
  * If not building with SSR mode, you can
@@ -59,7 +60,15 @@ export default route(function (/* { store, ssrContext } */) {
       return;
     }
     await dialogService.alert("Unexpected error", "We have encountered an unexpected error. Navigating to the home page.");
-    return router.push({ path: "/", query: { noNavAway: "true" } });
+    try {
+      return await router.push({ path: "/", query: { noNavAway: "true" } });
+    } catch (error) {
+      console.error(error);
+      window.location.href = "/";
+      await sleep(1000);
+      // @ts-ignore
+      window.location.reload(true);
+    }
   });
 
   return router;

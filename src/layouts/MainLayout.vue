@@ -320,7 +320,14 @@ onMounted(() => {
   auditLogService.engineInit("MainLayout");
   globalErrorService.setupSubscription();
   handleRouteChange(route.fullPath, null);
+  informApplicationHasLoaded();
 });
+
+function informApplicationHasLoaded() {
+  console.debug("informApplicationHasLoaded");
+  // @ts-ignore
+  window.__ck__hasLoaded = true;
+}
 
 async function logoutClicked() {
   let [successful, failureReason] = await authService.logout();
