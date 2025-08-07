@@ -83,6 +83,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("pages/RollingBudgetsPage.vue"),
         meta: { requiresAuthentication: true, title: "Rolling Budgets", rememberable: true },
       },
+      {
+        path: "budget-analysis",
+        name: "budget-analysis",
+        component: () => import("pages/BudgetAnalysisPage.vue"),
+        meta: { requiresAuthentication: true, title: "Budget Analysis", rememberable: true },
+      },
       // --- Entities:
       {
         path: "parties",
@@ -182,6 +188,12 @@ const routes: RouteRecordRaw[] = [
         name: "debug",
         component: () => import("pages/DebugPage.vue"),
         meta: { requiresAuthentication: true, title: "Debug", rememberable: true },
+      },
+      {
+        path: "audit-log",
+        name: "audit-log",
+        component: () => import("pages/AuditLogPage.vue"),
+        meta: { requiresAuthentication: true, title: "Audit Log", rememberable: true },
       },
       {
         path: "about",

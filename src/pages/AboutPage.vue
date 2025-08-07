@@ -29,9 +29,9 @@
       </div>
 
       <div :hidden="isLoading" class="q-pa-md" style="display: flex; justify-content: end">
-        <q-btn color="red" text-color="white" label="Remove All Local Data" @click="removeLocalDataClicked" />
+        <q-btn color="red" text-color="white" label="Remove Local Data" @click="removeLocalDataClicked" />
         <div class="spacer"></div>
-        <q-btn color="grey-7" text-color="white" label="Back to Home" @click="backToHomeClicked" />
+        <q-btn color="grey-7" text-color="white" label="Home" @click="backToHomeClicked" />
       </div>
     </q-card>
   </q-page>
@@ -69,11 +69,11 @@ async function forceUpdateClicked() {
     // @ts-ignore
     window.location.reload(true);
   } catch (ex) {
+    isLoading.value = false;
     console.warn(ex);
     const message = ex && ex instanceof Error ? ex.message : JSON.stringify(ex);
     await dialogService.alert("Update Error", "Unable to check for or to complete update. Reason: " + message);
   }
-  isLoading.value = false;
 }
 
 function removeLocalDataClicked() {

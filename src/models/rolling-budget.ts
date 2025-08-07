@@ -22,7 +22,7 @@ export type RollingBudget = {
   tagIdWhiteList: string[];
   tagIdBlackList: string[];
 
-  frequency: "monthly";
+  frequency: "monthly" | "irregular";
   budgetedPeriodList: BudgetedPeriod[];
 
   rollOverRule: "always" | "never" | "positive-only" | "negative-only";
@@ -33,4 +33,8 @@ export type RollingBudget = {
   _currencySign?: string;
 
   _budgetedPeriodIndexInRange?: number;
+
+  // Monthly frequency specific properties
+  monthlyStartDate?: number | null;
+  monthlyEndDate?: number | null;
 };

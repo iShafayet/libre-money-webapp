@@ -95,12 +95,14 @@
 import EssentialLink from "components/sidebar/EssentialLink.vue";
 import { useQuasar } from "quasar";
 import { APP_BUILD_DATE, APP_BUILD_VERSION, APP_VERSION } from "src/constants/config-constants";
+import { auditLogService } from "src/services/audit-log-service";
 import { authService } from "src/services/auth-service";
 import { currencyFormatService } from "src/services/currency-format-service";
 import { dialogService } from "src/services/dialog-service";
+import { globalErrorService } from "src/services/global-error-service";
 import { syncService } from "src/services/sync-service";
 import { useUserStore } from "src/stores/user";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -185,6 +187,12 @@ const entityList = [
 
 const reportList = [
   {
+    title: "Budget Analysis",
+    caption: "Compare expenses across budget periods",
+    icon: "analytics",
+    link: "#/budget-analysis",
+  },
+  {
     title: "Combined Report",
     caption: "",
     icon: "description",
@@ -265,6 +273,12 @@ const miscList = [
     link: "#/settings",
   },
   {
+    title: "Audit Log",
+    caption: "",
+    icon: "history",
+    link: "#/audit-log",
+  },
+  {
     title: "Debug",
     caption: "",
     icon: "bug_report",
@@ -303,8 +317,17 @@ onMounted(() => {
   checkIfInDevMode();
   currencyFormatService.init();
   syncService.setUpPouchdbListener();
+  auditLogService.engineInit("MainLayout");
+  globalErrorService.setupSubscription();
   handleRouteChange(route.fullPath, null);
+  informApplicationHasLoaded();
 });
+
+function informApplicationHasLoaded() {
+  console.debug("informApplicationHasLoaded");
+  // @ts-ignore
+  window.__ck__hasLoaded = true;
+}
 
 async function logoutClicked() {
   let [successful, failureReason] = await authService.logout();
@@ -349,6 +372,10 @@ function handleRouteChange(newPath: string, oldPath: string | null) {
 }
 
 watch(() => route.fullPath, handleRouteChange);
+
+onUnmounted(() => {
+  globalErrorService.cancelSubscription();
+});
 </script>
 
 <style scoped lang="scss">

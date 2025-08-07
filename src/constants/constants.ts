@@ -54,6 +54,13 @@ export const rollOverRuleList = [
 
 export const defaultRollOverRule = "positive-only";
 
+export const budgetFrequencyList = [
+  { value: "monthly", label: "Monthly" },
+  { value: "irregular", label: "Irregular" },
+];
+
+export const defaultBudgetFrequency = "monthly";
+
 export const defaultWalletType = "cash";
 
 export const Collection = {

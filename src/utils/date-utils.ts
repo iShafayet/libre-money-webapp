@@ -66,6 +66,7 @@ export function normalizeEpochRange(startEpoch: number, endEpoch: number) {
   endEpoch = date2.getTime();
   return [startEpoch, endEpoch];
 }
+
 export function normalizeEpochAsDate(epoch: number) {
   const date1 = new Date(epoch);
   date1.setHours(0);
@@ -82,4 +83,36 @@ export function normalizeEpochAsDateAtTheEndOfDay(epoch: number) {
   date1.setSeconds(59);
   date1.setMilliseconds(999);
   return date1.getTime();
+}
+
+export function getLastDayOfMonth(date: Date): number {
+  const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return lastDay.getTime();
+}
+
+export function generateMonthlyPeriods(startEpoch: number, endEpoch: number): Array<{ startEpoch: number; endEpoch: number }> {
+  const periods: Array<{ startEpoch: number; endEpoch: number }> = [];
+  const startDate = new Date(normalizeEpochAsDate(startEpoch));
+  const endDate = new Date(normalizeEpochAsDate(endEpoch));
+
+  // Set to first day of the month
+  const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  while (currentDate <= endDate) {
+    const periodStart = currentDate.getTime();
+    const periodEnd = getLastDayOfMonth(currentDate);
+
+    // Only add periods that overlap with the requested range
+    if (periodStart <= endEpoch && periodEnd >= startEpoch) {
+      periods.push({
+        startEpoch: Math.max(periodStart, startEpoch),
+        endEpoch: Math.min(periodEnd, endEpoch),
+      });
+    }
+
+    // Move to next month
+    currentDate.setMonth(currentDate.getMonth() + 1);
+  }
+
+  return periods;
 }
