@@ -326,7 +326,7 @@ onMounted(() => {
 function informApplicationHasLoaded() {
   console.debug("informApplicationHasLoaded");
   // @ts-ignore
-  window.__ck__hasLoaded = true;
+  window.__lm__hasLoaded = true;
 }
 
 async function logoutClicked() {
