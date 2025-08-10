@@ -1,4 +1,4 @@
-export const DEFAULT_REMOTE_SERVER_URL = "https://homeserver.libre.money";
+export const DEFAULT_REMOTE_SERVER_URL = "https://cluster-1.libre.money";
 
 export type ServerOption = {
   label: string;
