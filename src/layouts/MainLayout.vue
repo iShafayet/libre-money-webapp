@@ -31,6 +31,7 @@
               <q-item clickable v-close-popup @click="fullSyncClicked" :disable="syncService.isSyncing()">
                 <q-item-section>Sync</q-item-section>
               </q-item>
+              <q-separator />
               <q-item clickable v-close-popup @click="hardRefreshClicked">
                 <q-item-section>Hard Refresh</q-item-section>
               </q-item>
