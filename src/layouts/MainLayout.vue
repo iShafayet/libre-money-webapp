@@ -31,6 +31,9 @@
               <q-item clickable v-close-popup @click="fullSyncClicked" :disable="syncService.isSyncing()">
                 <q-item-section>Sync</q-item-section>
               </q-item>
+              <q-item clickable v-close-popup @click="hardRefreshClicked">
+                <q-item-section>Hard Refresh</q-item-section>
+              </q-item>
               <q-separator />
               <q-item clickable v-close-popup @click="logoutClicked">
                 <q-item-section>Logout</q-item-section>
@@ -372,6 +375,13 @@ function handleRouteChange(newPath: string, oldPath: string | null) {
 }
 
 watch(() => route.fullPath, handleRouteChange);
+
+function hardRefreshClicked() {
+  console.debug("hardRefreshClicked");
+  window.location.href = "/";
+  // @ts-ignore
+  // window.location.reload(true);
+}
 
 onUnmounted(() => {
   globalErrorService.cancelSubscription();
