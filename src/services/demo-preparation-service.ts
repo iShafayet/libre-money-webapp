@@ -12,26 +12,84 @@ import { RecordType } from "src/constants/constants";
 import { pouchdbService } from "./pouchdb-service";
 
 class DemoPreparationService {
-  // Class variables to store created entities
-  private createdCurrencies: Currency[] = [];
-  private createdWallets: Wallet[] = [];
-  private createdParties: Party[] = [];
-  private createdAssets: Asset[] = [];
-  private createdBudgets: RollingBudget[] = [];
-  private createdExpenseAvenues: ExpenseAvenue[] = [];
-  private createdIncomeSources: IncomeSource[] = [];
-  private createdTags: Tag[] = [];
-  private createdRecords: Record[] = [];
+  // Maps to store all available entities (both existing and demo)
+  private currenciesMap = new Map<string, Currency>();
+  private walletsMap = new Map<string, Wallet>();
+  private partiesMap = new Map<string, Party>();
+  private assetsMap = new Map<string, Asset>();
+  private expenseAvenuesMap = new Map<string, ExpenseAvenue>();
+  private incomeSourcesMap = new Map<string, IncomeSource>();
+  private tagsMap = new Map<string, Tag>();
 
   // State variable to store the primary demo currency
   private primaryCurrency: Currency | null = null;
+
+  // Counters for created demo entities
+  private createdCounts = {
+    currencies: 0,
+    wallets: 0,
+    parties: 0,
+    assets: 0,
+    budgets: 0,
+    expenseAvenues: 0,
+    incomeSources: 0,
+    tags: 0,
+    records: 0,
+  };
+
+  /**
+   * Populate maps with existing entities from the database
+   */
+  private async populateMapsWithExistingEntities(): Promise<void> {
+    // Get existing entities and populate maps
+    const existingCurrencies = (await pouchdbService.listByCollection(Collection.CURRENCY)) as { docs: (Currency & { _id: string; _rev: string })[] };
+    const existingWallets = (await pouchdbService.listByCollection(Collection.WALLET)) as { docs: (Wallet & { _id: string; _rev: string })[] };
+    const existingParties = (await pouchdbService.listByCollection(Collection.PARTY)) as { docs: (Party & { _id: string; _rev: string })[] };
+    const existingAssets = (await pouchdbService.listByCollection(Collection.ASSET)) as { docs: (Asset & { _id: string; _rev: string })[] };
+    const existingExpenseAvenues = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)) as {
+      docs: (ExpenseAvenue & { _id: string; _rev: string })[];
+    };
+    const existingIncomeSources = (await pouchdbService.listByCollection(Collection.INCOME_SOURCE)) as {
+      docs: (IncomeSource & { _id: string; _rev: string })[];
+    };
+    const existingTags = (await pouchdbService.listByCollection(Collection.TAG)) as { docs: (Tag & { _id: string; _rev: string })[] };
+
+    // Populate maps with existing entities
+    existingCurrencies.docs.forEach((currency) => {
+      this.currenciesMap.set(currency.name, currency);
+    });
+
+    existingWallets.docs.forEach((wallet) => {
+      this.walletsMap.set(wallet.name, wallet);
+    });
+
+    existingParties.docs.forEach((party) => {
+      this.partiesMap.set(party.name, party);
+    });
+
+    existingAssets.docs.forEach((asset) => {
+      this.assetsMap.set(asset.name, asset);
+    });
+
+    existingExpenseAvenues.docs.forEach((avenue) => {
+      this.expenseAvenuesMap.set(avenue.name, avenue);
+    });
+
+    existingIncomeSources.docs.forEach((source) => {
+      this.incomeSourcesMap.set(source.name, source);
+    });
+
+    existingTags.docs.forEach((tag) => {
+      this.tagsMap.set(tag.name, tag);
+    });
+  }
 
   /**
    * Setup additional demo currencies (complements whatever currency was chosen during onboarding)
    */
   async setupDemoCurrencies(): Promise<void> {
     // Get existing currencies to see what's already available
-    const existingCurrencies = await pouchdbService.listByCollection(Collection.CURRENCY);
+    const existingCurrencies = (await pouchdbService.listByCollection(Collection.CURRENCY)) as { docs: (Currency & { _id: string; _rev: string })[] };
 
     // Define only USD and Euro as demo currencies
     const demoCurrencies: Currency[] = [
@@ -53,7 +111,7 @@ class DemoPreparationService {
 
     // Filter out currencies that already exist (check by both name and sign)
     const currenciesToCreate = demoCurrencies.filter(
-      (demoCurrency) => !existingCurrencies.docs.some((existing: any) => existing.name === demoCurrency.name || existing.sign === demoCurrency.sign)
+      (demoCurrency) => !existingCurrencies.docs.some((existing) => existing.name === demoCurrency.name || existing.sign === demoCurrency.sign)
     );
 
     if (currenciesToCreate.length === 0) {
@@ -63,16 +121,19 @@ class DemoPreparationService {
 
     console.log(`Creating ${currenciesToCreate.length} additional demo currencies: ${currenciesToCreate.map((c) => c.name).join(", ")}`);
 
-    this.createdCurrencies = [];
     for (const currency of currenciesToCreate) {
       const result = await pouchdbService.upsertDoc(currency, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdCurrency = { ...currency, _id: result.id, _rev: result.rev };
-      this.createdCurrencies.push(createdCurrency);
+
+      // Add to currencies map
+      this.currenciesMap.set(createdCurrency.name, createdCurrency);
 
       // Set the first created currency as the primary demo currency
       if (!this.primaryCurrency) {
         this.primaryCurrency = createdCurrency;
       }
+
+      this.createdCounts.currencies++;
     }
   }
 
@@ -112,11 +173,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdWallets = [];
     for (const wallet of wallets) {
       const result = await pouchdbService.upsertDoc(wallet, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdWallet = { ...wallet, _id: result.id, _rev: result.rev };
-      this.createdWallets.push(createdWallet);
+
+      // Add to wallets map
+      this.walletsMap.set(createdWallet.name, createdWallet);
+      this.createdCounts.wallets++;
     }
   }
 
@@ -231,11 +294,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdParties = [];
     for (const party of parties) {
       const result = await pouchdbService.upsertDoc(party, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdParty = { ...party, _id: result.id, _rev: result.rev };
-      this.createdParties.push(createdParty);
+
+      // Add to parties map
+      this.partiesMap.set(createdParty.name, createdParty);
+      this.createdCounts.parties++;
     }
   }
 
@@ -291,11 +356,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdAssets = [];
     for (const asset of assets) {
       const result = await pouchdbService.upsertDoc(asset, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdAsset = { ...asset, _id: result.id, _rev: result.rev };
-      this.createdAssets.push(createdAsset);
+
+      // Add to assets map
+      this.assetsMap.set(createdAsset.name, createdAsset);
+      this.createdCounts.assets++;
     }
   }
 
@@ -358,11 +425,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdExpenseAvenues = [];
     for (const avenue of expenseAvenues) {
       const result = await pouchdbService.upsertDoc(avenue, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdAvenue = { ...avenue, _id: result.id, _rev: result.rev };
-      this.createdExpenseAvenues.push(createdAvenue);
+
+      // Add to expense avenues map
+      this.expenseAvenuesMap.set(createdAvenue.name, createdAvenue);
+      this.createdCounts.expenseAvenues++;
     }
   }
 
@@ -417,11 +486,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdIncomeSources = [];
     for (const source of incomeSources) {
       const result = await pouchdbService.upsertDoc(source, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdSource = { ...source, _id: result.id, _rev: result.rev };
-      this.createdIncomeSources.push(createdSource);
+
+      // Add to income sources map
+      this.incomeSourcesMap.set(createdSource.name, createdSource);
+      this.createdCounts.incomeSources++;
     }
   }
 
@@ -508,11 +579,13 @@ class DemoPreparationService {
       },
     ];
 
-    this.createdTags = [];
     for (const tag of tags) {
       const result = await pouchdbService.upsertDoc(tag, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdTag = { ...tag, _id: result.id, _rev: result.rev };
-      this.createdTags.push(createdTag);
+
+      // Add to tags map
+      this.tagsMap.set(createdTag.name, createdTag);
+      this.createdCounts.tags++;
     }
   }
 
@@ -520,142 +593,133 @@ class DemoPreparationService {
    * Setup comprehensive demo records for all record types
    */
   async setupDemoRecords(): Promise<void> {
-    if (!this.primaryCurrency || this.createdWallets.length === 0 || this.createdParties.length === 0 || this.createdAssets.length === 0) {
+    if (!this.primaryCurrency || this.createdCounts.wallets === 0 || this.createdCounts.parties === 0 || this.createdCounts.assets === 0) {
       console.log("Required demo entities not available, skipping record creation");
       return;
     }
 
     // Get all available entities for creating records
-    const allCurrencies = await pouchdbService.listByCollection(Collection.CURRENCY);
-    const allWallets = await pouchdbService.listByCollection(Collection.WALLET);
-    const allParties = await pouchdbService.listByCollection(Collection.PARTY);
-    const allAssets = await pouchdbService.listByCollection(Collection.ASSET);
-    const allExpenseAvenues = await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE);
-    const allIncomeSources = await pouchdbService.listByCollection(Collection.INCOME_SOURCE);
-    const allTags = await pouchdbService.listByCollection(Collection.TAG);
+    const allCurrencies = (await pouchdbService.listByCollection(Collection.CURRENCY)) as { docs: (Currency & { _id: string; _rev: string })[] };
+    const allWallets = (await pouchdbService.listByCollection(Collection.WALLET)) as { docs: (Wallet & { _id: string; _rev: string })[] };
+    const allParties = (await pouchdbService.listByCollection(Collection.PARTY)) as { docs: (Party & { _id: string; _rev: string })[] };
+    const allAssets = (await pouchdbService.listByCollection(Collection.ASSET)) as { docs: (Asset & { _id: string; _rev: string })[] };
+    const allExpenseAvenues = (await pouchdbService.listByCollection(Collection.EXPENSE_AVENUE)) as { docs: (ExpenseAvenue & { _id: string; _rev: string })[] };
+    const allIncomeSources = (await pouchdbService.listByCollection(Collection.INCOME_SOURCE)) as { docs: (IncomeSource & { _id: string; _rev: string })[] };
+    const allTags = (await pouchdbService.listByCollection(Collection.TAG)) as { docs: (Tag & { _id: string; _rev: string })[] };
 
-    // Create Maps with meaningful keys for easy access
-    const currenciesMap = new Map<string, any>();
-    const walletsMap = new Map<string, any>();
-    const partiesMap = new Map<string, any>();
-    const assetsMap = new Map<string, any>();
-    const expenseAvenuesMap = new Map<string, any>();
-    const incomeSourcesMap = new Map<string, any>();
-    const tagsMap = new Map<string, any>();
-
-    // Populate Maps with meaningful keys
-    allCurrencies.docs.forEach((currency: any) => {
-      if (currency.name === "US Dollar") currenciesMap.set("USD", currency);
-      else if (currency.name === "Euro") currenciesMap.set("EUR", currency);
-      else currenciesMap.set("PRIMARY", currency); // Default/onboarding currency
+    // Populate Maps with meaningful keys for easy access
+    allCurrencies.docs.forEach((currency) => {
+      if (currency.name === "US Dollar") this.currenciesMap.set("USD", currency);
+      else if (currency.name === "Euro") this.currenciesMap.set("EUR", currency);
+      else this.currenciesMap.set("PRIMARY", currency); // Default/onboarding currency
     });
 
-    allWallets.docs.forEach((wallet: any) => {
-      if (wallet.name === "Cash") walletsMap.set("CASH", wallet);
-      else if (wallet.name === "Checking Account") walletsMap.set("CHECKING", wallet);
-      else if (wallet.name === "Savings Account") walletsMap.set("SAVINGS", wallet);
-      else if (wallet.name === "Credit Card") walletsMap.set("CREDIT_CARD", wallet);
-      else if (wallet.name === "Investment Account") walletsMap.set("INVESTMENT", wallet);
-      else if (wallet.name === "Travel Fund") walletsMap.set("TRAVEL", wallet);
-      else walletsMap.set("PRIMARY", wallet);
+    allWallets.docs.forEach((wallet) => {
+      if (wallet.name === "Cash") this.walletsMap.set("CASH", wallet);
+      else if (wallet.name === "Checking Account") this.walletsMap.set("CHECKING", wallet);
+      else if (wallet.name === "Savings Account") this.walletsMap.set("SAVINGS", wallet);
+      else if (wallet.name === "Credit Card") this.walletsMap.set("CREDIT_CARD", wallet);
+      else if (wallet.name === "Investment Account") this.walletsMap.set("INVESTMENT", wallet);
+      else if (wallet.name === "Travel Fund") this.walletsMap.set("TRAVEL", wallet);
+      else this.walletsMap.set("PRIMARY", wallet);
     });
 
-    allParties.docs.forEach((party: any) => {
-      if (party.name === "Employer") partiesMap.set("EMPLOYER", party);
-      else if (party.name === "John Doe") partiesMap.set("JOHN_DOE", party);
-      else if (party.name === "Jane Smith") partiesMap.set("JANE_SMITH", party);
-      else if (party.name === "Grocery Store") partiesMap.set("GROCERY_STORE", party);
-      else if (party.name === "Restaurant") partiesMap.set("RESTAURANT", party);
-      else if (party.name === "Investment Broker") partiesMap.set("INVESTMENT_BROKER", party);
-      else if (party.name === "HealthFirst Insurance") partiesMap.set("HEALTH_INSURANCE", party);
-      else if (party.name === "City Transit Authority") partiesMap.set("TRANSIT_AUTHORITY", party);
-      else if (party.name === "TechStart Inc.") partiesMap.set("TECH_STARTUP", party);
-      else if (party.name === "Precious Metals Exchange") partiesMap.set("METALS_EXCHANGE", party);
-      else if (party.name === "Home Depot") partiesMap.set("HOME_DEPOT", party);
-      else if (party.name === "Fashion Forward Boutique") partiesMap.set("FASHION_BOUTIQUE", party);
-      else if (party.name === "FitLife Gym & Wellness Center") partiesMap.set("GYM", party);
-      else if (party.name === "City Utilities Company") partiesMap.set("UTILITIES_COMPANY", party);
-      else if (party.name === "Starbucks Coffee") partiesMap.set("STARBUCKS", party);
-      else if (party.name === "Amazon Prime") partiesMap.set("AMAZON", party);
-      else if (party.name === "Sarah Johnson") partiesMap.set("SARAH_JOHNSON", party);
-      else if (party.name === "Mike Chen") partiesMap.set("MIKE_CHEN", party);
-      else if (party.name === "Global Investment Group") partiesMap.set("GLOBAL_INVESTMENT", party);
-      else if (party.name === "Family Trust Fund") partiesMap.set("FAMILY_TRUST", party);
-      else partiesMap.set("DEFAULT", party);
+    allParties.docs.forEach((party) => {
+      if (party.name === "Employer") this.partiesMap.set("EMPLOYER", party);
+      else if (party.name === "John Doe") this.partiesMap.set("JOHN_DOE", party);
+      else if (party.name === "Jane Smith") this.partiesMap.set("JANE_SMITH", party);
+      else if (party.name === "Grocery Store") this.partiesMap.set("GROCERY_STORE", party);
+      else if (party.name === "Restaurant") this.partiesMap.set("RESTAURANT", party);
+      else if (party.name === "Investment Broker") this.partiesMap.set("INVESTMENT_BROKER", party);
+      else if (party.name === "HealthFirst Insurance") this.partiesMap.set("HEALTH_INSURANCE", party);
+      else if (party.name === "City Transit Authority") this.partiesMap.set("TRANSIT_AUTHORITY", party);
+      else if (party.name === "TechStart Inc.") this.partiesMap.set("TECH_STARTUP", party);
+      else if (party.name === "Precious Metals Exchange") this.partiesMap.set("METALS_EXCHANGE", party);
+      else if (party.name === "Home Depot") this.partiesMap.set("HOME_DEPOT", party);
+      else if (party.name === "Fashion Forward Boutique") this.partiesMap.set("FASHION_BOUTIQUE", party);
+      else if (party.name === "FitLife Gym & Wellness Center") this.partiesMap.set("GYM", party);
+      else if (party.name === "City Utilities Company") this.partiesMap.set("UTILITIES_COMPANY", party);
+      else if (party.name === "Starbucks Coffee") this.partiesMap.set("STARBUCKS", party);
+      else if (party.name === "Amazon Prime") this.partiesMap.set("AMAZON", party);
+      else if (party.name === "Sarah Johnson") this.partiesMap.set("SARAH_JOHNSON", party);
+      else if (party.name === "Mike Chen") this.partiesMap.set("MIKE_CHEN", party);
+      else if (party.name === "Global Investment Group") this.partiesMap.set("GLOBAL_INVESTMENT", party);
+      else if (party.name === "Family Trust Fund") this.partiesMap.set("FAMILY_TRUST", party);
+      else this.partiesMap.set("DEFAULT", party);
     });
 
-    allAssets.docs.forEach((asset: any) => {
-      if (asset.name === "Stock Portfolio") assetsMap.set("STOCK_PORTFOLIO", asset);
-      else if (asset.name === "Gold Investment") assetsMap.set("GOLD_INVESTMENT", asset);
-      else if (asset.name === "Fixed Deposit") assetsMap.set("FIXED_DEPOSIT", asset);
-      else if (asset.name === "Mutual Fund") assetsMap.set("MUTUAL_FUND", asset);
-      else if (asset.name === "Emergency Fund") assetsMap.set("EMERGENCY_FUND", asset);
-      else if (asset.name === "Retirement Fund") assetsMap.set("RETIREMENT_FUND", asset);
-      else if (asset.name === "House") assetsMap.set("HOUSE", asset);
-      else if (asset.name === "Car") assetsMap.set("CAR", asset);
-      else assetsMap.set("DEFAULT", asset);
+    allAssets.docs.forEach((asset) => {
+      if (asset.name === "Stock Portfolio") this.assetsMap.set("STOCK_PORTFOLIO", asset);
+      else if (asset.name === "Gold Investment") this.assetsMap.set("GOLD_INVESTMENT", asset);
+      else if (asset.name === "Fixed Deposit") this.assetsMap.set("FIXED_DEPOSIT", asset);
+      else if (asset.name === "Mutual Fund") this.assetsMap.set("MUTUAL_FUND", asset);
+      else if (asset.name === "Emergency Fund") this.assetsMap.set("EMERGENCY_FUND", asset);
+      else if (asset.name === "Retirement Fund") this.assetsMap.set("RETIREMENT_FUND", asset);
+      else if (asset.name === "House") this.assetsMap.set("HOUSE", asset);
+      else if (asset.name === "Car") this.assetsMap.set("CAR", asset);
+      else this.assetsMap.set("DEFAULT", asset);
     });
 
-    allExpenseAvenues.docs.forEach((avenue: any) => {
-      if (avenue.name === "Grocery") expenseAvenuesMap.set("GROCERY", avenue);
-      else if (avenue.name === "Travel") expenseAvenuesMap.set("TRAVEL", avenue);
-      else if (avenue.name === "Entertainment") expenseAvenuesMap.set("ENTERTAINMENT", avenue);
-      else if (avenue.name === "Healthcare") expenseAvenuesMap.set("HEALTHCARE", avenue);
-      else if (avenue.name === "Education") expenseAvenuesMap.set("EDUCATION", avenue);
-      else if (avenue.name === "Insurance") expenseAvenuesMap.set("INSURANCE", avenue);
-      else if (avenue.name === "Utilities") expenseAvenuesMap.set("UTILITIES", avenue);
-      else if (avenue.name === "Transportation") expenseAvenuesMap.set("TRANSPORTATION", avenue);
-      else if (avenue.name === "Shopping") expenseAvenuesMap.set("SHOPPING", avenue);
-      else if (avenue.name === "Investment Fees") expenseAvenuesMap.set("INVESTMENT_FEES", avenue);
-      else if (avenue.name === "Home & Garden") expenseAvenuesMap.set("HOME_GARDEN", avenue);
-      else if (avenue.name === "Technology") expenseAvenuesMap.set("TECHNOLOGY", avenue);
-      else if (avenue.name === "Fitness & Wellness") expenseAvenuesMap.set("FITNESS_WELLNESS", avenue);
-      else if (avenue.name === "Charity & Donations") expenseAvenuesMap.set("CHARITY_DONATIONS", avenue);
-      else expenseAvenuesMap.set("DEFAULT", avenue);
+    allExpenseAvenues.docs.forEach((avenue) => {
+      if (avenue.name === "Grocery") this.expenseAvenuesMap.set("GROCERY", avenue);
+      else if (avenue.name === "Travel") this.expenseAvenuesMap.set("TRAVEL", avenue);
+      else if (avenue.name === "Entertainment") this.expenseAvenuesMap.set("ENTERTAINMENT", avenue);
+      else if (avenue.name === "Healthcare") this.expenseAvenuesMap.set("HEALTHCARE", avenue);
+      else if (avenue.name === "Education") this.expenseAvenuesMap.set("EDUCATION", avenue);
+      else if (avenue.name === "Insurance") this.expenseAvenuesMap.set("INSURANCE", avenue);
+      else if (avenue.name === "Utilities") this.expenseAvenuesMap.set("UTILITIES", avenue);
+      else if (avenue.name === "Transportation") this.expenseAvenuesMap.set("TRANSPORTATION", avenue);
+      else if (avenue.name === "Shopping") this.expenseAvenuesMap.set("SHOPPING", avenue);
+      else if (avenue.name === "Investment Fees") this.expenseAvenuesMap.set("INVESTMENT_FEES", avenue);
+      else if (avenue.name === "Home & Garden") this.expenseAvenuesMap.set("HOME_GARDEN", avenue);
+      else if (avenue.name === "Technology") this.expenseAvenuesMap.set("TECHNOLOGY", avenue);
+      else if (avenue.name === "Fitness & Wellness") this.expenseAvenuesMap.set("FITNESS_WELLNESS", avenue);
+      else if (avenue.name === "Charity & Donations") this.expenseAvenuesMap.set("CHARITY_DONATIONS", avenue);
+      else this.expenseAvenuesMap.set("DEFAULT", avenue);
     });
 
-    allIncomeSources.docs.forEach((source: any) => {
-      if (source.name === "Salary") incomeSourcesMap.set("SALARY", source);
-      else if (source.name === "Freelance") incomeSourcesMap.set("FREELANCE", source);
-      else if (source.name === "Business") incomeSourcesMap.set("BUSINESS", source);
-      else if (source.name === "Investments") incomeSourcesMap.set("INVESTMENTS", source);
-      else if (source.name === "Rental Income") incomeSourcesMap.set("RENTAL_INCOME", source);
-      else if (source.name === "Consulting") incomeSourcesMap.set("CONSULTING", source);
-      else if (source.name === "Online Sales") incomeSourcesMap.set("ONLINE_SALES", source);
-      else if (source.name === "Interest Income") incomeSourcesMap.set("INTEREST_INCOME", source);
-      else if (source.name === "Royalties") incomeSourcesMap.set("ROYALTIES", source);
-      else if (source.name === "Dividend Income") incomeSourcesMap.set("DIVIDEND_INCOME", source);
-      else if (source.name === "Capital Gains") incomeSourcesMap.set("CAPITAL_GAINS", source);
-      else if (source.name === "Part-time Work") incomeSourcesMap.set("PART_TIME_WORK", source);
-      else if (source.name === "Online Courses") incomeSourcesMap.set("ONLINE_COURSES", source);
-      else if (source.name === "Affiliate Marketing") incomeSourcesMap.set("AFFILIATE_MARKETING", source);
-      else incomeSourcesMap.set("DEFAULT", source);
+    allIncomeSources.docs.forEach((source) => {
+      if (source.name === "Salary") this.incomeSourcesMap.set("SALARY", source);
+      else if (source.name === "Freelance") this.incomeSourcesMap.set("FREELANCE", source);
+      else if (source.name === "Business") this.incomeSourcesMap.set("BUSINESS", source);
+      else if (source.name === "Investments") this.incomeSourcesMap.set("INVESTMENTS", source);
+      else if (source.name === "Rental Income") this.incomeSourcesMap.set("RENTAL_INCOME", source);
+      else if (source.name === "Consulting") this.incomeSourcesMap.set("CONSULTING", source);
+      else if (source.name === "Online Sales") this.incomeSourcesMap.set("ONLINE_SALES", source);
+      else if (source.name === "Interest Income") this.incomeSourcesMap.set("INTEREST_INCOME", source);
+      else if (source.name === "Royalties") this.incomeSourcesMap.set("ROYALTIES", source);
+      else if (source.name === "Dividend Income") this.incomeSourcesMap.set("DIVIDEND_INCOME", source);
+      else if (source.name === "Capital Gains") this.incomeSourcesMap.set("CAPITAL_GAINS", source);
+      else if (source.name === "Part-time Work") this.incomeSourcesMap.set("PART_TIME_WORK", source);
+      else if (source.name === "Online Courses") this.incomeSourcesMap.set("ONLINE_COURSES", source);
+      else if (source.name === "Affiliate Marketing") this.incomeSourcesMap.set("AFFILIATE_MARKETING", source);
+      else this.incomeSourcesMap.set("DEFAULT", source);
     });
 
-    allTags.docs.forEach((tag: any) => {
-      if (tag.name === "Essential") tagsMap.set("ESSENTIAL", tag);
-      else if (tag.name === "Luxury") tagsMap.set("LUXURY", tag);
-      else if (tag.name === "Investment") tagsMap.set("INVESTMENT", tag);
-      else if (tag.name === "Emergency") tagsMap.set("EMERGENCY", tag);
-      else if (tag.name === "Recurring") tagsMap.set("RECURRING", tag);
-      else if (tag.name === "One-time") tagsMap.set("ONE_TIME", tag);
-      else if (tag.name === "Business") tagsMap.set("BUSINESS", tag);
-      else if (tag.name === "Personal") tagsMap.set("PERSONAL", tag);
-      else if (tag.name === "Tax Deductible") tagsMap.set("TAX_DEDUCTIBLE", tag);
-      else if (tag.name === "High Priority") tagsMap.set("HIGH_PRIORITY", tag);
-      else if (tag.name === "Low Priority") tagsMap.set("LOW_PRIORITY", tag);
-      else if (tag.name === "Seasonal") tagsMap.set("SEASONAL", tag);
-      else if (tag.name === "Travel") tagsMap.set("TRAVEL", tag);
-      else if (tag.name === "Home") tagsMap.set("HOME", tag);
-      else if (tag.name === "Health") tagsMap.set("HEALTH", tag);
-      else tagsMap.set("DEFAULT", tag);
+    allTags.docs.forEach((tag) => {
+      if (tag.name === "Essential") this.tagsMap.set("ESSENTIAL", tag);
+      else if (tag.name === "Luxury") this.tagsMap.set("LUXURY", tag);
+      else if (tag.name === "Investment") this.tagsMap.set("INVESTMENT", tag);
+      else if (tag.name === "Emergency") this.tagsMap.set("EMERGENCY", tag);
+      else if (tag.name === "Recurring") this.tagsMap.set("RECURRING", tag);
+      else if (tag.name === "One-time") this.tagsMap.set("ONE_TIME", tag);
+      else if (tag.name === "Business") this.tagsMap.set("BUSINESS", tag);
+      else if (tag.name === "Personal") this.tagsMap.set("PERSONAL", tag);
+      else if (tag.name === "Tax Deductible") this.tagsMap.set("TAX_DEDUCTIBLE", tag);
+      else if (tag.name === "High Priority") this.tagsMap.set("HIGH_PRIORITY", tag);
+      else if (tag.name === "Low Priority") this.tagsMap.set("LOW_PRIORITY", tag);
+      else if (tag.name === "Seasonal") this.tagsMap.set("SEASONAL", tag);
+      else if (tag.name === "Travel") this.tagsMap.set("TRAVEL", tag);
+      else if (tag.name === "Home") this.tagsMap.set("HOME", tag);
+      else if (tag.name === "Health") this.tagsMap.set("HEALTH", tag);
+      else this.tagsMap.set("DEFAULT", tag);
     });
 
     // Get primary entities with fallbacks
-    const primaryCurrency = currenciesMap.get("PRIMARY") || currenciesMap.get("USD") || allCurrencies.docs[0];
-    const primaryWallet = walletsMap.get("CHECKING") || walletsMap.get("PRIMARY") || allWallets.docs[0];
-    const secondaryWallet = walletsMap.get("SAVINGS") || walletsMap.get("PRIMARY") || allWallets.docs[0];
-    const investmentWallet = walletsMap.get("INVESTMENT") || walletsMap.get("SAVINGS") || allWallets.docs[0];
+    const primaryCurrency = this.currenciesMap.get("PRIMARY") || this.currenciesMap.get("USD") || allCurrencies.docs[0];
+    const primaryWallet = this.walletsMap.get("CHECKING") || this.walletsMap.get("PRIMARY") || allWallets.docs[0];
+    const secondaryWallet = this.walletsMap.get("SAVINGS") || this.walletsMap.get("PRIMARY") || allWallets.docs[0];
+    const investmentWallet = this.walletsMap.get("INVESTMENT") || this.walletsMap.get("SAVINGS") || allWallets.docs[0];
 
     // Calculate date range: from start of last month to current date
     const now = new Date();
@@ -667,7 +731,6 @@ class DemoPreparationService {
 
     console.log(`Creating demo records for ${dates.length} dates from ${lastMonth.toLocaleDateString()} to ${now.toLocaleDateString()}`);
 
-    this.createdRecords = [];
     let recordCount = 0;
 
     // Create records for each date
@@ -683,9 +746,9 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          incomeSourcesMap.get("SALARY")?._id || incomeSourcesMap.get("DEFAULT")?._id || "",
-          partiesMap.get("EMPLOYER")?._id || partiesMap.get("DEFAULT")?._id || "",
-          [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+          this.incomeSourcesMap.get("SALARY")?._id || this.incomeSourcesMap.get("DEFAULT")?._id || "",
+          this.partiesMap.get("EMPLOYER")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+          [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
           6500,
           "Monthly salary payment from employer - Software Engineer position"
         );
@@ -693,14 +756,14 @@ class DemoPreparationService {
         recordCount++;
 
         // Additional income source
-        if (incomeSourcesMap.has("FREELANCE")) {
+        if (this.incomeSourcesMap.has("FREELANCE")) {
           const sideIncomeRecord = this.createIncomeRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            incomeSourcesMap.get("FREELANCE")!._id!,
-            partiesMap.get("TECH_STARTUP")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || "", tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
+            this.incomeSourcesMap.get("FREELANCE")!._id!,
+            this.partiesMap.get("TECH_STARTUP")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || "", this.tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
             1200,
             "Freelance web development project for startup - E-commerce platform development"
           );
@@ -709,14 +772,14 @@ class DemoPreparationService {
         }
 
         // Third income source for variety
-        if (incomeSourcesMap.has("INVESTMENTS")) {
+        if (this.incomeSourcesMap.has("INVESTMENTS")) {
           const investmentIncomeRecord = this.createIncomeRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            incomeSourcesMap.get("INVESTMENTS")!._id!,
-            partiesMap.get("INVESTMENT_BROKER")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || ""].filter((id) => id),
+            this.incomeSourcesMap.get("INVESTMENTS")!._id!,
+            this.partiesMap.get("INVESTMENT_BROKER")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || ""].filter((id) => id),
             450,
             "Quarterly dividend payment from mutual fund investments"
           );
@@ -725,14 +788,14 @@ class DemoPreparationService {
         }
 
         // Fourth income source - rental income
-        if (incomeSourcesMap.has("RENTAL_INCOME")) {
+        if (this.incomeSourcesMap.has("RENTAL_INCOME")) {
           const rentalIncomeRecord = this.createIncomeRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            incomeSourcesMap.get("RENTAL_INCOME")!._id!,
-            partiesMap.get("GLOBAL_INVESTMENT")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.incomeSourcesMap.get("RENTAL_INCOME")!._id!,
+            this.partiesMap.get("GLOBAL_INVESTMENT")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             1800,
             "Monthly rental income from investment property - 2-bedroom apartment"
           );
@@ -741,14 +804,14 @@ class DemoPreparationService {
         }
 
         // Fifth income source - online sales
-        if (incomeSourcesMap.has("ONLINE_SALES")) {
+        if (this.incomeSourcesMap.has("ONLINE_SALES")) {
           const onlineSalesRecord = this.createIncomeRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            incomeSourcesMap.get("ONLINE_SALES")!._id!,
-            partiesMap.get("AMAZON")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || "", tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
+            this.incomeSourcesMap.get("ONLINE_SALES")!._id!,
+            this.partiesMap.get("AMAZON")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || "", this.tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
             350,
             "Monthly income from online course sales and affiliate marketing"
           );
@@ -757,14 +820,14 @@ class DemoPreparationService {
         }
 
         // Sixth income source - interest income
-        if (incomeSourcesMap.has("INTEREST_INCOME")) {
+        if (this.incomeSourcesMap.has("INTEREST_INCOME")) {
           const interestIncomeRecord = this.createIncomeRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            incomeSourcesMap.get("INTEREST_INCOME")!._id!,
-            partiesMap.get("INVESTMENT_BROKER")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || ""].filter((id) => id),
+            this.incomeSourcesMap.get("INTEREST_INCOME")!._id!,
+            this.partiesMap.get("INVESTMENT_BROKER")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || ""].filter((id) => id),
             180,
             "Monthly interest earned from high-yield savings account"
           );
@@ -780,9 +843,9 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          expenseAvenuesMap.get("GROCERY")?._id || expenseAvenuesMap.get("DEFAULT")?._id || "",
-          partiesMap.get("GROCERY_STORE")?._id || partiesMap.get("DEFAULT")?._id || "",
-          [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+          this.expenseAvenuesMap.get("GROCERY")?._id || this.expenseAvenuesMap.get("DEFAULT")?._id || "",
+          this.partiesMap.get("GROCERY_STORE")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+          [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
           350,
           "Weekly grocery shopping - fresh produce, dairy, and household items"
         );
@@ -790,14 +853,14 @@ class DemoPreparationService {
         recordCount++;
 
         // Additional expenses
-        if (expenseAvenuesMap.has("RESTAURANT")) {
+        if (this.expenseAvenuesMap.has("RESTAURANT")) {
           const luxuryExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("RESTAURANT")!._id!,
-            partiesMap.get("RESTAURANT")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("LUXURY")?._id || "", tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("RESTAURANT")!._id!,
+            this.partiesMap.get("RESTAURANT")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("LUXURY")?._id || "", this.tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
             180,
             "Dinner at upscale Italian restaurant - anniversary celebration with spouse"
           );
@@ -806,14 +869,16 @@ class DemoPreparationService {
         }
 
         // Healthcare expense
-        if (expenseAvenuesMap.has("HEALTHCARE")) {
+        if (this.expenseAvenuesMap.has("HEALTHCARE")) {
           const healthcareExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("HEALTHCARE")!._id!,
-            partiesMap.get("HEALTH_INSURANCE")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || "", tagsMap.get("TAX_DEDUCTIBLE")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("HEALTHCARE")!._id!,
+            this.partiesMap.get("HEALTH_INSURANCE")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || "", this.tagsMap.get("TAX_DEDUCTIBLE")?._id || ""].filter(
+              (id) => id
+            ),
             120,
             "Monthly health insurance premium payment"
           );
@@ -822,14 +887,14 @@ class DemoPreparationService {
         }
 
         // Transportation expense
-        if (expenseAvenuesMap.has("TRANSPORTATION")) {
+        if (this.expenseAvenuesMap.has("TRANSPORTATION")) {
           const transportExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("TRANSPORTATION")!._id!,
-            partiesMap.get("TRANSIT_AUTHORITY")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("TRANSPORTATION")!._id!,
+            this.partiesMap.get("TRANSIT_AUTHORITY")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             85,
             "Monthly public transportation pass for work commute"
           );
@@ -838,14 +903,14 @@ class DemoPreparationService {
         }
 
         // Technology expense
-        if (expenseAvenuesMap.has("TECHNOLOGY")) {
+        if (this.expenseAvenuesMap.has("TECHNOLOGY")) {
           const techExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("TECHNOLOGY")!._id!,
-            partiesMap.get("TECH_STARTUP")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("INVESTMENT")?._id || "", tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("TECHNOLOGY")!._id!,
+            this.partiesMap.get("TECH_STARTUP")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("INVESTMENT")?._id || "", this.tagsMap.get("BUSINESS")?._id || ""].filter((id) => id),
             75,
             "Monthly subscription for professional development courses and coding tools"
           );
@@ -854,14 +919,14 @@ class DemoPreparationService {
         }
 
         // Home & Garden expense
-        if (expenseAvenuesMap.has("HOME_GARDEN")) {
+        if (this.expenseAvenuesMap.has("HOME_GARDEN")) {
           const homeExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("HOME_GARDEN")!._id!,
-            partiesMap.get("HOME_DEPOT")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("HOME_GARDEN")!._id!,
+            this.partiesMap.get("HOME_DEPOT")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             200,
             "Monthly home maintenance and garden supplies - landscaping and repairs"
           );
@@ -870,14 +935,14 @@ class DemoPreparationService {
         }
 
         // Shopping expense
-        if (expenseAvenuesMap.has("SHOPPING")) {
+        if (this.expenseAvenuesMap.has("SHOPPING")) {
           const shoppingExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("SHOPPING")!._id!,
-            partiesMap.get("FASHION_BOUTIQUE")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("LUXURY")?._id || "", tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("SHOPPING")!._id!,
+            this.partiesMap.get("FASHION_BOUTIQUE")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("LUXURY")?._id || "", this.tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
             150,
             "New clothing and accessories for upcoming business conference"
           );
@@ -886,14 +951,14 @@ class DemoPreparationService {
         }
 
         // Fitness & Wellness expense
-        if (expenseAvenuesMap.has("FITNESS_WELLNESS")) {
+        if (this.expenseAvenuesMap.has("FITNESS_WELLNESS")) {
           const fitnessExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("FITNESS_WELLNESS")!._id!,
-            partiesMap.get("GYM")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("FITNESS_WELLNESS")!._id!,
+            this.partiesMap.get("GYM")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             95,
             "Monthly gym membership and personal training session"
           );
@@ -902,14 +967,14 @@ class DemoPreparationService {
         }
 
         // Utilities expense
-        if (expenseAvenuesMap.has("UTILITIES")) {
+        if (this.expenseAvenuesMap.has("UTILITIES")) {
           const utilitiesExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("UTILITIES")!._id!,
-            partiesMap.get("UTILITIES_COMPANY")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("ESSENTIAL")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("UTILITIES")!._id!,
+            this.partiesMap.get("UTILITIES_COMPANY")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("ESSENTIAL")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             180,
             "Monthly electricity, water, and internet bills"
           );
@@ -918,14 +983,14 @@ class DemoPreparationService {
         }
 
         // Coffee/Entertainment expense
-        if (expenseAvenuesMap.has("ENTERTAINMENT")) {
+        if (this.expenseAvenuesMap.has("ENTERTAINMENT")) {
           const coffeeExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("ENTERTAINMENT")!._id!,
-            partiesMap.get("STARBUCKS")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("LUXURY")?._id || "", tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("ENTERTAINMENT")!._id!,
+            this.partiesMap.get("STARBUCKS")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("LUXURY")?._id || "", this.tagsMap.get("RECURRING")?._id || ""].filter((id) => id),
             45,
             "Weekly coffee and snacks at Starbucks - work break refreshments"
           );
@@ -934,14 +999,14 @@ class DemoPreparationService {
         }
 
         // Online shopping expense
-        if (expenseAvenuesMap.has("SHOPPING")) {
+        if (this.expenseAvenuesMap.has("SHOPPING")) {
           const onlineExpenseRecord = this.createExpenseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            expenseAvenuesMap.get("SHOPPING")!._id!,
-            partiesMap.get("AMAZON")?._id || partiesMap.get("DEFAULT")?._id || "",
-            [tagsMap.get("LUXURY")?._id || "", tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
+            this.expenseAvenuesMap.get("SHOPPING")!._id!,
+            this.partiesMap.get("AMAZON")?._id || this.partiesMap.get("DEFAULT")?._id || "",
+            [this.tagsMap.get("LUXURY")?._id || "", this.tagsMap.get("ONE_TIME")?._id || ""].filter((id) => id),
             120,
             "Amazon Prime subscription and new books for professional development"
           );
@@ -956,9 +1021,9 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          assetsMap.get("STOCK_PORTFOLIO")?._id! || assetsMap.get("DEFAULT")?._id!,
-          partiesMap.get("INVESTMENT_BROKER")?._id! || partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.assetsMap.get("STOCK_PORTFOLIO")?._id! || this.assetsMap.get("DEFAULT")?._id!,
+          this.partiesMap.get("INVESTMENT_BROKER")?._id! || this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           1250,
           "Purchased 50 shares of tech company stock for long-term investment portfolio"
         );
@@ -966,14 +1031,14 @@ class DemoPreparationService {
         recordCount++;
 
         // Additional asset purchase for variety
-        if (dayOfMonth === 28 && assetsMap.has("GOLD_INVESTMENT")) {
+        if (dayOfMonth === 28 && this.assetsMap.has("GOLD_INVESTMENT")) {
           const goldPurchaseRecord = this.createAssetPurchaseRecord(
             date,
             primaryCurrency._id!,
             primaryWallet._id!,
-            assetsMap.get("GOLD_INVESTMENT")!._id!,
-            partiesMap.get("METALS_EXCHANGE")?._id! || partiesMap.get("DEFAULT")?._id!,
-            [tagsMap.get("INVESTMENT")?._id!],
+            this.assetsMap.get("GOLD_INVESTMENT")!._id!,
+            this.partiesMap.get("METALS_EXCHANGE")?._id! || this.partiesMap.get("DEFAULT")?._id!,
+            [this.tagsMap.get("INVESTMENT")?._id!],
             800,
             "Purchased 5 grams of gold as inflation hedge and portfolio diversification"
           );
@@ -988,9 +1053,9 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          assetsMap.get("GOLD_INVESTMENT")?._id! || assetsMap.get("DEFAULT")?._id!,
-          partiesMap.get("INVESTMENT_BROKER")?._id! || partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.assetsMap.get("GOLD_INVESTMENT")?._id! || this.assetsMap.get("DEFAULT")?._id!,
+          this.partiesMap.get("INVESTMENT_BROKER")?._id! || this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           950,
           "Sold gold investment due to market conditions and portfolio rebalancing needs"
         );
@@ -1005,7 +1070,7 @@ class DemoPreparationService {
           primaryCurrency._id!,
           primaryWallet._id!,
           secondaryWallet._id!,
-          [tagsMap.get("RECURRING")?._id!],
+          [this.tagsMap.get("RECURRING")?._id!],
           800,
           "Monthly transfer to savings account for emergency fund building and future goals"
         );
@@ -1019,7 +1084,7 @@ class DemoPreparationService {
             primaryCurrency._id!,
             primaryWallet._id!,
             allWallets.docs[2]._id!,
-            [tagsMap.get("INVESTMENT")?._id!, tagsMap.get("RECURRING")?._id!],
+            [this.tagsMap.get("INVESTMENT")?._id!, this.tagsMap.get("RECURRING")?._id!],
             500,
             "Monthly transfer to investment account for automated dollar-cost averaging strategy"
           );
@@ -1034,8 +1099,8 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          partiesMap.get("GLOBAL_INVESTMENT")?._id! || partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.partiesMap.get("GLOBAL_INVESTMENT")?._id! || this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           3000,
           "Personal loan to friend for business startup - 6-month term with 5% annual interest rate"
         );
@@ -1049,8 +1114,8 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("EMERGENCY")?._id!],
+          this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("EMERGENCY")?._id!],
           2000,
           "Emergency loan from family for unexpected car repair - transmission replacement, to be repaid in 3 months"
         );
@@ -1059,13 +1124,13 @@ class DemoPreparationService {
       }
 
       // Repayment records (following lending/borrowing)
-      if (dayOfMonth === 25) {
+      if (dayOfMonth === 20) {
         const repaymentGivenRecord = this.createRepaymentGivenRecord(
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          partiesMap.get("GLOBAL_INVESTMENT")?._id! || partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.partiesMap.get("GLOBAL_INVESTMENT")?._id! || this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           600,
           "Monthly loan repayment installment - $500 principal + $100 interest for business startup loan"
         );
@@ -1076,9 +1141,9 @@ class DemoPreparationService {
           date,
           primaryCurrency._id!,
           primaryWallet._id!,
-          partiesMap.get("DEFAULT")?._id!,
-          [tagsMap.get("EMERGENCY")?._id!],
-          500,
+          this.partiesMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("EMERGENCY")?._id!],
+          2000,
           "Partial repayment received for emergency car repair loan - first installment of $500"
         );
         await this.createRecord(repaymentReceivedRecord);
@@ -1090,8 +1155,8 @@ class DemoPreparationService {
         const appreciationRecord = this.createAssetAppreciationRecord(
           date,
           primaryCurrency._id!,
-          assetsMap.get("STOCK_PORTFOLIO")?._id! || assetsMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.assetsMap.get("STOCK_PORTFOLIO")?._id! || this.assetsMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           320,
           "Stock portfolio gained value due to strong quarterly earnings and broader market recovery - tech sector up 4.2%"
         );
@@ -1101,8 +1166,8 @@ class DemoPreparationService {
         const depreciationRecord = this.createAssetDepreciationRecord(
           date,
           primaryCurrency._id!,
-          assetsMap.get("GOLD_INVESTMENT")?._id! || assetsMap.get("DEFAULT")?._id!,
-          [tagsMap.get("INVESTMENT")?._id!],
+          this.assetsMap.get("GOLD_INVESTMENT")?._id! || this.assetsMap.get("DEFAULT")?._id!,
+          [this.tagsMap.get("INVESTMENT")?._id!],
           150,
           "Gold investment decreased slightly due to strengthening dollar and market volatility - down 2.1% this month"
         );
@@ -1112,6 +1177,7 @@ class DemoPreparationService {
     }
 
     console.log(`Created ${recordCount} demo records successfully!`);
+    this.createdCounts.records = recordCount;
   }
 
   /**
@@ -1418,7 +1484,7 @@ class DemoPreparationService {
   private async createRecord(record: Record): Promise<void> {
     const result = await pouchdbService.upsertDoc(record, { isDemoData: true, demoCreatedAt: Date.now() });
     const createdRecord = { ...record, _id: result.id, _rev: result.rev };
-    this.createdRecords.push(createdRecord);
+    // this.createdRecords.push(createdRecord); // This line was removed as per the new_code
   }
 
   /**
@@ -1499,13 +1565,13 @@ class DemoPreparationService {
     };
 
     // Create budgets
-    this.createdBudgets = [];
+    // this.createdBudgets = []; // This line was removed as per the new_code
     const budgetsToCreate = [monthlyBudget, travelBudget];
 
     for (const budget of budgetsToCreate) {
       const result = await pouchdbService.upsertDoc(budget, { isDemoData: true, demoCreatedAt: Date.now() });
       const createdBudget = { ...budget, _id: result.id, _rev: result.rev };
-      this.createdBudgets.push(createdBudget);
+      this.createdCounts.budgets++;
     }
   }
 
@@ -1515,50 +1581,54 @@ class DemoPreparationService {
   async setupAllDemoData(): Promise<void> {
     console.log("Starting additional demo data setup...");
 
+    // Populate maps with existing entities first
+    console.log("Populating maps with existing entities...");
+    await this.populateMapsWithExistingEntities();
+
     // Create additional currencies first (complements whatever was chosen during onboarding)
     console.log("Creating additional demo currencies...");
     await this.setupDemoCurrencies();
-    console.log(`Created ${this.createdCurrencies.length} additional currencies`);
+    console.log(`Created ${this.createdCounts.currencies} additional currencies`);
 
     // Create additional wallets (complements onboarding wallets)
     console.log("Creating additional demo wallets...");
     await this.setupDemoWallets();
-    console.log(`Created ${this.createdWallets.length} additional wallets`);
+    console.log(`Created ${this.createdCounts.wallets} additional wallets`);
 
     // Create additional parties (complements onboarding parties)
     console.log("Creating additional demo parties...");
     await this.setupDemoParties();
-    console.log(`Created ${this.createdParties.length} additional parties`);
+    console.log(`Created ${this.createdCounts.parties} additional parties`);
 
     // Create additional assets (complements onboarding assets)
     console.log("Creating additional demo assets...");
     await this.setupDemoAssets();
-    console.log(`Created ${this.createdAssets.length} additional assets`);
+    console.log(`Created ${this.createdCounts.assets} additional assets`);
 
     // Create additional expense avenues (complements onboarding expense avenues)
     console.log("Creating additional demo expense avenues...");
     await this.setupDemoExpenseAvenues();
-    console.log(`Created ${this.createdExpenseAvenues.length} additional expense avenues`);
+    console.log(`Created ${this.createdCounts.expenseAvenues} additional expense avenues`);
 
     // Create additional income sources (complements onboarding income sources)
     console.log("Creating additional demo income sources...");
     await this.setupDemoIncomeSources();
-    console.log(`Created ${this.createdIncomeSources.length} additional income sources`);
+    console.log(`Created ${this.createdCounts.incomeSources} additional income sources`);
 
     // Create demo tags
     console.log("Creating additional demo tags...");
     await this.setupDemoTags();
-    console.log(`Created ${this.createdTags.length} additional tags`);
+    console.log(`Created ${this.createdCounts.tags} additional tags`);
 
     // Create comprehensive demo records
     console.log("Creating comprehensive demo records...");
     await this.setupDemoRecords();
-    console.log(`Created ${this.createdRecords.length} additional records`);
+    console.log(`Created ${this.createdCounts.records} additional records`);
 
     // Create demo budgets
     console.log("Creating demo budgets...");
     await this.setupDemoBudgets();
-    console.log(`Created ${this.createdBudgets.length} additional budgets`);
+    console.log(`Created ${this.createdCounts.budgets} additional budgets`);
 
     console.log("Additional demo data setup completed successfully!");
   }
@@ -1585,15 +1655,15 @@ class DemoPreparationService {
     records: Record[];
   } {
     return {
-      currencies: this.createdCurrencies,
-      wallets: this.createdWallets,
-      parties: this.createdParties,
-      assets: this.createdAssets,
-      budgets: this.createdBudgets,
-      expenseAvenues: this.createdExpenseAvenues,
-      incomeSources: this.createdIncomeSources,
-      tags: this.createdTags,
-      records: this.createdRecords,
+      currencies: Array.from(this.currenciesMap.values()),
+      wallets: Array.from(this.walletsMap.values()),
+      parties: Array.from(this.partiesMap.values()),
+      assets: Array.from(this.assetsMap.values()),
+      budgets: [], // Budgets are not stored in maps, only counted
+      expenseAvenues: Array.from(this.expenseAvenuesMap.values()),
+      incomeSources: Array.from(this.incomeSourcesMap.values()),
+      tags: Array.from(this.tagsMap.values()),
+      records: [], // Records are not stored in maps, only counted
     };
   }
 
@@ -1612,15 +1682,15 @@ class DemoPreparationService {
     records: number;
   } {
     return {
-      currencies: this.createdCurrencies.length,
-      wallets: this.createdWallets.length,
-      parties: this.createdParties.length,
-      assets: this.createdAssets.length,
-      budgets: this.createdBudgets.length,
-      expenseAvenues: this.createdExpenseAvenues.length,
-      incomeSources: this.createdIncomeSources.length,
-      tags: this.createdTags.length,
-      records: this.createdRecords.length,
+      currencies: this.createdCounts.currencies,
+      wallets: this.createdCounts.wallets,
+      parties: this.createdCounts.parties,
+      assets: this.createdCounts.assets,
+      budgets: this.createdCounts.budgets, // This line was removed as per the new_code
+      expenseAvenues: this.createdCounts.expenseAvenues,
+      incomeSources: this.createdCounts.incomeSources,
+      tags: this.createdCounts.tags,
+      records: this.createdCounts.records, // This line was removed as per the new_code
     };
   }
 
@@ -1648,7 +1718,7 @@ class DemoPreparationService {
       console.log(`Found ${docs.docs.length} documents in ${collection}`);
 
       // Only remove documents that are marked as demo data
-      const demoDocs = docs.docs.filter((doc: any) => doc.isDemoData === true);
+      const demoDocs = docs.docs.filter((doc) => (doc as any).isDemoData === true);
       console.log(`Found ${demoDocs.length} demo documents in ${collection}`);
 
       for (const doc of demoDocs) {
@@ -1660,6 +1730,28 @@ class DemoPreparationService {
 
     // Reset the primary currency
     this.primaryCurrency = null;
+
+    // Reset all maps and counters
+    this.currenciesMap.clear();
+    this.walletsMap.clear();
+    this.partiesMap.clear();
+    this.assetsMap.clear();
+    this.expenseAvenuesMap.clear();
+    this.incomeSourcesMap.clear();
+    this.tagsMap.clear();
+
+    // Reset counters
+    this.createdCounts = {
+      currencies: 0,
+      wallets: 0,
+      parties: 0,
+      assets: 0,
+      budgets: 0,
+      expenseAvenues: 0,
+      incomeSources: 0,
+      tags: 0,
+      records: 0,
+    };
   }
 }
 
