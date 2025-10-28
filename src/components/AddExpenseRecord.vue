@@ -2,29 +2,48 @@
   <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
     <q-card class="q-dialog-plugin">
       <q-card-section>
-        <div class="std-dialog-title q-pa-md">
-          {{ existingRecordId ? "Editing an Expense Record" : "Adding an Expense Record" }}
+        <div class="std-dialog-title text-primary text-weight-bold">
+          {{ existingRecordId ? "Editing an Expense" : "Adding an Expense" }}
         </div>
-        <q-form class="q-gutter-md q-pa-md" ref="recordForm">
+      </q-card-section>
+      <q-separator />
+      <q-card-section style="max-height: 50vh" class="scroll">
+        <q-form class="q-gutter-md q-pa-md1" ref="recordForm">
+          <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
           <select-expense-avenue v-model="recordExpenseAvenueId"></select-expense-avenue>
-          <q-input type="number" filled v-model="recordAmount" label="Expense Amount" lazy-rules :rules="validators.balance">
+          <q-input
+            type="number"
+            filled
+            v-model.number="recordAmount"
+            label="Expense Amount"
+            lazy-rules
+            :rules="validators.balance"
+          >
             <template v-slot:append>
               <div class="currency-label">{{ recordCurrencySign }}</div>
             </template>
           </q-input>
-          <select-currency v-model="recordCurrencyId"></select-currency>
 
-          <q-tabs v-model="paymentType" inline-label class="bg-grey text-white shadow-2 std-margin-bottom-32">
+          <q-tabs v-model="paymentType" inline-label class="bg-blue-grey text-white shadow-2 std-margin-bottom-32">
             <q-tab name="full" label="Paid" />
             <q-tab name="partial" label="Partially Paid" />
             <q-tab name="unpaid" label="Unpaid" />
           </q-tabs>
 
-          <select-wallet v-model="recordWalletId" v-if="paymentType == 'full' || paymentType == 'partial'" :limitByCurrencyId="recordCurrencyId">
+          <select-wallet
+            v-model="recordWalletId"
+            v-if="paymentType == 'full' || paymentType == 'partial'"
+            :limitByCurrencyId="recordCurrencyId"
+          >
           </select-wallet>
-          <div class="wallet-balance-container" v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet">
+          <div
+            class="wallet-balance-container"
+            v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet"
+          >
             <div>Balance in wallet: {{ printAmount(selectedWallet._balance!) }}</div>
-            <div style="margin-top: 8px">Balance afterwards will be: {{ printAmount(selectedWallet.potentialBalance) }}</div>
+            <div style="margin-top: 8px">
+              Balance afterwards will be: {{ printAmount(selectedWallet.potentialBalance) }}
+            </div>
             <div class="wallet-limit" style="margin-top: 8px" v-if="selectedWallet._minimumBalanceState !== 'not-set'">
               <span class="wallet-limit-warning" v-if="selectedWallet._minimumBalanceState === 'warning'">
                 Approaching limit {{ printAmount(selectedWallet.minimumBalance!) }}
@@ -38,7 +57,15 @@
             </div>
           </div>
 
-          <q-input type="number" filled v-model="recordAmountPaid" label="Amount Paid" lazy-rules :rules="validators.balance" v-if="paymentType == 'partial'" />
+          <q-input
+            type="number"
+            filled
+            v-model="recordAmountPaid"
+            label="Amount Paid"
+            lazy-rules
+            :rules="validators.balance"
+            v-if="paymentType == 'partial'"
+          />
           <q-input
             type="number"
             readonly
@@ -49,17 +76,20 @@
             style="margin-top: 8px; margin-bottom: 24px"
           />
 
-          <select-party v-model="recordPartyId" :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
+          <select-party
+            v-model="recordPartyId"
+            :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"
+          ></select-party>
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
-          <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
+          <select-currency v-model="recordCurrencyId"></select-currency>
         </q-form>
       </q-card-section>
-
-      <q-card-actions class="row justify-start std-bottom-action-row">
+      <q-separator />
+      <q-card-actions align="between" class="q-pa-md">
         <q-btn color="blue-grey" label="Cancel" @click="onDialogCancel" />
         <div class="spacer"></div>
-        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px">
+        <q-btn-dropdown size="md" color="primary" icon="save" label="Save" split @click="okClicked">
           <q-list>
             <q-item clickable v-close-popup @click="saveAsTemplateClicked">
               <q-item-section>
@@ -123,7 +153,7 @@ const paymentType = ref<string>("full");
 const recordType = RecordType.EXPENSE;
 
 const recordExpenseAvenueId = ref<string | null>(null);
-const recordAmount = ref<number>(0);
+const recordAmount = ref<number>();
 const recordCurrencyId = ref<string | null>(null);
 const recordCurrencySign = ref<string | null>(null);
 const recordPartyId = ref<string | null>(null);

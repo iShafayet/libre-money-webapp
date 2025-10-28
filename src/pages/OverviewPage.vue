@@ -1,65 +1,74 @@
 <template>
-  <q-page class="items-center page">
-    <div class="q-pa-md row justify-end std-card" style="margin-right: 0; margin-bottom: -36px; width: 100%; align-items: center">
-      <select-currency v-model="recordCurrencyId"></select-currency>
-      <q-btn icon="refresh" flat round size="lg" @click="reloadClicked" style="margin-top: -32px" />
-    </div>
-
-    <q-card class="std-card q-pa-md" :hidden="!isLoading">
-      <loading-indicator :is-loading="isLoading" :phases="2" ref="loadingIndicator"></loading-indicator>
-    </q-card>
-
-    <q-card class="std-card" v-if="!isLoading && !overview">
-      <div class="q-pa-md q-gutter-sm">
-        <div>
-          Welcome to Libre Money!<br /><br />
-          If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started guide.<br /><br />
-          If you already have some data on our servers, use the button to the top right to <strong>Sync</strong> your data to this device.<br /><br />
-          Enjoy!
+  <q-page padding class="page">
+    <div class="row">
+      <div class="col-12 col-lg-8 offset-lg-2">
+        <div class="flex items-start justify-end q-mb-md">
+          <q-btn icon="refresh" flat size="lg" @click="reloadClicked" class="q-mt-xs" />
+          <select-currency v-model="recordCurrencyId"></select-currency>
         </div>
-      </div>
-    </q-card>
 
-    <q-card class="std-card" v-if="!isLoading && overview">
-      <div class="title-row q-pa-md q-gutter-sm">
-        <div class="title">Wallet Balances</div>
-      </div>
+        <q-card class="std-card q-pa-md" :hidden="!isLoading">
+          <loading-indicator :is-loading="isLoading" :phases="2" ref="loadingIndicator"></loading-indicator>
+        </q-card>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
-          <tbody>
-            <tr>
-              <th>Wallet</th>
-              <th>Balance</th>
-            </tr>
-            <tr v-for="row in overview.wallets.list" v-bind:key="row.walletId">
-              <td>{{ row.wallet.name }}</td>
-              <td>
-                {{ printAmount(row.balance) }}
-                <span class="wallet-limit" v-if="row.minimumBalanceState !== 'not-set'">
-                  <span class="wallet-limit-warning" v-if="row.minimumBalanceState === 'warning'">
-                    (Approaching limit {{ printAmount(row.wallet.minimumBalance!) }})
-                  </span>
-                  <span class="wallet-limit-exceeded" v-else-if="row.minimumBalanceState === 'exceeded'">
-                    (Exceeded limit {{ printAmount(row.wallet.minimumBalance!) }})
-                  </span>
-                  <span class="wallet-limit-normal" v-else-if="row.minimumBalanceState === 'normal'">
-                    (Limit {{ printAmount(row.wallet.minimumBalance!) }})
-                  </span>
-                </span>
-              </td>
-            </tr>
-            <tr>
-              <th>Grand Total</th>
-              <th>{{ printAmount(overview.wallets.sumOfBalances) }}</th>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </q-card>
+        <q-card class="std-card" v-if="!isLoading && !overview">
+          <div class="q-pa-md q-gutter-sm">
+            <div>
+              Welcome to Libre Money!<br /><br />
+              If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started
+              guide.<br /><br />
+              If you already have some data on our servers, use the button to the top right to
+              <strong>Sync</strong> your data to this device.<br /><br />
+              Enjoy!
+            </div>
+          </div>
+        </q-card>
 
-    <br />
-    <div style="min-height: 120px; min-width: 300px; display: block"></div>
+        <q-card class="full-width" v-if="!isLoading && overview">
+          <q-card-section>
+            <div class="text-h6">Wallet Balances</div>
+            <div class="text-subtitle2 text-grey-7">as of {{ new Date().toLocaleDateString() }}</div>
+          </q-card-section>
+
+          <q-markup-table class="base-table text-left">
+            <thead>
+              <tr class="bg-primary text-white">
+                <th>Wallet</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in overview.wallets.list" v-bind:key="row.walletId">
+                <td>{{ row.wallet.name }}</td>
+                <td>
+                  {{ printAmount(row.balance) }}
+                  <span class="wallet-limit" v-if="row.minimumBalanceState !== 'not-set'">
+                    <span class="wallet-limit-warning" v-if="row.minimumBalanceState === 'warning'">
+                      (Approaching limit {{ printAmount(row.wallet.minimumBalance!) }})
+                    </span>
+                    <span class="wallet-limit-exceeded" v-else-if="row.minimumBalanceState === 'exceeded'">
+                      (Exceeded limit {{ printAmount(row.wallet.minimumBalance!) }})
+                    </span>
+                    <span class="wallet-limit-normal" v-else-if="row.minimumBalanceState === 'normal'">
+                      (Limit {{ printAmount(row.wallet.minimumBalance!) }})
+                    </span>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Grand Total</th>
+                <th>{{ printAmount(overview.wallets.sumOfBalances) }}</th>
+              </tr>
+            </tfoot>
+          </q-markup-table>
+        </q-card>
+
+        <br />
+        <div style="min-height: 120px; min-width: 300px; display: block"></div>
+      </div>
+    </div>
   </q-page>
 </template>
 
