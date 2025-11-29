@@ -96,61 +96,55 @@
             <!-- Unified Single Amount Record - start -->
             <div class="single-amount-row row" v-if="isSingleAmountType(record)" :data-index="index">
               <div class="details-section">
-                <div class="record-date">
-                  {{ prettifyDate(record.transactionEpoch) }}
+                <div class="record-date text-weight-light text-grey-7">
+                  <div>{{ prettifyDate(record.transactionEpoch) }}</div>
                   <template v-if="isPotentialDuplicate(record)">
                     <q-icon name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
                   </template>
                 </div>
 
-                <div class="primary-line" v-if="record.type === RecordType.EXPENSE">
+                <div class="text-h6 text-brown-7" v-if="record.type === RecordType.EXPENSE">
                   {{ record.expense?.expenseAvenue.name }}
                 </div>
-                <div class="primary-line" v-else-if="record.type === RecordType.INCOME">
+                <div class="text-h5 text-brown-7" v-else-if="record.type === RecordType.INCOME">
                   {{ record.income?.incomeSource.name }}
                 </div>
-                <div class="primary-line" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
+                <div class="" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
 
-                <div class="row secondary-line">
+                <div class="row secondary-line text-body2 text-grey-7">
                   <div class="party" v-if="getParty(record)">
                     <span class="party-type">{{ getParty(record)?.type }}</span
                     >: {{ getParty(record)?.name }}
                   </div>
                 </div>
 
-                <div class="notes" v-if="record.notes">Notes: {{ record.notes }}</div>
+                <div class="notes text-body2 text-grey-7 q-mb-sm" v-if="record.notes">Notes: {{ record.notes }}</div>
 
-                <div class="row tags-line">
-                  <div class="record-type" :data-record-type="record.type">
-                    {{ record.typePrettified }}
-                  </div>
-                  <div
-                    class="tag"
-                    v-for="tag in record.tagList"
-                    v-bind:key="tag._id"
-                    :style="`background-color: ${tag.color}; color: ${guessFontColorCode(tag.color)}`"
-                  >
-                    {{ tag.name }}
-                  </div>
+                <div class="tags-line">
+                  <q-chip size="sm" class="text-capitalize record-type" :data-record-type="record.type">{{ record.typePrettified }}</q-chip>
+                  <q-chip size="sm" v-for="tag in record.tagList" v-bind:key="tag._id">{{ tag.name }}</q-chip>
                 </div>
               </div>
 
               <div class="amounts-section">
-                <div class="amount" :class="{ 'amount-out': isRecordOutFlow(record), 'amount-in': isRecordInFlow(record) }">
+                <div class="amount" :class="{ 'text-black': isRecordOutFlow(record), 'text-positive': isRecordInFlow(record) }">
                   {{ printAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
                 </div>
-                <div class="wallet" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
-                <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
-                  Unpaid:
-                  {{ printAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
-                </div>
-                <div class="controls">
-                  <q-btn class="control-button" round color="primary" icon="create" size="8px" @click="editSingleAmountRecordClicked(record)" />
-                  <q-btn class="control-button" round color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
+                <div class="flex items-center justify-end">
+                  <div class="wallet q-mr-sm" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
                   <div class="username" v-if="record.modifiedByUsername">
                     <q-icon name="account_circle"></q-icon>
                     {{ record.modifiedByUsername }}
                   </div>
+                </div>
+
+                <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
+                  Unpaid:
+                  {{ printAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
+                </div>
+                <div class="controls q-my-sm">
+                  <q-btn round outline color="primary" icon="create" size="8px" class="q-mr-xs" @click="editSingleAmountRecordClicked(record)" />
+                  <q-btn round outline color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
                 </div>
               </div>
             </div>
@@ -269,6 +263,8 @@ import { printAmount } from "src/utils/de-facto-utils";
 import { deepClone, guessFontColorCode, prettifyDate } from "src/utils/misc-utils";
 import PromisePool from "src/utils/promise-pool";
 import { Ref, onMounted, ref, watch } from "vue";
+import ExpenseRecordCard from "src/components/ExpenseRecordCard.vue";
+
 const $q = useQuasar();
 
 const recordPaginationStore = useRecordPaginationSizeStore();
@@ -641,7 +637,6 @@ onMounted(() => {
 .record-row {
   .record-date {
     font-size: 10px;
-    display: inline-block;
 
     .duplicate-flag {
       color: #a61c1c;
@@ -659,13 +654,14 @@ onMounted(() => {
     }
 
     .tags-line {
+      margin-left: -5px;
       .record-type {
-        font-size: 12px;
-        padding: 2px 6px;
-        display: inline-block;
-        border-radius: 6px;
-        text-transform: capitalize;
-        background-color: #e6e6e6;
+        // font-size: 12px;
+        // padding: 2px 6px;
+        // display: inline-block;
+        // border-radius: 6px;
+        // text-transform: capitalize;
+        // background-color: #e6e6e6;
 
         &[data-record-type="expense"] {
           background-color: $record-expense-primary-color;
@@ -765,7 +761,7 @@ onMounted(() => {
 }
 
 .username {
-  font-size: 8px;
+  font-size: 10px;
   text-transform: capitalize;
 }
 
@@ -804,5 +800,10 @@ onMounted(() => {
   border-top: 1px dashed #eaeaea;
   margin-top: 12px;
   margin-bottom: 12px;
+}
+
+.expense-avenue {
+  font-weight: bold;
+  font-size: 18px;
 }
 </style>
