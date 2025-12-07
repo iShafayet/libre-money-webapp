@@ -104,7 +104,7 @@
         <div class="flex">
           <q-btn flat rounded size="lg" label="Cancel" @click="onDialogCancel" />
           <div class="spacer"></div>
-          <q-btn-dropdown rounded size="lg" color="primary" label="Save Record" split @click="okClicked">
+          <q-btn-dropdown rounded size="lg" color="primary" label="Save" split @click="okClicked">
             <q-list>
               <q-item clickable v-close-popup @click="saveAsTemplateClicked">
                 <q-item-section>

@@ -11,7 +11,7 @@
     <!-- End of Budget Highlights -->
 
     <!-- Records -->
-    <q-card class="std-card full-width">
+    <div class="std-card full-width">
       <div class="title-row q-pa-md q-gutter-sm">
         <q-btn color="secondary" icon="filter_list" flat round @click="setFiltersClicked" />
         <q-btn color="blue-6" icon="bar_chart" flat round @click="showQuickExpenseSummaryClicked" />
@@ -61,7 +61,7 @@
         </q-btn-dropdown>
       </div>
 
-      <div class="q-pa-md" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
+      <div class="q-pa-sm" style="padding-top: 0px; margin-top: -8px; margin-bottom: 8px">
         <div class="filters-activated-area" v-if="recordFilters">
           <div style="flex: 1">
             <span v-if="recordFilters.type === 'standard'">These results are filtered.</span>
@@ -94,60 +94,64 @@
             </template>
 
             <!-- Unified Single Amount Record - start -->
-            <div class="single-amount-row row" v-if="isSingleAmountType(record)" :data-index="index">
-              <div class="details-section">
-                <div class="record-date text-weight-light text-grey-7">
-                  <div>{{ prettifyDate(record.transactionEpoch) }}</div>
-                  <template v-if="isPotentialDuplicate(record)">
-                    <q-icon name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
-                  </template>
-                </div>
+            <q-card flat bordered class="expense-record-card" v-if="isSingleAmountType(record)">
+              <q-card-section>
+                <div class="single-amount-row row" :data-index="index">
+                  <div class="details-section">
+                    <div class="record-date text-weight-light text-grey-7">
+                      <div>{{ prettifyDate(record.transactionEpoch) }}</div>
+                      <template v-if="isPotentialDuplicate(record)">
+                        <q-icon name="flag" class="duplicate-flag" title="Potential duplicate" /> Potential duplicate
+                      </template>
+                    </div>
 
-                <div class="text-h6 text-brown-7" v-if="record.type === RecordType.EXPENSE">
-                  {{ record.expense?.expenseAvenue.name }}
-                </div>
-                <div class="text-h5 text-brown-7" v-else-if="record.type === RecordType.INCOME">
-                  {{ record.income?.incomeSource.name }}
-                </div>
-                <div class="" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
+                    <div class="text-h6 text-brown-7" v-if="record.type === RecordType.EXPENSE">
+                      {{ record.expense?.expenseAvenue.name }}
+                    </div>
+                    <div class="text-h5 text-brown-7" v-else-if="record.type === RecordType.INCOME">
+                      {{ record.income?.incomeSource.name }}
+                    </div>
+                    <div class="" v-else-if="getAsset(record)">Asset: {{ getAsset(record)!.name }}</div>
 
-                <div class="row secondary-line text-body2 text-grey-7">
-                  <div class="party" v-if="getParty(record)">
-                    <span class="party-type">{{ getParty(record)?.type }}</span
-                    >: {{ getParty(record)?.name }}
+                    <div class="row secondary-line text-body2 text-grey-7">
+                      <div class="party" v-if="getParty(record)">
+                        <span class="party-type">{{ getParty(record)?.type }}</span
+                        >: {{ getParty(record)?.name }}
+                      </div>
+                    </div>
+
+                    <div class="notes text-body2 text-grey-7 q-mb-sm" v-if="record.notes">Notes: {{ record.notes }}</div>
+
+                    <div class="tags-line">
+                      <q-chip size="sm" class="text-capitalize record-type" :data-record-type="record.type">{{ record.typePrettified }}</q-chip>
+                      <q-chip size="sm" v-for="tag in record.tagList" v-bind:key="tag._id">{{ tag.name }}</q-chip>
+                    </div>
+                  </div>
+
+                  <div class="amounts-section">
+                    <div class="amount" :class="{ 'text-black': isRecordOutFlow(record), 'text-positive': isRecordInFlow(record) }">
+                      {{ printAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
+                    </div>
+                    <div class="flex items-center justify-end">
+                      <div class="wallet q-mr-sm" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
+                      <div class="username" v-if="record.modifiedByUsername">
+                        <q-icon name="account_circle"></q-icon>
+                        {{ record.modifiedByUsername }}
+                      </div>
+                    </div>
+
+                    <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
+                      Unpaid:
+                      {{ printAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
+                    </div>
+                    <div class="controls q-my-sm">
+                      <q-btn round outline color="primary" icon="create" size="8px" class="q-mr-xs" @click="editSingleAmountRecordClicked(record)" />
+                      <q-btn round outline color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
+                    </div>
                   </div>
                 </div>
-
-                <div class="notes text-body2 text-grey-7 q-mb-sm" v-if="record.notes">Notes: {{ record.notes }}</div>
-
-                <div class="tags-line">
-                  <q-chip size="sm" class="text-capitalize record-type" :data-record-type="record.type">{{ record.typePrettified }}</q-chip>
-                  <q-chip size="sm" v-for="tag in record.tagList" v-bind:key="tag._id">{{ tag.name }}</q-chip>
-                </div>
-              </div>
-
-              <div class="amounts-section">
-                <div class="amount" :class="{ 'text-black': isRecordOutFlow(record), 'text-positive': isRecordInFlow(record) }">
-                  {{ printAmount(getNumber(record, "amount")!, getString(record, "currencyId")!) }}
-                </div>
-                <div class="flex items-center justify-end">
-                  <div class="wallet q-mr-sm" v-if="getWallet(record)">({{ getWallet(record)!.name }})</div>
-                  <div class="username" v-if="record.modifiedByUsername">
-                    <q-icon name="account_circle"></q-icon>
-                    {{ record.modifiedByUsername }}
-                  </div>
-                </div>
-
-                <div class="unpaid-amount" v-if="getNumber(record, 'amountUnpaid')! > 0">
-                  Unpaid:
-                  {{ printAmount(getNumber(record, "amountUnpaid")!, getString(record, "currencyId")!) }}
-                </div>
-                <div class="controls q-my-sm">
-                  <q-btn round outline color="primary" icon="create" size="8px" class="q-mr-xs" @click="editSingleAmountRecordClicked(record)" />
-                  <q-btn round outline color="negative" icon="delete" size="8px" @click="deleteClicked(record)" />
-                </div>
-              </div>
-            </div>
+              </q-card-section>
+            </q-card>
             <!-- Unified Single Amount Record -->
 
             <!-- Money Transfer - start -->
@@ -211,7 +215,7 @@
           <q-pagination v-model="paginationCurrentPage" :max="paginationMaxPage" input />
         </div>
       </div>
-    </q-card>
+    </div>
     <!-- End of Records -->
 
     <!-- Quick Summary - Start -->
@@ -788,18 +792,19 @@ onMounted(() => {
   background-color: #fff;
   padding: 0px 8px;
   display: inline-block;
+  border-radius: 8px;
 }
 
 .divider-line-different-day {
-  border-top: 1px dashed #eaeaea;
+  border-top: 1px dashed #bdbdbd;
   margin-top: 24px;
   margin-bottom: 8px;
 }
 
 .divider-line-same-day {
-  border-top: 1px dashed #eaeaea;
-  margin-top: 12px;
-  margin-bottom: 12px;
+  // border-top: 1px dashed #eaeaea;
+  margin-top: 4px;
+  // margin-bottom: 12px;
 }
 
 .expense-avenue {

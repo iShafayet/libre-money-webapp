@@ -52,7 +52,7 @@ function filterIncomeSourceFn(val: string, update: any, abort: any) {
   </div>
 
   <q-select
-    filled
+    standout="bg-primary text-white"
     v-model="value"
     :options="walletIncomeSourceList"
     label="Income Source"
@@ -62,10 +62,10 @@ function filterIncomeSourceFn(val: string, update: any, abort: any) {
     use-input
     input-debounce="0"
     @filter="filterIncomeSourceFn"
-    class="std-margin-bottom-32"
     option-value="_id"
     option-label="name"
     hide-selected
+    behavior="menu"
     v-if="!isLoading"
   />
 </template>
