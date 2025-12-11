@@ -1,9 +1,12 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
-      <q-card-section v-if="recordFilters">
-        <div class="std-dialog-title" style="padding-bottom: 8px">Filters</div>
-        <q-select filled v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value map-options />
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss :maximized="$q.screen.lt.sm">
+    <q-card class="q-dialog-plugin column full-height">
+      <q-card-section class="no-shrink">
+        <div class="std-dialog-title text-primary text-weight-bold">Filters</div>
+      </q-card-section>
+      <q-separator />
+      <q-card-section v-if="recordFilters" class="col scroll" style="min-height: 0">
+        <q-select standout="bg-primary text-white" v-model="selectedPreset" :options="dateRangePresetList" label="Preset" emit-value map-options />
         <div class="row no-wrap" style="margin-top: 8px">
           <date-input v-model="recordFilters.startEpoch" label="Start Date" @update:model-value="startEpochChanged"></date-input>
           <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged" style="margin-left: 4px"></date-input>
@@ -44,7 +47,7 @@
           <select-tag v-model="recordFilters.tagIdBlackList" label="Exclude if contains tags"></select-tag>
         </div>
         <div style="margin-top: -20px">
-          <q-input filled v-model="recordFilters.searchString" label="Search in notes" />
+          <q-input standout="bg-primary text-white" v-model="recordFilters.searchString" label="Search in notes" />
         </div>
 
         <!-- More Options Section -->
@@ -61,10 +64,10 @@
 
           <div v-show="moreOptionsExpanded">
             <div style="margin-top: 12px">
-              <q-input filled v-model="recordFilters.deepSearchString" label="Deep search (advanced)" />
+              <q-input standout="bg-primary text-white" v-model="recordFilters.deepSearchString" label="Deep search (advanced)" />
             </div>
             <div style="margin-top: 12px; margin-bottom: 12px">
-              <q-select filled v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value map-options />
+              q-select standout="bg-primary text-white" v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value map-options />
             </div>
             <div style="margin-top: 12px; margin-bottom: 12px">
               <q-checkbox v-model="recordFilters.highlightDuplicates" label="Highlight possible duplicates" />
@@ -72,12 +75,14 @@
           </div>
         </div>
       </q-card-section>
-
-      <q-card-actions class="row justify-start std-bottom-action-row-alt">
-        <q-btn color="blue-grey" label="Cancel" @click="cancelClicked" />
-        <div class="spacer"></div>
-        <q-btn color="primary" label="Apply Filters" @click="okClicked" />
-      </q-card-actions>
+      <q-separator />
+      <q-card-section class="no-shrink">
+        <div class="flex">
+          <q-btn flat rounded size="lg" label="Cancel" @click="cancelClicked" />
+          <div class="spacer"></div>
+          <q-btn rounded size="lg" color="primary" label="Apply Filters" @click="okClicked" />
+        </div>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>

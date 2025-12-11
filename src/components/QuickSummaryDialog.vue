@@ -1,8 +1,11 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
-      <q-card-section v-if="quickSummaryList.length">
-        <div class="std-dialog-title" style="margin-bottom: 12px">Summary</div>
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss :maximized="$q.screen.lt.sm">
+    <q-card class="q-dialog-plugin column full-height">
+      <q-card-section class="no-shrink">
+        <div class="std-dialog-title text-primary text-weight-bold">Summary</div>
+      </q-card-section>
+      <q-separator />
+      <q-card-section v-if="quickSummaryList.length" class="col scroll" style="min-height: 0">
         <div class="quick-summary-container">
           <div v-for="quickSummary in quickSummaryList" v-bind:key="quickSummary.currency._id!" style="padding-bottom: 12px">
             <table class="overview-table quick-summary-table">
@@ -33,10 +36,13 @@
           </div>
         </div>
       </q-card-section>
-
-      <q-card-actions class="row justify-end" style="margin-right: 8px; margin-bottom: 8px">
-        <q-btn color="primary" label="Close" @click="okClicked" />
-      </q-card-actions>
+      <q-separator />
+      <q-card-section class="no-shrink">
+        <div class="flex">
+          <div class="spacer"></div>
+          <q-btn rounded size="lg" color="primary" label="Close" @click="okClicked" />
+        </div>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>

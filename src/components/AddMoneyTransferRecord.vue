@@ -1,44 +1,65 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
-      <q-card-section>
-        <div class="std-dialog-title q-pa-md">
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss :maximized="$q.screen.lt.sm">
+    <q-card class="q-dialog-plugin column full-height">
+      <q-card-section class="no-shrink">
+        <div class="std-dialog-title text-primary text-weight-bold">
           {{ existingRecordId ? "Editing a Money Transfer Record" : "Adding a Money Transfer Record" }}
         </div>
-        <q-form class="q-gutter-md q-pa-md" ref="recordForm">
+      </q-card-section>
+      <q-separator />
+      <q-card-section class="col scroll" style="min-height: 0">
+        <q-form class="q-gutter-md" ref="recordForm">
+          <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
           <select-wallet v-model="recordFromWalletId" label="From Wallet (Source)"> </select-wallet>
-          <q-input type="number" filled v-model="recordFromAmount" label="Source Amount" lazy-rules :rules="validators.balance">
+          <q-input
+            input-class="text-h6"
+            type="number"
+            standout="bg-primary text-white"
+            v-model="recordFromAmount"
+            label="Source Amount"
+            lazy-rules
+            :rules="validators.balance"
+          >
             <template v-slot:append>
               <div class="currency-label">{{ recordFromCurrencySign }}</div>
             </template>
           </q-input>
 
           <select-wallet v-model="recordToWalletId" label="To Wallet (Destination)"> </select-wallet>
-          <q-input type="number" filled v-model="recordToAmount" label="Destination Amount" lazy-rules :rules="validators.balance">
+          <q-input
+            input-class="text-h6"
+            type="number"
+            standout="bg-primary text-white"
+            v-model="recordToAmount"
+            label="Destination Amount"
+            lazy-rules
+            :rules="validators.balance"
+          >
             <template v-slot:append>
               <div class="currency-label">{{ recordToCurrencySign }}</div>
             </template>
           </q-input>
 
           <select-tag v-model="recordTagIdList"></select-tag>
-          <q-input type="textarea" filled v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
-          <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
+          <q-input standout="bg-primary text-white" type="textarea" v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
         </q-form>
       </q-card-section>
-
-      <q-card-actions class="row justify-start std-bottom-action-row">
-        <q-btn color="blue-grey" label="Cancel" @click="onDialogCancel" />
-        <div class="spacer"></div>
-        <q-btn-dropdown size="md" color="primary" label="Save" split @click="okClicked" style="margin-left: 8px">
-          <q-list>
-            <q-item clickable v-close-popup @click="saveAsTemplateClicked">
-              <q-item-section>
-                <q-item-label>Save as Template</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
-      </q-card-actions>
+      <q-separator />
+      <q-card-section class="no-shrink">
+        <div class="flex">
+          <q-btn flat rounded size="lg" label="Cancel" @click="onDialogCancel" />
+          <div class="spacer"></div>
+          <q-btn-dropdown rounded size="lg" color="primary" label="Save" split @click="okClicked">
+            <q-list>
+              <q-item clickable v-close-popup @click="saveAsTemplateClicked">
+                <q-item-section>
+                  <q-item-label>Save as Template</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-btn-dropdown>
+        </div>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>

@@ -76,7 +76,7 @@
           <div class="q-pa-md control-group">
             <div class="control-title">Select your server and domain</div>
             <q-select
-              filled
+              standout="bg-primary text-white"
               v-model="selectedServer"
               :options="serverOptions"
               label="Select Server"

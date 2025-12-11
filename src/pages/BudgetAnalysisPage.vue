@@ -14,7 +14,7 @@
             option-label="name"
             option-value="_id"
             label="Select Budget"
-            outlined
+            standout="bg-primary text-white"
             dense
             @update:model-value="onBudgetSelected"
           />

@@ -146,7 +146,7 @@
 
           <q-form class="currency-form">
             <q-select
-              filled
+              standout="bg-primary text-white"
               v-model="selectedCurrency"
               :options="currencyOptions"
               label="Currency"

@@ -50,7 +50,7 @@
         <div class="local-control" style="margin-bottom: -24px">
           <q-select
             :disable="rememberLastOpenedView"
-            filled
+            standout="bg-primary text-white"
             v-model="defaultView"
             :options="defaultViewOptionList"
             label="Default View"

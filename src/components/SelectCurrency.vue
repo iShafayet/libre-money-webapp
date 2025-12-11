@@ -75,7 +75,7 @@ function filterCurrencyFn(val: string, update: any, abort: any) {
   </div>
 
   <q-select
-    filled
+    standout="bg-grey-7 text-white"
     v-model="value"
     :options="walletCurrencyList"
     :label="label || 'Currency'"
@@ -85,7 +85,6 @@ function filterCurrencyFn(val: string, update: any, abort: any) {
     use-input
     input-debounce="0"
     @filter="filterCurrencyFn"
-    class="std-margin-bottom-321"
     option-value="_id"
     :option-label="props.shorthand ? 'sign' : 'name'"
     hide-selected

@@ -1,13 +1,24 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
-      <q-card-section>
-        <div class="std-dialog-title q-pa-md">Import Text</div>
-        <q-form class="q-gutter-md q-pa-md" ref="importForm">
-          <q-input type="textarea" filled v-model="importText" label="Paste your text here" lazy-rules :rules="validators.required" autogrow />
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss :maximized="$q.screen.lt.sm">
+    <q-card class="q-dialog-plugin column full-height">
+      <q-card-section class="no-shrink">
+        <div class="std-dialog-title text-primary text-weight-bold">Import Text</div>
+      </q-card-section>
+      <q-separator />
+      <q-card-section class="col scroll" style="min-height: 0">
+        <q-form class="q-gutter-md" ref="importForm">
+          <q-input
+            type="textarea"
+            standout="bg-primary text-white"
+            v-model="importText"
+            label="Paste your text here"
+            lazy-rules
+            :rules="validators.required"
+            autogrow
+          />
 
           <q-select
-            filled
+            standout="bg-primary text-white"
             v-model="selectedRuleId"
             :options="ruleOptions"
             label="Select Import Rule"
@@ -48,12 +59,15 @@
           </div>
         </q-form>
       </q-card-section>
-
-      <q-card-actions class="row justify-end">
-        <q-btn color="blue-grey" label="Cancel" @click="onDialogCancel" />
-        <q-btn color="primary" label="Parse" @click="parseClicked" />
-        <q-btn v-if="parsedData" color="green" label="Create Expense" @click="createExpenseClicked" />
-      </q-card-actions>
+      <q-separator />
+      <q-card-section class="no-shrink">
+        <div class="flex">
+          <q-btn flat rounded size="lg" label="Cancel" @click="onDialogCancel" />
+          <div class="spacer"></div>
+          <q-btn rounded size="lg" color="primary" label="Parse" @click="parseClicked" />
+          <q-btn v-if="parsedData" rounded size="lg" color="green" label="Create Expense" @click="createExpenseClicked" />
+        </div>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>

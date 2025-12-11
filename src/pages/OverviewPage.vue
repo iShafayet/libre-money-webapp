@@ -2,7 +2,7 @@
   <q-page padding class="page">
     <div class="row">
       <div class="col-12 col-lg-8 offset-lg-2">
-        <div class="flex items-start justify-end q-mb-md">
+        <div class="flex items-start justify-end q-mb-md std-card">
           <q-btn icon="refresh" flat size="lg" @click="reloadClicked" class="q-mt-xs" />
           <select-currency v-model="recordCurrencyId"></select-currency>
         </div>
@@ -15,8 +15,7 @@
           <div class="q-pa-md q-gutter-sm">
             <div>
               Welcome to Libre Money!<br /><br />
-              If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started
-              guide.<br /><br />
+              If this is your first time here, please read the <strong>Currently Imaginary</strong> getting started guide.<br /><br />
               If you already have some data on our servers, use the button to the top right to
               <strong>Sync</strong> your data to this device.<br /><br />
               Enjoy!
@@ -24,7 +23,7 @@
           </div>
         </q-card>
 
-        <q-card class="full-width" v-if="!isLoading && overview">
+        <q-card class="std-card" v-if="!isLoading && overview">
           <q-card-section>
             <div class="text-h6">Wallet Balances</div>
             <div class="text-subtitle2 text-grey-7">as of {{ new Date().toLocaleDateString() }}</div>

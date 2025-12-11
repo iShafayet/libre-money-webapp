@@ -5,8 +5,24 @@
         <div class="std-dialog-title q-pa-md">{{ existingAssetId ? "Editing an Asset" : "Adding an Asset" }}</div>
         <q-form class="q-gutter-md q-pa-md" ref="assetForm">
           <q-input filled v-model="assetName" label="Name of the Asset" lazy-rules :rules="validators.name" />
-          <q-select filled v-model="assetType" :options="assetTypeList" label="Type" emit-value map-options class="std-margin-bottom-32 std-margin-top-12" />
-          <q-select filled v-model="assetLiquidity" :options="assetLiquidityList" label="Liquidity" emit-value map-options class="std-margin-bottom-32" />
+          <q-select
+            standout="bg-primary text-white"
+            v-model="assetType"
+            :options="assetTypeList"
+            label="Type"
+            emit-value
+            map-options
+            class="std-margin-bottom-32 std-margin-top-12"
+          />
+          <q-select
+            standout="bg-primary text-white"
+            v-model="assetLiquidity"
+            :options="assetLiquidityList"
+            label="Liquidity"
+            emit-value
+            map-options
+            class="std-margin-bottom-32"
+          />
           <select-currency v-model="assetCurrencyId"></select-currency>
           <q-toggle class="std-toggle" v-model="shouldShowAdvancedOptions" color="green" label="Show advanced options" left-label v-if="existingAssetId" />
           <q-input

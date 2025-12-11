@@ -33,7 +33,7 @@ const value = computed({
 
 <template>
   <template v-if="!onlyIcon">
-    <q-input filled v-model="value" :label="props.label">
+    <q-input standout="bg-primary text-white" v-model="value" :label="props.label">
       <template v-slot:prepend>
         <q-icon name="event" class="cursor-pointer">
           <q-popup-proxy cover transition-show="scale" transition-hide="scale">

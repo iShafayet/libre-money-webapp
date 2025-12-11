@@ -64,7 +64,7 @@ function filterRecordTypeFn(val: string, update: any, abort: any) {
   </div>
 
   <q-select
-    filled
+    standout="bg-primary text-white"
     v-model="value"
     :options="recordTypeList"
     label="Record Types"

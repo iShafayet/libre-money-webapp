@@ -9,7 +9,7 @@
         <!-- Step 1: Server Selection -->
         <q-form v-if="currentStep === 1" ref="serverForm" @submit="onServerSelectionStepComplete" class="q-gutter-md q-pa-md">
           <q-select
-            filled
+            standout="bg-primary text-white"
             v-model="selectedServer"
             :options="serverOptions"
             label="Select Server"

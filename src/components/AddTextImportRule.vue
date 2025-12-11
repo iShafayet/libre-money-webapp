@@ -63,7 +63,16 @@
           <div v-for="(rule, index) in walletMatchRules" :key="index" class="q-pa-sm q-mb-sm" style="border: 1px solid #e0e0e0; border-radius: 4px">
             <div class="column q-gutter-xs">
               <div class="row q-gutter-xs">
-                <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-12 col-sm-4" emit-value map-options dense />
+                <q-select
+                  standout="bg-primary text-white"
+                  v-model="rule.operator"
+                  :options="operatorOptions"
+                  label="Operator"
+                  class="col-12 col-sm-4"
+                  emit-value
+                  map-options
+                  dense
+                />
                 <q-input filled v-model="rule.value" label="Match Value" class="col-12 col-sm-8" dense />
               </div>
               <div class="row q-gutter-xs items-center">
@@ -79,7 +88,8 @@
           <div v-for="(rule, index) in expenseAvenueMatchRules" :key="index" class="q-pa-sm q-mb-sm" style="border: 1px solid #e0e0e0; border-radius: 4px">
             <div class="column q-gutter-xs">
               <div class="row q-gutter-xs">
-                <q-select filled v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-12 col-sm-4" emit-value map-options dense />
+                q-select standout="bg-primary text-white" v-model="rule.operator" :options="operatorOptions" label="Operator" class="col-12 col-sm-4" emit-value
+                map-options dense />
                 <q-input filled v-model="rule.value" label="Match Value" class="col-12 col-sm-8" dense />
               </div>
               <div class="row q-gutter-xs items-center">
