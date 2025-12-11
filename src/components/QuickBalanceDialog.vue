@@ -1,9 +1,11 @@
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss>
-    <q-card class="q-dialog-plugin">
-      <q-card-section>
-        <div class="std-dialog-title" style="margin-bottom: 12px">Balances</div>
-
+  <q-dialog ref="dialogRef" @hide="onDialogHide" no-backdrop-dismiss :maximized="$q.screen.lt.sm">
+    <q-card class="q-dialog-plugin column full-height">
+      <q-card-section class="no-shrink">
+        <div class="std-dialog-title text-primary text-weight-bold">Balances</div>
+      </q-card-section>
+      <q-separator />
+      <q-card-section class="col scroll" style="min-height: 0">
         <loading-indicator :is-loading="isLoading" :phases="4" ref="loadingIndicator"></loading-indicator>
 
         <div class="quick-balance-table-container">
@@ -51,10 +53,13 @@
           </table>
         </div>
       </q-card-section>
-
-      <q-card-actions class="row justify-end" style="margin-right: 8px; margin-bottom: 8px">
-        <q-btn color="primary" label="Close" @click="cancelClicked" />
-      </q-card-actions>
+      <q-separator />
+      <q-card-section class="no-shrink">
+        <div class="flex">
+          <div class="spacer"></div>
+          <q-btn rounded size="lg" color="primary" label="Close" @click="cancelClicked" />
+        </div>
+      </q-card-section>
     </q-card>
   </q-dialog>
 </template>

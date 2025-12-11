@@ -12,13 +12,11 @@
           <date-input v-model="recordFilters.endEpoch" label="End Date" @update:model-value="endEpochChanged" style="margin-left: 4px"></date-input>
         </div>
         <br />
-        <div class="row no-wrap" style="margin-top: -12px">
-          <div class="col col-5" style="margin-right: 4px">
-            <select-currency v-model="recordFilters.currencyId" :mandatory="false" :shorthand="true"></select-currency>
-          </div>
-          <div class="col">
-            <select-wallet v-model="recordFilters.walletId" :limit-by-currency-id="recordFilters.currencyId"></select-wallet>
-          </div>
+        <div>
+          <select-currency v-model="recordFilters.currencyId" :mandatory="false" :shorthand="true"></select-currency>
+        </div>
+        <div style="margin-top: 12px">
+          <select-wallet v-model="recordFilters.walletId" :limit-by-currency-id="recordFilters.currencyId"></select-wallet>
         </div>
         <div style="margin-top: -20px">
           <select-record-type v-model="recordFilters.recordTypeList" />
@@ -67,7 +65,7 @@
               <q-input standout="bg-primary text-white" v-model="recordFilters.deepSearchString" label="Deep search (advanced)" />
             </div>
             <div style="margin-top: 12px; margin-bottom: 12px">
-              q-select standout="bg-primary text-white" v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value map-options />
+              <q-select standout="bg-primary text-white" v-model="recordFilters.sortBy" :options="sortByTypeList" label="Sort by" emit-value map-options />
             </div>
             <div style="margin-top: 12px; margin-bottom: 12px">
               <q-checkbox v-model="recordFilters.highlightDuplicates" label="Highlight possible duplicates" />
