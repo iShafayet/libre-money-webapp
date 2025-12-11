@@ -266,7 +266,7 @@
       </q-card-section>
 
       <!-- Actions -->
-      <q-card-actions class="step-actions row">
+      <q-card-section class="step-actions row">
         <q-btn v-if="currentStep > 1 && !setupComplete && !isCreatingAccount" flat label="Back" color="grey-7" @click="goBack" />
         <div class="spacer"></div>
 
@@ -294,7 +294,7 @@
 
         <!-- Step 4 Dashboard Button -->
         <q-btn v-if="setupComplete" unelevated color="primary" label="Go to Dashboard" @click="goToDashboard" icon-right="dashboard" size="md" />
-      </q-card-actions>
+      </q-card-section>
     </q-card>
   </q-page>
 </template>
@@ -479,19 +479,6 @@ async function goToDashboard() {
 .onboarding-page {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
-}
-
-.onboarding-card {
-  min-width: 500px;
-  max-width: 800px;
-  margin: 16px;
-  border-radius: 2px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-
-  @media (max-width: 600px) {
-    min-width: 300px;
-    margin: 8px;
-  }
 }
 
 .app-name {

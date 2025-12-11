@@ -2,15 +2,26 @@
   <q-page class="items-center page">
     <q-card class="std-card">
       <div class="filter-section q-pa-md q-gutter-sm">
-        <div class="main-row">
-          <select-currency v-model="recordCurrencyId"></select-currency>
-          <div style="width: 8px; height: 1px"></div>
-          <date-input v-model="startEpoch" label="Start Date"></date-input>
-          <div style="width: 8px; height: 1px"></div>
-          <date-input v-model="endEpoch" label="End Date"></date-input>
+        <div class="row q-col-gutter-sm">
+          <div class="col-12 col-sm-4">
+            <select-currency v-model="recordCurrencyId"></select-currency>
+          </div>
+          <div class="col-6 col-sm-4">
+            <date-input v-model="startEpoch" label="Start Date"></date-input>
+          </div>
+          <div class="col-6 col-sm-4">
+            <date-input v-model="endEpoch" label="End Date"></date-input>
+          </div>
         </div>
         <div class="action-row">
-          <q-btn-dropdown class="preset-selector" size="md" color="secondary" label="Use Preset: Current Month" split @click="presetClicked('current-month')">
+          <q-btn-dropdown
+            class="preset-selector q-mb-sm"
+            size="md"
+            color="secondary"
+            label="Use Preset: Current Month"
+            split
+            @click="presetClicked('current-month')"
+          >
             <q-list>
               <q-item clickable v-close-popup @click="presetClicked('last-month')">
                 <q-item-section>
@@ -25,7 +36,7 @@
             </q-list>
           </q-btn-dropdown>
 
-          <q-btn color="primary" label="Submit" @click="submitClicked" />
+          <q-btn color="primary" size="md" label="Submit" @click="submitClicked" class="q-mb-sm" />
         </div>
       </div>
     </q-card>
@@ -39,8 +50,8 @@
         <div class="title">Income</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Income Source</th>
@@ -67,8 +78,8 @@
         <div class="title">Expense</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Expense Avenue</th>
@@ -95,8 +106,8 @@
         <div class="title">Wallets</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Wallet</th>
@@ -120,8 +131,8 @@
         <div class="title">Assets</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Asset</th>
@@ -148,8 +159,8 @@
         <div class="title">Assets (by Liquidity)</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Liquidity</th>
@@ -173,8 +184,8 @@
         <div class="title">Loans and Debts</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Party</th>
@@ -201,8 +212,8 @@
         <div class="title">Final Current Balance</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Particular</th>
@@ -240,8 +251,8 @@
         <div class="title">Final Current Balance with High Liquidity Assets</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Particular</th>
@@ -283,8 +294,8 @@
         <div class="title">Final Balance</div>
       </div>
 
-      <div class="q-pa-md">
-        <table class="overview-table">
+      <div class="">
+        <table class="overview-table q-mb-md">
           <tbody>
             <tr>
               <th>Particular</th>
@@ -451,6 +462,7 @@ onMounted(() => {
 .filter-section {
   .main-row {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
 
     > {
@@ -459,8 +471,6 @@ onMounted(() => {
   }
 
   .action-row {
-    margin-top: -12px;
-
     .preset-selector {
       margin-right: 8px;
     }
