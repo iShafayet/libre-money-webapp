@@ -22,3 +22,24 @@
   padding-bottom: 12px;
   text-align: left;
 }
+
+.body--dark .overview-table {
+  td,
+  th {
+    border-color: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+  }
+
+  tr:nth-child(even) {
+    background-color: #1a1f2e;
+  }
+
+  tr:hover {
+    background-color: rgba(30, 37, 56, 0.6);
+  }
+
+  th {
+    background-color: rgba(30, 37, 56, 0.8);
+    color: #cbd5e1;
+  }
+}

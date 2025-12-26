@@ -159,13 +159,13 @@ body.body--dark .negative-balance {
 //   color: #94a3b8;
 // }
 
-// body.body--dark .q-field__native {
-//   color: #e2e8f0;
-// }
+body.body--dark .q-field__native {
+  color: #e2e8f0 !important;
+}
 
-// body.body--dark .q-field--focused .q-field__label {
-//   color: var(--primary-dark);
-// }
+body.body--dark .q-field--focused .q-field__label {
+  color: var(--text-white);
+}
 
 // Toggle/Switch in dark mode
 // body.body--dark .q-toggle__track {
