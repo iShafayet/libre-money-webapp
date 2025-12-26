@@ -18,37 +18,10 @@
 }
 
 // Primary color variants for dark mode - defined in body.body--dark to ensure they use the correct primary color
-body.body--dark {
-  // RGB values for rgba() usage (daa520 = rgb(218, 165, 32))
-  // Update these RGB values if you change the primary-dark color in quasar.variables.scss
-  // Alternative RGB values for medium bright golden colors:
-  // #daa520 = rgb(218, 165, 32) - Main choice (Goldenrod - medium bright)
-  // #d4af37 = rgb(212, 175, 55) - Classic gold (slightly brighter)
-  // #f4a460 = rgb(244, 164, 96) - Sandy brown (warmer, lighter)
-  // #e6c200 = rgb(230, 194, 0) - Bright gold (more yellow)
-  // #ffb300 = rgb(255, 179, 0) - Golden yellow (bright, energetic)
-  // #d4a574 = rgb(212, 165, 116) - Lighter golden tan (softer)
-  --primary-dark-rgb: 218, 165, 32;
-  --primary-dark-opacity-1: rgba(var(--primary-dark-rgb), 0.1);
-  --primary-dark-opacity-15: rgba(var(--primary-dark-rgb), 0.15);
-  --primary-dark-opacity-2: rgba(var(--primary-dark-rgb), 0.2);
-  --primary-dark-opacity-3: rgba(var(--primary-dark-rgb), 0.3);
-  --primary-dark-opacity-5: rgba(var(--primary-dark-rgb), 0.5);
-  --primary-dark-opacity-8: rgba(var(--primary-dark-rgb), 0.08);
-}
 
 body {
   background-color: antiquewhite;
   transition: background 0.3s ease;
-}
-
-body.body--dark {
-  // Material 3 Dark Theme for Money Management App
-  // Subtle gradient that's professional and not distracting
-  background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 20%, #1e2538 40%, #1a1f2e 60%, #0f1419 100%);
-  background-attachment: fixed;
-  min-height: 100vh;
-  color: #e2e8f0; // Light gray-blue for primary text (slate-200)
 }
 
 .std-column {
@@ -62,6 +35,10 @@ body.body--dark {
 
 .main-left-sidebar-drawer {
   background-color: lightgrey;
+}
+
+body.body--dark .main-left-sidebar-drawer {
+  background-color: #1a1f2e; // Match dark surface color
 }
 
 body.body--dark .main-left-sidebar-drawer {
@@ -163,6 +140,10 @@ body.body--dark ::-webkit-scrollbar-track {
   background-color: #1a1f2e; // Dark surface color
 }
 
+body.body--dark ::-webkit-scrollbar-track {
+  background-color: #1a1f2e; // Dark surface color
+}
+
 ::-webkit-scrollbar-thumb {
   background-color: #5e5f5f;
   border-radius: 10px;
@@ -175,8 +156,17 @@ body.body--dark ::-webkit-scrollbar-thumb {
   border: 3px solid #1a1f2e; // Match track color
 }
 
+body.body--dark ::-webkit-scrollbar-thumb {
+  background-color: #475569; // slate-600 for dark mode
+  border: 3px solid #1a1f2e; // Match track color
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background-color: #a8bbbf;
+}
+
+body.body--dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b; // slate-500 for hover state
 }
 
 body.body--dark ::-webkit-scrollbar-thumb:hover {

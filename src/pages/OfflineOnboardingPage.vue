@@ -1,8 +1,8 @@
 <template>
   <q-page class="row items-center justify-evenly onboarding-page">
-    <q-card class="onboarding-card">
+    <q-card class="onboarding-card1">
       <!-- Header -->
-      <div class="app-name q-pa-xs">
+      <div class="app-name q-pa-md">
         <img class="logo" src="icons/logo.png" alt="CK" />
         Libre Money
       </div>
@@ -500,13 +500,13 @@ async function goToDashboard() {
 }
 
 .step-header {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  // background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 
   .step-title {
     text-align: center;
     font-size: 24px;
     font-weight: 500;
-    color: #2c3e50;
+    // color: #2c3e50;
   }
 
   .step-indicator {
@@ -635,7 +635,7 @@ async function goToDashboard() {
           display: flex;
           align-items: center;
           padding: 8px 12px;
-          background-color: #f8f9fa;
+          // background-color: #f8f9fa;
           border-radius: 6px;
           text-align: left;
 
@@ -655,8 +655,8 @@ async function goToDashboard() {
 
 .step-actions {
   padding: 16px 24px;
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+  // background-color: #f8f9fa;
+  // border-top: 1px solid #e9ecef;
 
   .q-btn {
     font-weight: 500;

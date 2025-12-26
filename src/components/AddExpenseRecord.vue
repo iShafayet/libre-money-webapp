@@ -13,7 +13,6 @@
           <select-expense-avenue v-model="recordExpenseAvenueId"></select-expense-avenue>
           <q-input
             input-class="text-h6"
-            type="number"
             standout="bg-primary text-white"
             v-model.number="recordAmount"
             label="Expense Amount"

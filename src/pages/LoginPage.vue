@@ -2,27 +2,34 @@
   <q-page class="row items-center justify-evenly">
     <q-card class="login-card">
       <div class="app-name q-pa-xs"><img class="logo" src="icons/logo.png" alt="LM" />Libre Money</div>
-      <div class="title q-pa-xs">{{ loginPageMode === "resume" ? "Welcome Back" : currentStep === 1 ? "Select Server" : "Login" }}</div>
+
+      <div class="title q-pa-md">{{ loginPageMode === "resume" ? "Resume Session" : currentStep === 1 ? "Connect Your Account" : "Sign In" }}</div>
+
+      <!-- <div v-if="loginPageMode === 'login' && currentStep === 1" class="subtitle q-px-md q-pb-md">
+        <div class="text-body2 text-grey-7 text-center">Choose where your data is stored, or start using the app offline.</div>
+      </div> -->
 
       <!-- login page mode : login - START -->
       <template v-if="loginPageMode === 'login'">
         <!-- Step 1: Server Selection -->
         <q-form v-if="currentStep === 1" ref="serverForm" @submit="onServerSelectionStepComplete" class="q-gutter-md q-pa-md">
-          <q-select
-            standout="bg-primary text-white"
-            v-model="selectedServer"
-            :options="serverOptions"
-            label="Select Server"
-            lazy-rules
-            :rules="[(val) => !!val || 'Please select a server']"
-          />
+          <div>
+            <q-select
+              standout="bg-primary text-white"
+              v-model="selectedServer"
+              :options="serverOptions"
+              label="Server"
+              lazy-rules
+              :rules="[(val) => !!val || 'Please select where your data is stored']"
+            />
+          </div>
 
           <!-- Custom Server URL input (only for Self Hosted) -->
           <q-input
             v-if="selectedServer?.value === 'self-hosted'"
             standout="bg-primary text-white"
             v-model="customServerUrl"
-            label="Server URL"
+            label="Server Address"
             lazy-rules
             :rules="validators.url"
           />
@@ -30,46 +37,55 @@
           <!-- Domain input -->
           <q-input standout="bg-primary text-white" v-model="domain" label="Domain" lazy-rules :rules="validators.domain" />
 
-          <div class="row justify-end">
-            <q-btn label="Reset Local Data" type="button" color="grey" outline @click="removeLocalDataClicked" />
+          <div class="row justify-end q-mt-md">
+            <q-btn label="Reset Local Data" type="button" outline color="grey" @click="removeLocalDataClicked" />
             <div class="spacer"></div>
-            <q-btn label="Next" type="submit" color="primary" />
+            <q-btn label="Continue" type="submit" color="primary" />
           </div>
         </q-form>
 
-        <!-- Offline Trial Option -->
-        <q-card-section v-if="currentStep === 1" class="offline-trial-section">
+        <!-- Offline Mode Option -->
+        <q-card-section v-if="currentStep === 1" class="offline-option-section">
           <q-separator class="q-mb-md" />
 
           <div class="text-center q-mb-md">
-            <div class="text-h6 q-mb-sm">Try Offline</div>
-            <div class="text-body2 text-grey-7">Start using Libre Money immediately with unlimited offline access</div>
+            <div class="text-h6 q-mb-sm">Try Libre Money Offline</div>
+            <div class="text-body2 text-grey-7">
+              Start using Libre Money immediately with full offline functionality. Your data is stored securely on your device. You can sync to the cloud later
+              or continue using offline mode.
+            </div>
           </div>
 
-          <q-btn unelevated color="secondary" label="Start Your Journey" icon="offline_bolt" class="full-width" @click="startOfflineSession" />
+          <q-btn unelevated color="secondary" label="Start In Offline Mode" icon="offline_bolt" class="full-width" @click="startOfflineSession" />
         </q-card-section>
 
         <!-- Step 2: Username & Password -->
-        <q-form v-if="currentStep === 2" ref="loginForm" @submit="onLoginSubmit" class="q-gutter-md q-pa-md">
-          <!-- Server info display -->
-          <q-banner class="bg-grey-2 text-dark q-mb-md">
-            <div class="text-subtitle2">Server: {{ selectedServer?.label }}</div>
-            <div class="text-caption">{{ displayServerUrl }}</div>
-            <div class="text-caption">Domain: {{ domain }}</div>
-          </q-banner>
+        <q-card-section v-if="currentStep === 2">
+          <q-form ref="loginForm" @submit="onLoginSubmit" class="q-gutter-sm">
+            <!-- Server info display -->
+            <q-banner class="q-mb-lg" rounded>
+              <template v-slot:avatar>
+                <q-icon name="info" color="primary" size="20px" />
+              </template>
+              <div class="text-subtitle2 q-mb-xs">Account Details</div>
+              <div class="text-caption"><strong>Server:</strong> {{ selectedServer?.label }}</div>
+              <div class="text-caption"><strong>Address:</strong> {{ displayServerUrl }}</div>
+              <div class="text-caption"><strong>Domain:</strong> {{ domain }}</div>
+            </q-banner>
 
-          <q-input standout="bg-primary text-white" v-model="username" label="Username" lazy-rules :rules="validators.username" />
+            <q-input standout="bg-primary text-white" v-model="username" label="Username" lazy-rules :rules="validators.username" />
 
-          <q-input type="password" standout="bg-primary text-white" v-model="password" label="Password" lazy-rules :rules="validators.password" />
+            <q-input type="password" standout="bg-primary text-white" v-model="password" label="Password" lazy-rules :rules="validators.password" />
 
-          <q-checkbox v-model="shouldRememberPassword" label="Store password on this device" />
+            <q-checkbox v-model="shouldRememberPassword" label="Remember password on this device" />
 
-          <div class="row">
-            <q-btn label="Back" type="button" color="grey" flat @click="goBackToServerSelection" />
-            <div class="spacer"></div>
-            <q-btn label="Login" type="submit" color="primary" :loading="isLoading" />
-          </div>
-        </q-form>
+            <div class="row justify-end q-mt-md">
+              <q-btn label="Back" icon="arrow_back" type="button" color="grey" flat @click="goBackToServerSelection" />
+              <div class="spacer"></div>
+              <q-btn label="Login" type="submit" color="primary" :loading="isLoading" />
+            </div>
+          </q-form>
+        </q-card-section>
       </template>
       <!-- login page mode : login - END -->
 
@@ -85,43 +101,38 @@
                 size="32px"
               />
             </template>
-            <div class="text-h6 q-mb-sm">Welcome Back!</div>
-            <div class="text-body2">We found your previous {{ previousSession?.user.isOfflineUser ? "offline" : "online" }} session.</div>
+            <div class="text-h6 q-mb-sm">Previous Session Detected</div>
+            <div class="text-body2">
+              A previous {{ previousSession?.user.isOfflineUser ? "offline" : "online" }} session was found. You can resume it or sign in with different
+              credentials.
+            </div>
           </q-banner>
 
           <div class="session-info q-mb-lg">
-            <div class="text-subtitle1 q-mb-sm">Session Details</div>
+            <div class="text-subtitle2 q-mb-sm text-grey-8">Session Information</div>
             <div class="session-details">
               <div class="detail-item">
                 <q-icon name="person" color="primary" size="16px" />
-                <span class="q-ml-sm"><strong>Username:</strong> {{ previousSession?.user.username }}</span>
+                <span class="q-ml-sm">{{ previousSession?.user.username }}</span>
               </div>
               <div class="detail-item" v-if="previousSession?.user.domain">
                 <q-icon name="domain" color="primary" size="16px" />
-                <span class="q-ml-sm"><strong>Domain:</strong> {{ previousSession.user.domain }}</span>
+                <span class="q-ml-sm">{{ previousSession.user.domain }}</span>
               </div>
               <div class="detail-item" v-if="previousSession?.user.serverUrl">
                 <q-icon name="cloud" color="primary" size="16px" />
-                <span class="q-ml-sm"><strong>Server:</strong> {{ previousSession.user.serverUrl }}</span>
+                <span class="q-ml-sm text-caption">{{ previousSession.user.serverUrl }}</span>
               </div>
               <div class="detail-item">
                 <q-icon name="schedule" color="primary" size="16px" />
-                <span class="q-ml-sm"><strong>Logged out:</strong> {{ logoutTimeFormatted }}</span>
+                <span class="q-ml-sm text-caption">Last active: {{ logoutTimeFormatted }}</span>
               </div>
             </div>
           </div>
 
           <!-- Password input for online sessions -->
           <q-form v-if="!previousSession?.user.isOfflineUser" ref="resumeForm" @submit="resumePreviousSession" class="q-gutter-md q-mb-lg">
-            <q-input
-              type="password"
-              standout="bg-primary text-white"
-              v-model="resumePassword"
-              label="Password"
-              hint="Enter your password to resume this session"
-              lazy-rules
-              :rules="validators.password"
-            />
+            <q-input type="password" standout="bg-primary text-white" v-model="resumePassword" label="Password" lazy-rules :rules="validators.password" />
             <q-checkbox v-model="shouldRememberPasswordForResume" label="Remember password on this device" />
           </q-form>
 
@@ -142,8 +153,8 @@
           <q-separator class="q-my-lg" />
 
           <div class="text-center">
-            <div class="text-caption text-grey-7 q-mb-sm">Or login with different credentials</div>
-            <q-btn flat color="primary" label="Use Different Credentials" @click="useDifferentCredentialsClicked" />
+            <div class="text-caption text-grey-7 q-mb-sm">Need to sign in with different credentials?</div>
+            <q-btn flat color="primary" label="Sign In with Different Account" @click="useDifferentCredentialsClicked" />
           </div>
         </q-card-section>
       </template>
@@ -339,10 +350,13 @@ function useDifferentCredentialsClicked() {
 <style scoped lang="scss">
 .title {
   text-align: center;
-  background-color: rgb(105, 187, 79);
-  text-transform: uppercase;
-  font-size: 26px;
-  // padding-top: 8px;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin-top: -8px;
 }
 
 .app-name {
@@ -371,10 +385,7 @@ function useDifferentCredentialsClicked() {
   margin: 12px;
 }
 
-.offline-trial-section {
-  background-color: #f8f9fa;
-  border-top: 1px solid #e9ecef;
-
+.offline-option-section {
   .q-btn {
     font-weight: 500;
   }
@@ -386,10 +397,15 @@ function useDifferentCredentialsClicked() {
       .detail-item {
         display: flex;
         align-items: center;
-        margin-bottom: 8px;
-        padding: 8px 12px;
+        margin-bottom: 6px;
+        padding: 10px 12px;
         background-color: #f8f9fa;
         border-radius: 6px;
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: #e9ecef;
+        }
 
         .q-icon {
           flex-shrink: 0;

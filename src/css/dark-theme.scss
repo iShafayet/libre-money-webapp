@@ -1,0 +1,203 @@
+// Dark Theme Enhancements for Money Management App
+// --------------------------------------------------
+body.body--dark {
+  --primary-dark-rgb: 218, 165, 32;
+  --primary-dark-opacity-1: rgba(var(--primary-dark-rgb), 0.1);
+  --primary-dark-opacity-15: rgba(var(--primary-dark-rgb), 0.15);
+  --primary-dark-opacity-2: rgba(var(--primary-dark-rgb), 0.2);
+  --primary-dark-opacity-3: rgba(var(--primary-dark-rgb), 0.3);
+  --primary-dark-opacity-5: rgba(var(--primary-dark-rgb), 0.5);
+  --primary-dark-opacity-8: rgba(var(--primary-dark-rgb), 0.08);
+}
+body.body--dark {
+  background: linear-gradient(180deg, #0f1419 0%, #1a1f2e 20%, #1e2538 40%, #1a1f2e 60%, #0f1419 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  // color: #e2e8f0;
+}
+
+// Cards and surfaces in dark mode
+body.body--dark .q-card {
+  background-color: #1e2538; // Slightly lighter than dark surface for depth
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.05); // Subtle border for definition
+}
+
+// Remove shadow from dark cards
+body.body--dark .q-card--dark,
+.q-card--dark {
+  box-shadow: none;
+}
+
+// Input fields in dark mode
+// body.body--dark .q-field--standout .q-field__control {
+//   background-color: var(--primary-dark-opacity-1);
+//   border: 1px solid var(--primary-dark-opacity-2);
+// }
+
+// body.body--dark .q-field--standout .q-field__control:hover {
+//   background-color: var(--primary-dark-opacity-15);
+//   border-color: var(--primary-dark-opacity-3);
+// }
+
+// Tabs in dark mode
+body.body--dark .q-tabs {
+  background-color: rgba(30, 37, 56, 0.6); // Semi-transparent dark surface
+}
+
+body.body--dark .q-tab {
+  color: #94a3b8; // slate-400 for inactive tabs
+}
+
+body.body--dark .q-tab--active {
+  color: var(--primary-dark);
+}
+
+// Tables in dark mode
+body.body--dark .q-table {
+  background-color: transparent;
+}
+
+body.body--dark .q-table thead th {
+  background-color: rgba(30, 37, 56, 0.8);
+  color: #cbd5e1; // slate-300
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.body--dark .q-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.body--dark .q-table tbody tr:hover {
+  background-color: var(--primary-dark-opacity-8);
+}
+
+// Drawer/Sidebar in dark mode
+body.body--dark .q-drawer {
+  background-color: #1a1f2e;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.body--dark .q-item {
+  color: #cbd5e1; // slate-300
+}
+
+body.body--dark .q-item:hover {
+  background-color: var(--primary-dark-opacity-1);
+}
+
+body.body--dark .q-item-label {
+  color: #94a3b8; // slate-400 for headers
+}
+
+// Header/Toolbar in dark mode
+body.body--dark .q-header {
+  background-color: #1a1f2e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+// Separators in dark mode
+body.body--dark .q-separator {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+// Financial indicators - Income (green)
+body.body--dark .income-indicator,
+body.body--dark [class*="income"] {
+  color: #4ade80; // Bright green for income
+}
+
+// Positive balance indicators
+body.body--dark .positive-balance {
+  color: #4ade80;
+}
+
+// Negative balance indicators
+body.body--dark .negative-balance {
+  color: #f87171;
+}
+
+// Buttons in dark mode
+// body.body--dark .q-btn {
+//   &.q-btn--outline {
+//     border-color: var(--primary-dark-opacity-3);
+//   }
+
+//   &.q-btn--outline:hover {
+//     border-color: var(--primary-dark-opacity-5);
+//     background-color: var(--primary-dark-opacity-1);
+//   }
+// }
+
+// Chips in dark mode
+// body.body--dark .q-chip {
+//   background-color: rgba(30, 37, 56, 0.8);
+//   color: #cbd5e1;
+// }
+
+// // Menu/Dropdown in dark mode
+// body.body--dark .q-menu {
+//   background-color: #1e2538;
+//   border: 1px solid rgba(255, 255, 255, 0.05);
+// }
+
+// body.body--dark .q-item {
+//   &.q-item--active {
+//     background-color: var(--primary-dark-opacity-15);
+//     color: var(--primary-dark);
+//   }
+// }
+
+// // Dialog enhancements for dark mode
+// body.body--dark .q-dialog__inner .q-card {
+//   background-color: #1e2538;
+//   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+// }
+
+// Input field enhancements
+// body.body--dark .q-field__label {
+//   color: #94a3b8;
+// }
+
+// body.body--dark .q-field__native {
+//   color: #e2e8f0;
+// }
+
+// body.body--dark .q-field--focused .q-field__label {
+//   color: var(--primary-dark);
+// }
+
+// Toggle/Switch in dark mode
+// body.body--dark .q-toggle__track {
+//   background-color: rgba(255, 255, 255, 0.2);
+// }
+
+// // Badge/Notification in dark mode
+// body.body--dark .q-badge {
+//   background-color: var(--primary-dark);
+//   color: #0f1419; // Dark text on light primary
+// }
+
+// Tooltip in dark mode
+// body.body--dark .q-tooltip {
+//   background-color: #1e2538;
+//   color: #e2e8f0;
+//   border: 1px solid rgba(255, 255, 255, 0.1);
+// }
+
+// // Skeleton loading in dark mode
+// body.body--dark .q-skeleton {
+//   background: rgba(255, 255, 255, 0.05);
+// }
+
+// body.body--dark .q-skeleton--anim-wave::after {
+//   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+// }
+
+.body--dark .q-menu--dark {
+  box-shadow: none;
+}
+
+.q-card--dark .std-dialog-title.text-primary {
+  color: unset !important;
+}
