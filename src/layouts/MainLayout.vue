@@ -475,6 +475,13 @@ onUnmounted(() => {
   color: whitesmoke;
 }
 
+// Dark theme drawer bottom
+body.body--dark .drawer-bottom {
+  background: #1e2538; // Match card background color
+  color: #cbd5e1; // slate-300 for text
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 .app-version {
   display: flex;
   align-items: start;

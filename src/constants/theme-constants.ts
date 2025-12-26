@@ -9,11 +9,11 @@
 function getCssVar(variableName: string): string {
   if (typeof document === "undefined") {
     // Fallback for SSR or when document is not available
-    return variableName === "primary-light" ? "#0d9488" : "#06b6d4";
+    return variableName === "primary-light" ? "#0d9488" : "#daa520";
   }
   return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
 }
 
 // Read theme colors from CSS custom properties
 export const PRIMARY_LIGHT = getCssVar("--primary-light") || "#0d9488";
-export const PRIMARY_DARK = getCssVar("--primary-dark") || "#06b6d4";
+export const PRIMARY_DARK = getCssVar("--primary-dark") || "#daa520";

@@ -1,5 +1,9 @@
 # Workspace Rules
 
+## App Overview
+
+- This is Personal Money/Finance Tracker/Management App made with flexibility and total tracking in mind. It has extensive feature set and privacy focus. The main selling point is Ease of Use and Simple Yet Advanced feature set.
+
 ## Stack Overview
 
 - This project uses Vue 3 with the Composition API and TypeScript.

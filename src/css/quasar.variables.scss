@@ -26,27 +26,38 @@
 
 // Theme-specific primary colors
 $primary-light: #0d9488;
-$primary-dark: #3f51b5;
+// Dark theme primary: Medium bright golden yellow to match logo
+// Main choice: Medium bright golden that complements the golden coin logo
+$primary-dark: #daa520; // Goldenrod (medium bright golden yellow - matches logo aesthetic)
+
+// Alternative medium bright golden options (uncomment to use):
+// $primary-dark: #d4af37; // Classic gold (slightly brighter, more luxurious)
+// $primary-dark: #f4a460; // Sandy brown (warmer, lighter golden)
+// $primary-dark: #e6c200; // Bright gold (more yellow, vibrant)
+// $primary-dark: #ffb300; // Golden yellow (bright, energetic)
+// $primary-dark: #d4a574; // Lighter golden tan (softer, warmer)
 
 $primary: $primary-light; // Default primary (light mode) - will be overridden in dark mode via CSS
 $secondary: #16a34a;
 $accent: #8b5cf6;
 
-// Dark Theme
-$dark: #1e293b;
-$dark-page: #0f172a;
+// Dark Theme - Material 3 Dark Surface Colors
+// Base dark surface (slate-900 equivalent, slightly warmer)
+$dark: #1a1f2e; // Rich dark blue-gray for main surfaces
+$dark-page: #0f1419; // Deepest dark for page background (almost black with subtle blue)
 
-// Status Colors
-$positive: #22c55e;
-$negative: #dc2626;
-$info: #0ea5e9;
-$warning: #f59e0b;
+// Status Colors - Optimized for dark theme readability
+$positive: #4ade80; // Bright green for income/positive values (high contrast)
+$negative: #f87171; // Soft red for expenses/negative values (readable, not harsh)
+$info: #60a5fa; // Bright blue for informational elements
+$warning: #fbbf24; // Amber for warnings (good visibility on dark)
 
 $record-expense-primary-color: #e0d4d4;
 $record-expense-text-color: #851f1f;
 
-$record-income-primary-color: #388036;
-$record-income-text-color: #ffffff;
+// Income colors: Bright green for positive financial indicators
+$record-income-primary-color: #4ade80; // Bright green for income backgrounds
+$record-income-text-color: #ffffff; // White for income text (maximum contrast)
 
 // Material Design 3 (Material You) Design Tokens
 // --------------------------------------------------

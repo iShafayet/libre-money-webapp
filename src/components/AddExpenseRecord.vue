@@ -482,4 +482,22 @@ defineExpose({
     color: #bf360c;
   }
 }
+
+// Dark theme styling for wallet balance container
+:deep(body.body--dark) .wallet-balance-container {
+  color: #94a3b8; // slate-400 for better readability
+
+  .wallet-limit-normal {
+    color: #94a3b8;
+  }
+
+  .wallet-limit-warning {
+    color: #fbbf24; // Amber warning color for dark theme
+    border-bottom: 4px solid #fbbf24;
+  }
+
+  .wallet-limit-exceeded {
+    color: #f87171; // Soft red for exceeded limit
+  }
+}
 </style>

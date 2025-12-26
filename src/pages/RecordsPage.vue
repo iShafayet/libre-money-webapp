@@ -638,6 +638,17 @@ onMounted(() => {
   border-radius: 4px;
 }
 
+body.body--dark .filters-activated-area {
+  color: #cbd5e1; // slate-300
+  background-color: rgba(30, 37, 56, 0.6); // Dark surface variant with transparency
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.body--dark .record-row .details-section .tags-line .record-type[data-record-type="expense"] {
+  background-color: #2e1a1e !important;
+  color: #ffb4ab;
+}
+
 .record-row {
   .record-date {
     font-size: 10px;
@@ -647,6 +658,14 @@ onMounted(() => {
       margin-left: 4px;
       font-size: 12px;
       animation: pulse 2s infinite;
+    }
+  }
+
+  body.body--dark & .record-date {
+    color: #94a3b8; // slate-400 for better readability
+
+    .duplicate-flag {
+      color: #f87171; // Soft red for dark mode
     }
   }
 
@@ -680,6 +699,12 @@ onMounted(() => {
         color: rgb(245, 245, 245);
         margin-left: 4px;
       }
+
+      body.body--dark & .tag {
+        background-color: rgba(30, 37, 56, 0.8);
+        color: #cbd5e1; // slate-300
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
     }
   }
 
@@ -706,6 +731,12 @@ onMounted(() => {
 .income-row {
   .amount {
     color: rgb(7, 112, 7);
+  }
+}
+
+body.body--dark .income-row {
+  .amount {
+    color: #4ade80; // Bright green for income in dark mode
   }
 }
 
@@ -743,6 +774,16 @@ onMounted(() => {
 
 .amount-out {
   color: rgb(112, 7, 7);
+}
+
+body.body--dark {
+  .amount-in {
+    color: #4ade80; // Bright green for incoming money
+  }
+
+  .amount-out {
+    color: #f87171; // Soft red for outgoing money
+  }
 }
 
 .quick-summary-title {
@@ -794,6 +835,21 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 
+body.body--dark {
+  .divider-line-date {
+    color: #94a3b8; // slate-400
+  }
+
+  .divider-line-inner {
+    background-color: #1e2538; // Dark surface variant
+    color: #cbd5e1; // slate-300
+  }
+
+  .divider-line-different-day {
+    border-top: 1px dashed rgba(255, 255, 255, 0.1); // Subtle border for dark mode
+  }
+}
+
 .divider-line-same-day {
   // border-top: 1px dashed #eaeaea;
   margin-top: 4px;
@@ -803,5 +859,27 @@ onMounted(() => {
 .expense-avenue {
   font-weight: bold;
   font-size: 18px;
+}
+
+// Dark mode adjustments for record cards
+body.body--dark {
+  .expense-record-card {
+    background-color: #1e2538; // Dark surface variant
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .record-row {
+    .amounts-section {
+      .amount {
+        &.text-positive {
+          color: #4ade80; // Bright green for positive amounts
+        }
+      }
+    }
+  }
+
+  .unpaid-amount {
+    color: #f87171; // Soft red for unpaid amounts
+  }
 }
 </style>
