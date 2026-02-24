@@ -87,6 +87,7 @@
                 <div class="divider-line-date">
                   <div class="divider-line-inner">{{ prettifyDate(rows[index].transactionEpoch) }}</div>
                 </div>
+                <div style="font-size: 10px" class="text-right text-grey-7">Total Expenses: {{ getDayTotalDisplay(rows[index].transactionEpoch ?? 0) }}</div>
               </div>
             </template>
             <template v-else>
@@ -273,8 +274,8 @@ import { pouchdbService } from "src/services/pouchdb-service";
 import { recordService } from "src/services/record-service";
 import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import { useRecordPaginationSizeStore } from "src/stores/record-pagination";
-import { normalizeEpochRange } from "src/utils/date-utils";
-import { printAmount } from "src/utils/de-facto-utils";
+import { normalizeEpochAsDate, normalizeEpochAsDateAtTheEndOfDay, normalizeEpochRange } from "src/utils/date-utils";
+import { asAmount, printAmount } from "src/utils/de-facto-utils";
 import { deepClone, guessFontColorCode, prettifyDate } from "src/utils/misc-utils";
 import PromisePool from "src/utils/promise-pool";
 import { Ref, onMounted, ref, watch } from "vue";
@@ -625,6 +626,36 @@ function getNumber(record: InferredRecord, key: string): number | null {
 function getString(record: InferredRecord, key: string): string | null {
   let value = getInnerKey(record, key);
   return value;
+}
+
+function getDayTotalDisplay(recordEpoch: number): string {
+  const dayStart = normalizeEpochAsDate(recordEpoch);
+  const dayEnd = normalizeEpochAsDateAtTheEndOfDay(recordEpoch);
+  const dayRecords = cachedInferredRecordList.filter((r) => r.transactionEpoch != null && r.transactionEpoch >= dayStart && r.transactionEpoch <= dayEnd);
+
+  const totalsByCurrency: { [key: string]: number } = {};
+  for (const record of dayRecords) {
+    if (record.type === RecordType.MONEY_TRANSFER && record.moneyTransfer) {
+      const amt = asAmount(record.moneyTransfer.fromAmount);
+      if (amt > 0) {
+        const cid = record.moneyTransfer.fromCurrencyId;
+        totalsByCurrency[cid] = (totalsByCurrency[cid] ?? 0) + amt;
+      }
+    } else if (isRecordOutFlow(record) && isSingleAmountType(record)) {
+      const amt = asAmount(getNumber(record, "amount"));
+      if (amt > 0) {
+        const cid = getString(record, "currencyId");
+        if (cid) {
+          totalsByCurrency[cid] = (totalsByCurrency[cid] ?? 0) + amt;
+        }
+      }
+    }
+  }
+
+  const parts = Object.entries(totalsByCurrency)
+    .filter(([, amt]) => amt !== 0)
+    .map(([cid, amt]) => printAmount(amt, cid));
+  return parts.length > 0 ? parts.join(", ") : printAmount(0, null);
 }
 
 function isPotentialDuplicate(record: InferredRecord): boolean {

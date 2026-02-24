@@ -87,14 +87,12 @@ watch(limitByCurrencyId, () => {
     :label="label || 'Wallet'"
     emit-value
     map-options
-    fill-input
     use-input
     input-debounce="0"
     @filter="filterWalletFn"
     class="std-margin-bottom-32"
     option-value="_id"
     option-label="name"
-    hide-selected
     v-if="!isLoading"
     :rules="props.rules"
     clearable

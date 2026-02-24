@@ -55,9 +55,9 @@ function filterExpenseAvenueFn(val: string, update: any, abort: any) {
 </script>
 
 <template>
-  <div style="text-align: center" v-if="isLoading">
+  <!-- <div style="text-align: center" v-if="isLoading">
     <q-spinner color="primary" size="40px" :thickness="4" />
-  </div>
+  </div> -->
 
   <q-select
     standout="bg-primary text-white"
@@ -66,15 +66,15 @@ function filterExpenseAvenueFn(val: string, update: any, abort: any) {
     label="Expense Avenue"
     emit-value
     map-options
-    fill-input
     use-input
     input-debounce="0"
     @filter="filterExpenseAvenueFn"
     option-value="_id"
     option-label="name"
-    hide-selected
     behavior="menu"
     v-if="!isLoading"
     :clearable="!mandatory"
+    :loading="isLoading"
+    class="std-margin-bottom-32"
   />
 </template>

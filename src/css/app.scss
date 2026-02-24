@@ -179,6 +179,14 @@ body.body--dark ::-webkit-scrollbar-thumb:hover {
   min-width: 100px;
 }
 
+.q-field--standout.q-field--rounded .q-field__control {
+  border-radius: $generic-border-radius !important;
+}
+
+.q-menu--square {
+  border-radius: $generic-border-radius !important;
+}
+
 // Dark Theme Enhancements for Money Management App
 // --------------------------------------------------
 
@@ -333,4 +341,8 @@ body.body--dark .q-skeleton {
 
 body.body--dark .q-skeleton--anim-wave::after {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+}
+
+body.body--dark .q-menu {
+  background-color: var(--q-dark);
 }

@@ -11,16 +11,29 @@
         <q-form class="q-gutter-md q-pa-md1" ref="recordForm">
           <date-time-input v-model="transactionEpoch" label="Date & Time"></date-time-input>
           <select-expense-avenue v-model="recordExpenseAvenueId"></select-expense-avenue>
-          <q-input input-class="text-h6" standout="bg-primary text-white" v-model.number="recordAmount"
-            label="Expense Amount" type="number" lazy-rules :rules="validators.balance">
+          <q-input
+            input-class="text-h6"
+            standout="bg-primary text-white"
+            v-model.number="recordAmount"
+            label="Expense Amount"
+            type="number"
+            lazy-rules
+            :rules="validators.balance"
+          >
             <template v-slot:append>
               <!-- <div class="currency-label">{{ recordCurrencySign }}</div> -->
               <q-btn-dropdown flat dense color="primary" :label="recordCurrencySign as string">
                 <q-list style="min-width: 160px">
-                  <q-item v-for="curr in fullWalletCurrencyList" :key="curr._id" clickable v-close-popup @click="
-                    recordCurrencyId = curr._id ?? null;
-                  recordCurrencySign = curr.sign ?? null;
-                  ">
+                  <q-item
+                    v-for="curr in fullWalletCurrencyList"
+                    :key="curr._id"
+                    clickable
+                    v-close-popup
+                    @click="
+                      recordCurrencyId = curr._id ?? null;
+                      recordCurrencySign = curr.sign ?? null;
+                    "
+                  >
                     <q-item-section>
                       <q-item-label>{{ curr.sign }}</q-item-label>
                     </q-item-section>
@@ -30,21 +43,24 @@
             </template>
           </q-input>
 
-          <q-tabs v-model="paymentType" inline-label class="bg-grey-11 text-grey-7 shadow-1 rounded-borders q-mb-lg"
-            active-color="primary" active-bg-color="primary-dark" indicator-color="transparent">
+          <q-tabs
+            v-model="paymentType"
+            inline-label
+            class="bg-grey-11 text-grey-7 shadow-1 rounded-borders q-mb-lg"
+            active-color="primary"
+            active-bg-color="primary-dark"
+            indicator-color="transparent"
+          >
             <q-tab name="full" label="Paid" />
             <q-tab name="partial" label="Partially Paid" />
             <q-tab name="unpaid" label="Unpaid" />
           </q-tabs>
 
-          <select-wallet v-model="recordWalletId" v-if="paymentType == 'full' || paymentType == 'partial'"
-            :limitByCurrencyId="recordCurrencyId">
+          <select-wallet v-model="recordWalletId" v-if="paymentType == 'full' || paymentType == 'partial'" :limitByCurrencyId="recordCurrencyId">
           </select-wallet>
-          <div class="wallet-balance-container"
-            v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet">
+          <div class="wallet-balance-container" v-if="(paymentType == 'full' || paymentType == 'partial') && selectedWallet">
             <div>Balance in wallet: {{ printAmount(selectedWallet._balance!) }}</div>
-            <div style="margin-top: 8px">Balance afterwards will be: {{ printAmount(selectedWallet.potentialBalance) }}
-            </div>
+            <div style="margin-top: 8px">Balance afterwards will be: {{ printAmount(selectedWallet.potentialBalance) }}</div>
             <div class="wallet-limit" style="margin-top: 8px" v-if="selectedWallet._minimumBalanceState !== 'not-set'">
               <span class="wallet-limit-warning" v-if="selectedWallet._minimumBalanceState === 'warning'">
                 Approaching limit {{ printAmount(selectedWallet.minimumBalance!) }}
@@ -58,16 +74,28 @@
             </div>
           </div>
 
-          <q-input type="number" standout="bg-primary text-white" v-model="recordAmountPaid" label="Amount Paid"
-            lazy-rules :rules="validators.balance" v-if="paymentType == 'partial'" />
-          <q-input type="number" readonly standout="bg-primary text-white" v-model="recordAmountUnpaid"
-            label="Amount Due" v-if="paymentType == 'partial'" style="margin-top: 8px; margin-bottom: 24px" />
+          <q-input
+            type="number"
+            standout="bg-primary text-white"
+            v-model="recordAmountPaid"
+            label="Amount Paid"
+            lazy-rules
+            :rules="validators.balance"
+            v-if="paymentType == 'partial'"
+          />
+          <q-input
+            type="number"
+            readonly
+            standout="bg-primary text-white"
+            v-model="recordAmountUnpaid"
+            label="Amount Due"
+            v-if="paymentType == 'partial'"
+            style="margin-top: 8px; margin-bottom: 24px"
+          />
 
-          <select-party v-model="recordPartyId"
-            :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
+          <select-party v-model="recordPartyId" :mandatory="paymentType == 'unpaid' || paymentType == 'partial'"></select-party>
           <select-tag v-model="recordTagIdList"></select-tag>
-          <q-input standout="bg-primary text-white" type="textarea" v-model="recordNotes" label="Notes" lazy-rules
-            :rules="validators.notes" />
+          <q-input standout="bg-primary text-white" type="textarea" v-model="recordNotes" label="Notes" lazy-rules :rules="validators.notes" />
           <!-- <select-currency v-model="recordCurrencyId"></select-currency> -->
         </q-form>
       </q-card-section>
@@ -139,6 +167,11 @@ const isLoading = ref(false);
 const recordForm = ref<QForm | null>(null);
 
 const paymentType = ref<string>("full");
+const paymentTypeOptions = [
+  { value: "full", label: "Paid" },
+  { value: "partial", label: "Partially Paid" },
+  { value: "unpaid", label: "Unpaid" },
+];
 const recordType = RecordType.EXPENSE;
 
 const recordExpenseAvenueId = ref<string | null>(null);
@@ -373,7 +406,7 @@ watch(recordWalletId, async (newWalletId: any) => {
     await computationService.computeBalancesForWallets([wallet]);
     wallet.potentialBalance = 0;
     selectedWallet.value = wallet;
-    
+
     // Auto-set currency from wallet
     let currency = await entityService.getCurrency(wallet.currencyId);
     recordCurrencyId.value = currency._id!;
