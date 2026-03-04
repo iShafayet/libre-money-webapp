@@ -20,7 +20,8 @@
               <tr v-for="wallet in currencyWallets.wallets" v-bind:key="wallet._id">
                 <td>{{ wallet.name }}</td>
                 <td>
-                  {{ printAmount(enforceNonNegativeZero(wallet._balance || 0), currencyWallets.currency._id!) }}
+                  <div>{{ printAmount(enforceNonNegativeZero(wallet._balance || 0), currencyWallets.currency._id!) }}
+                  </div>
                   <span class="wallet-limit" v-if="wallet._minimumBalanceState !== 'not-set'">
                     <span class="wallet-limit-warning" v-if="wallet._minimumBalanceState === 'warning'">
                       (Approaching limit {{ printAmount(wallet.minimumBalance!, currencyWallets.currency._id!) }})
@@ -28,16 +29,25 @@
                     <span class="wallet-limit-exceeded" v-else-if="wallet._minimumBalanceState === 'exceeded'">
                       (Exceeded limit {{ printAmount(wallet.minimumBalance!, currencyWallets.currency._id!) }})
                     </span>
-                    <span class="wallet-limit-normal" v-else-if="wallet._minimumBalanceState === 'normal'">
+                    <span class="wallet-limit-normal"
+                      v-else-if="wallet._minimumBalanceState === 'normal' && wallet.minimumBalance !== 0">
                       (Limit {{ printAmount(wallet.minimumBalance!, currencyWallets.currency._id!) }})
                     </span>
                   </span>
                 </td>
                 <td>
-                  <q-btn v-if="intent === 'balances'" flat dense round icon="tune"
-                    @click="onCalibrateClick(wallet._id!, wallet._balance || 0)" class="q-ml-sm" />
-                  <q-btn v-else-if="intent === 'calibration'" color="primary" size="sm" label="Calibrate"
-                    @click="onCalibrateClick(wallet._id!, wallet._balance || 0)" class="q-ml-sm" />
+                  <template v-if="intent === 'balances'">
+                    <div class="row no-wrap">
+                      <q-btn flat dense round icon="filter_list" title="Filter records by this wallet"
+                        @click="onFilterByWalletClick(wallet._id!)" class="q-ml-xs" size="md" />
+                      <q-btn flat dense round icon="tune" @click="onCalibrateClick(wallet._id!, wallet._balance || 0)"
+                        class="q-ml-sm" size="md" />
+                    </div>
+                  </template>
+                  <template v-else-if="intent === 'calibration'">
+                    <q-btn color="primary" size="sm" label="Calibrate"
+                      @click="onCalibrateClick(wallet._id!, wallet._balance || 0)" class="q-ml-sm" />
+                  </template>
                 </td>
               </tr>
               <tr>
@@ -57,14 +67,18 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 import LoadingIndicator from "src/components/LoadingIndicator.vue";
 import { Collection } from "src/constants/constants";
+import { RecordFilters } from "src/models/inferred/record-filters";
 import { Currency } from "src/schemas/currency";
 import { Wallet } from "src/schemas/wallet";
 import { computationService } from "src/services/computation-service";
 import { currencyFormatService } from "src/services/currency-format-service";
 import { pouchdbService } from "src/services/pouchdb-service";
+import { useRecordFiltersStore } from "src/stores/record-filters-store";
 import { useSettingsStore } from "src/stores/settings";
+import { getStartAndEndEpochFromPreset } from "src/utils/date-range-preset-utils";
 import { setDateToTheFirstDateOfMonth } from "src/utils/date-utils";
 import { asAmount } from "src/utils/de-facto-utils";
 import { printAmount } from "src/utils/de-facto-utils";
@@ -90,7 +104,9 @@ const emit = defineEmits([...useDialogPluginComponent.emits]);
 const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const $q = useQuasar();
+const router = useRouter();
 const settingsStore = useSettingsStore();
+const recordFiltersStore = useRecordFiltersStore();
 
 const isLoading = ref(true);
 const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
@@ -143,6 +159,39 @@ async function loadBalances() {
   }).filter((item) => item.wallets.length > 0);
 
   isLoading.value = false;
+}
+
+function onFilterByWalletClick(walletId: string) {
+  const wallet = currencyWalletsList.value
+    .flatMap((cw) => cw.wallets)
+    .find((w) => w._id === walletId);
+  const walletName = wallet?.name ?? "Wallet";
+
+  const range = getStartAndEndEpochFromPreset("current-year");
+  const [startEpoch, endEpoch] = range ? [range.startEpoch, range.endEpoch] : [Date.now(), Date.now()];
+  const filters: RecordFilters = {
+    startEpoch,
+    endEpoch,
+    recordTypeList: [],
+    tagIdWhiteList: [],
+    tagIdBlackList: [],
+    partyId: null,
+    currencyId: null,
+    walletId: walletId,
+    expenseAvenueId: null,
+    incomeSourceId: null,
+    assetId: null,
+    searchString: "",
+    deepSearchString: "",
+    sortBy: "transactionEpochDesc",
+    type: "wallet",
+    _walletName: walletName,
+    _preset: "current-year",
+    highlightDuplicates: false,
+  };
+  recordFiltersStore.setRecordFilters(filters);
+  onDialogOK();
+  router.push({ name: "records" });
 }
 
 async function onCalibrateClick(walletId: string, balance: number) {

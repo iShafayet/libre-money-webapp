@@ -13,9 +13,10 @@ export type RecordFilters = {
   searchString: string;
   deepSearchString: string;
   sortBy: "transactionEpochDesc" | "lastModifiedEpochDesc";
-  type: "standard" | "budget" | "loansAndDebts" | "parties";
+  type: "standard" | "budget" | "loansAndDebts" | "parties" | "wallet";
   _budgetName?: string;
   _partyName?: string;
+  _walletName?: string;
   _preset?: string;
   highlightDuplicates?: boolean;
 };

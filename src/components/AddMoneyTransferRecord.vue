@@ -41,11 +41,14 @@
             <div style="margin-top: 8px">Balance afterwards will be: {{ printToAmount(selectedToWallet.potentialBalance) }}</div>
           </div>
           <q-input input-class="text-h6" type="number" standout="bg-primary text-white" v-model="recordToAmount"
-            label="Destination Amount" lazy-rules :rules="validators.balance">
+            label="Destination Amount" lazy-rules :rules="validators.balance" @update:model-value="onToAmountModelValue">
             <template v-slot:append>
               <div class="currency-label">{{ recordToCurrencySign }}</div>
             </template>
           </q-input>
+          <div v-if="transferFeeAmount > 0" class="text-caption text-primary q-mt-n-sm q-mb-sm">
+            The extra amount ({{ printFromAmount(transferFeeAmount) }}) will be treated as transfer fee.
+          </div>
 
           <select-tag v-model="recordTagIdList"></select-tag>
           <q-input standout="bg-primary text-white" type="textarea" v-model="recordNotes" label="Notes" lazy-rules
@@ -74,7 +77,7 @@
 
 <script setup lang="ts">
 import { QForm, useDialogPluginComponent } from "quasar";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, nextTick, computed } from "vue";
 import { validators } from "src/utils/validators";
 import { Collection, RecordType } from "src/constants/constants";
 import { Record } from "src/schemas/record";
@@ -88,8 +91,6 @@ import { asAmount, printAmount as printAmountUtil } from "src/utils/de-facto-uti
 import { entityService } from "src/services/entity-service";
 import DateTimeInput from "./lib/DateTimeInput.vue";
 import { NotificationType, dialogService } from "src/services/dialog-service";
-import { computed } from "vue";
-
 // Props
 const props = defineProps<{
   existingRecordId?: string | null;
@@ -120,6 +121,11 @@ const recordToCurrencyId = ref<string | null>(null);
 const recordToWalletId = ref<string | null>(null);
 const recordToCurrencySign = ref<string | null>(null);
 
+/** True when user has manually edited destination amount (so we don't overwrite it from source amount). */
+const toAmountDirty = ref(false);
+/** Set while syncing from amount -> to amount so we don't mark to amount as dirty. */
+let syncingToFromAmount = false;
+
 const recordTagIdList = ref<string[]>([]);
 const recordNotes = ref<string | null>(null);
 
@@ -148,7 +154,18 @@ async function prefillRecord(prefilledRecord: Record): Promise<boolean> {
   recordTagIdList.value = prefilledRecord.tagIdList;
   recordNotes.value = prefilledRecord.notes;
 
+  toAmountDirty.value = false;
   return true;
+}
+
+function isToAmountEmptyOrZero(val: number | string | null | undefined): boolean {
+  if (val === undefined || val === null || val === "") return true;
+  return Number(val) === 0;
+}
+
+function onToAmountModelValue(val: number | string | null | undefined) {
+  if (syncingToFromAmount) return;
+  toAmountDirty.value = !isToAmountEmptyOrZero(val);
 }
 
 // Load initial data
@@ -268,6 +285,30 @@ watch(recordToWalletId, async (newWalletId: any) => {
   let currency = await entityService.getCurrency(wallet.currencyId);
   recordToCurrencyId.value = currency._id!;
   recordToCurrencySign.value = currency.sign;
+});
+
+// When from amount changes, sync to "to amount" only if same currency and (not dirty or to amount empty/zero)
+watch(recordFromAmount, (newFrom) => {
+  const sameCurrency = recordFromCurrencyId.value && recordFromCurrencyId.value === recordToCurrencyId.value;
+  if (!sameCurrency) return;
+  const toVal = recordToAmount.value;
+  if (!toAmountDirty.value || isToAmountEmptyOrZero(toVal)) {
+    syncingToFromAmount = true;
+    recordToAmount.value = newFrom;
+    toAmountDirty.value = false;
+    nextTick(() => {
+      syncingToFromAmount = false;
+    });
+  }
+});
+
+// Transfer fee note: from > to => extra amount shown (only when same currency)
+const transferFeeAmount = computed(() => {
+  const sameCurrency = recordFromCurrencyId.value && recordFromCurrencyId.value === recordToCurrencyId.value;
+  if (!sameCurrency) return 0;
+  const from = asAmount(recordFromAmount.value);
+  const to = asAmount(recordToAmount.value);
+  return from > to ? from - to : 0;
 });
 
 // Watch amounts to update potential balances

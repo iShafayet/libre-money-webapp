@@ -71,6 +71,7 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent, useQuasar } from "quasar";
+import { Collection } from "src/constants/constants";
 import { TextImportRules, TextImportRulesSchema } from "src/schemas/text-import-rules";
 import { ref } from "vue";
 
@@ -90,7 +91,9 @@ function validateJson(val: string) {
 
   try {
     const parsed = JSON.parse(val);
-    const result = TextImportRulesSchema.safeParse(parsed);
+    // Export strips $collection; add it so schema validation passes on re-import
+    const withCollection = { ...parsed, $collection: Collection.TEXT_IMPORT_RULES };
+    const result = TextImportRulesSchema.safeParse(withCollection);
 
     if (result.success) {
       validationErrors.value = [];
