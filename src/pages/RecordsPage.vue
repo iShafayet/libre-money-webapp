@@ -65,6 +65,7 @@
         <div class="filters-activated-area" v-if="recordFilters">
           <div style="flex: 1">
             <span v-if="recordFilters.type === 'standard'">These results are filtered.</span>
+            <span v-else-if="recordFilters.type === 'wallet'">Viewing records for wallet: {{ recordFilters._walletName }}.</span>
             <span v-else-if="recordFilters.type === 'budget' && recordFilters._budgetName === UNBUDGETED_RECORDS_BUDGET_NAME">Viewing unbudgeted records.</span>
             <span v-else-if="recordFilters.type === 'budget'">Viewing records under budget: {{ recordFilters._budgetName }}.</span>
             <span v-else-if="recordFilters.type === 'loansAndDebts' || recordFilters.type === 'parties'">
