@@ -140,11 +140,6 @@ const parseClicked = async () => {
           // Update the dropdown to show which rule was selected
           selectedRuleId.value = testRule._id!;
 
-          $q.notify({
-            type: "positive",
-            message: `Auto-detected rule: "${testRule.name}"`,
-            timeout: 2000,
-          });
           break;
         } else {
           console.debug("Rule regex matched but capture groups incomplete:", testRule.name);
