@@ -87,9 +87,13 @@
               <q-card class="q-pb-md">
                 <q-card-section>
                   <div class="text-h6">Top Expense Categories</div>
-                  <div class="text-subtitle2 text-grey-7">Highest spending this period</div>
                 </q-card-section>
-                <q-list v-if="topExpenseCategories.length > 0" dense>
+                <q-card-section v-if="topExpenseCategories.length > 0" class="q-pt-none">
+                  <div class="top-expense-pie">
+                    <canvas ref="topExpensePieCanvas" />
+                  </div>
+                </q-card-section>
+                <q-list v-if="topExpenseCategories.length > 0" dense hidden>
                   <q-item v-for="row in topExpenseCategories" :key="row.expenseAvenueId">
                     <q-item-section>
                       <div class="row items-center justify-between q-mb-xs">
@@ -106,7 +110,7 @@
           </div>
 
           <!-- Top Expenses -->
-          <div class="row q-col-gutter-md q-mb-md">
+          <div class="row q-col-gutter-md q-mb-md" v-if="false">
             <div class="col-12">
               <q-card class="q-pb-md">
                 <q-card-section>
@@ -132,11 +136,12 @@
           <div class="row q-col-gutter-md q-mb-md">
             <div class="col-12">
               <q-card class="q-pb-md">
-                <q-card-section>
+                <!-- <q-card-section>
                   <div class="text-h6">Top Income Sources</div>
                   <div class="text-subtitle2 text-grey-7">This period</div>
-                </q-card-section>
-                <q-list v-if="topIncome.length > 0" dense>
+                </q-card-section> -->
+                <q-list v-if="topIncome.length > 0">
+                  <q-item-label header class="text-h6 text-white">Top Income Sources</q-item-label>
                   <q-item v-for="row in topIncome" :key="row.incomeSourceId">
                     <q-item-section>
                       <div class="row items-center justify-between q-mb-xs">
@@ -157,11 +162,12 @@
             <!-- Wallet Balances -->
             <div class="col-12 col-lg-6">
               <q-card class="">
-                <q-card-section>
+                <!-- <q-card-section>
                   <div class="text-h6">Wallet Balances</div>
                   <div class="text-subtitle2 text-grey-7">as of {{ new Date().toLocaleDateString() }}</div>
-                </q-card-section>
-                <q-list v-if="overview.wallets.list.length > 0" dense>
+                </q-card-section> -->
+                <q-list v-if="overview.wallets.list.length > 0">
+                  <q-item-label header class="text-h6 text-white">Wallet Balances</q-item-label>
                   <q-item v-for="row in overview.wallets.list" :key="row.walletId">
                     <q-item-section>
                       <q-item-label>{{ row.wallet.name }}</q-item-label>
@@ -200,10 +206,11 @@
           <div class="row q-col-gutter-md q-mt-sm">
             <div class="col-12 col-md-6">
               <q-card class="">
-                <q-card-section>
+                <!-- <q-card-section>
                   <div class="text-h6">Assets by Liquidity</div>
-                </q-card-section>
+                </q-card-section> -->
                 <q-list v-if="assetsByLiquidity.length > 0" dense>
+                  <q-item-label header class="text-h6 text-white">Assets by Liquidity</q-item-label>
                   <q-item v-for="item in assetsByLiquidity" :key="item.liquidity">
                     <q-item-section>
                       <q-item-label>{{ item.liquidity }} Liquidity</q-item-label>
@@ -227,11 +234,12 @@
             </div>
             <div class="col-12 col-md-6">
               <q-card>
-                <q-card-section>
+                <!-- <q-card-section>
                   <div class="text-h6">Loans & Debts</div>
                   <q-btn v-if="hasLoansOrDebts" flat dense size="sm" label="View all" :to="{ name: 'payables-receivables-consolidated' }" class="q-ml-sm" />
-                </q-card-section>
+                </q-card-section> -->
                 <q-list v-if="hasLoansOrDebts" dense>
+                  <q-item-label header class="text-h6 text-white">Loans & Debts</q-item-label>
                   <q-item>
                     <q-item-section>
                       <q-item-label>You are owed</q-item-label>
@@ -277,16 +285,22 @@ import { useSettingsStore } from "src/stores/settings";
 import { normalizeEpochRange } from "src/utils/date-utils";
 import { printAmount as printAmountUtil } from "src/utils/de-facto-utils";
 import { CodedError } from "src/utils/error-utils";
-import { Ref, computed, onMounted, ref, watch } from "vue";
+import { ArcElement, Chart, Legend, PieController, Tooltip, type ChartData, type ChartOptions } from "chart.js";
+import ChartDataLabels from "chartjs-plugin-datalabels";
+import { Ref, computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 const $q = useQuasar();
 const settingsStore = useSettingsStore();
+
+Chart.register(PieController, ArcElement, Tooltip, Legend, ChartDataLabels);
 
 // ----- Refs
 const isMounted = ref(false);
 const isLoading = ref(true);
 const loadingIndicator = ref<InstanceType<typeof LoadingIndicator>>();
 const budgetHighlightsRef = ref<InstanceType<typeof BudgetHighlights>>();
+const topExpensePieCanvas = ref<HTMLCanvasElement | null>(null);
+const topExpensePieChart = ref<Chart<"pie"> | null>(null);
 
 const recordCurrencyId: Ref<string | null> = ref(settingsStore.defaultCurrencyId);
 const filterMonth = ref(new Date().getMonth());
@@ -376,6 +390,73 @@ function incomePercent(sum: number) {
   return Math.min(1, sum / overview.value.income.grandSum);
 }
 
+function destroyTopExpensePieChart() {
+  topExpensePieChart.value?.destroy();
+  topExpensePieChart.value = null;
+}
+
+async function renderTopExpensePieChart() {
+  if (!topExpensePieCanvas.value) return;
+  if (!overview.value) return;
+  if (overview.value.expense.grandSum <= 0) return;
+
+  const rows = topExpenseCategories.value;
+  if (rows.length === 0) return;
+
+  destroyTopExpensePieChart();
+
+  const labels = rows.map((r) => r.expenseAvenue.name);
+  const values = rows.map((r) => r.sum);
+
+  const data: ChartData<"pie"> = {
+    labels,
+    datasets: [
+      {
+        data: values,
+        backgroundColor: ["#5C6BC0", "#26A69A", "#FFA726", "#EF5350", "#AB47BC", "#29B6F6", "#8D6E63"],
+        borderColor: "rgba(0,0,0,0)",
+      },
+    ],
+  };
+
+  const options: ChartOptions<"pie"> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: { padding: 4 },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: { usePointStyle: true, boxWidth: 10, boxHeight: 10, padding: 12 },
+      },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const label = ctx.label ?? "";
+            const value = Number(ctx.raw ?? 0);
+            return `${label}: ${printAmount(value)}`;
+          },
+        },
+      },
+      datalabels: {
+        color: "#fff",
+        font: { weight: "600" },
+        formatter: (value: unknown) => {
+          const v = typeof value === "number" ? value : Number(value ?? 0);
+          if (!overview.value || overview.value.expense.grandSum <= 0) return "";
+          const pct = Math.round((v / overview.value.expense.grandSum) * 100);
+          return pct >= 8 ? `${pct}%` : "";
+        },
+      },
+    },
+  };
+
+  topExpensePieChart.value = new Chart(topExpensePieCanvas.value, {
+    type: "pie",
+    data,
+    options,
+  });
+}
+
 async function loadOverview() {
   const [start, end] = getEpochRange();
   const newOverview = await computationService.computeOverview(start, end, recordCurrencyId.value!);
@@ -441,6 +522,20 @@ onMounted(() => {
   isMounted.value = true;
   loadData();
 });
+
+onBeforeUnmount(() => {
+  destroyTopExpensePieChart();
+});
+
+watch(
+  [topExpenseCategories, recordCurrencyId, isLoading],
+  async () => {
+    if (isLoading.value) return;
+    await nextTick();
+    await renderTopExpensePieChart();
+  },
+  { immediate: true }
+);
 </script>
 
 <style scoped lang="scss">
@@ -520,6 +615,13 @@ onMounted(() => {
       margin-left: 4px;
     }
   }
+}
+
+.top-expense-pie {
+  height: 260px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
 }
 
 @media (max-width: $breakpoint-xs-max) {
