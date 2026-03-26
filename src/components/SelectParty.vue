@@ -65,14 +65,12 @@ function filterPartyFn(val: string, update: any, abort: any) {
     label="Party / Vendor"
     emit-value
     map-options
-    fill-input
     use-input
     input-debounce="0"
     @filter="filterPartyFn"
     class="std-margin-bottom-32"
     option-value="_id"
     option-label="name"
-    hide-selected
     v-if="!isLoading"
     :clearable="!mandatory"
   />

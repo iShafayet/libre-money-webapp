@@ -1,14 +1,16 @@
 <template>
   <!-- Featured Rolling Budgets -->
-  <q-card class="std-card featured-rolling-budgets-card" style="margin-bottom: 4px" v-show="featuredRollingBudgetList.length > 0">
+  <q-card class="std-card featured-rolling-budgets-card" style="margin-bottom: 4px; position: relative" v-show="featuredRollingBudgetList.length > 0">
     <div class="featured-rolling-budget-list q-pa-md q-gutter-sm">
       <q-btn
         v-if="featuredRollingBudgetList.length > 1"
-        style="position: absolute; left: -4px; top: 52px"
-        color="secondary"
-        :icon="showAllRollingBudgets ? 'expand_less' : 'expand_more'"
-        flat
         round
+        flat
+        size="md"
+        padding="xs"
+        color="primary"
+        :icon="showAllRollingBudgets ? 'expand_less' : 'expand_more'"
+        class="expand-fab"
         @click="toggleShowAllRollingBudgets"
       />
       <template v-for="rollingBudget in featuredRollingBudgetList" :key="rollingBudget._id">
@@ -21,10 +23,10 @@
             <div class="row no-wrap" style="height: 10px; border-radius: 5px; overflow: hidden">
               <div
                 :style="{
-                  width: (rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount * 100) + '%',
-                  backgroundColor: rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount + rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount > rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount ? 'var(--q-negative)' : 'var(--q-positive)',
-                  height: '100%',
-                }"
+                width: (rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount / rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount * 100) + '%',
+                backgroundColor: rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount + rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].heldAmount > rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount ? 'var(--q-negative)' : 'var(--q-positive)',
+                height: '100%',
+              }"
               ></div>
               <div
                 v-if="rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].usedAmount < rollingBudget.budgetedPeriodList[rollingBudget._budgetedPeriodIndexInRange!].totalAllocatedAmount"
@@ -154,3 +156,12 @@ defineExpose({
   loadFeaturedRollingBudgets: loadFeaturedRollingBudgetsDebounced,
 });
 </script>
+
+<style scoped>
+.expand-fab {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+</style>

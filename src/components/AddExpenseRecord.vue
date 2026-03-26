@@ -30,7 +30,7 @@
             </template>
           </q-input>
 
-          <q-tabs v-model="paymentType" inline-label class="bg-grey-11 text-grey-7 shadow-1 rounded-borders q-mb-lg"
+          <q-tabs v-model="paymentType" inline-label class="payment-type-tabs rounded-borders q-mb-lg"
             active-color="primary" active-bg-color="primary-dark" indicator-color="transparent">
             <q-tab name="full" label="Paid" />
             <q-tab name="partial" label="Partially Paid" />
@@ -139,6 +139,11 @@ const isLoading = ref(false);
 const recordForm = ref<QForm | null>(null);
 
 const paymentType = ref<string>("full");
+const paymentTypeOptions = [
+  { value: "full", label: "Paid" },
+  { value: "partial", label: "Partially Paid" },
+  { value: "unpaid", label: "Unpaid" },
+];
 const recordType = RecordType.EXPENSE;
 
 const recordExpenseAvenueId = ref<string | null>(null);
@@ -373,7 +378,7 @@ watch(recordWalletId, async (newWalletId: any) => {
     await computationService.computeBalancesForWallets([wallet]);
     wallet.potentialBalance = 0;
     selectedWallet.value = wallet;
-    
+
     // Auto-set currency from wallet
     let currency = await entityService.getCurrency(wallet.currencyId);
     recordCurrencyId.value = currency._id!;
@@ -440,6 +445,30 @@ defineExpose({
 });
 </script>
 <style scoped lang="scss">
+.payment-type-tabs {
+  background-color: #eceff1; // grey-2 for light mode
+  color: #546e7a; // grey-7 for inactive tabs
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+// Dark theme styling for payment type tabs
+body.body--dark .payment-type-tabs {
+  background-color: #161b28; // Darker than card (#21283b) for clear separation
+  color: var(--dark-text-secondary, #cbd5e1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.body--dark .payment-type-tabs :deep(.q-tab) {
+  color: var(--dark-text-tertiary, #94a3b8);
+}
+
+body.body--dark .payment-type-tabs :deep(.q-tab--active) {
+  color: #e2e8f0; // Bright text for contrast
+  background-color: rgba(82, 106, 203, 0.35); // Lighter blue (#526acb) for visibility
+  font-weight: 600;
+}
+
 .wallet-balance-container {
   color: #546e7a;
   margin-top: -16px;

@@ -38,7 +38,15 @@ function onDateSelected() {
 </script>
 
 <template>
-  <q-input standout="bg-primary text-white" v-model="value" :label="props.label" readonly @click="openDatePopup" @focus="openDatePopup">
+  <q-input
+    standout="bg-primary text-white"
+    v-model="value"
+    :label="props.label"
+    readonly
+    @click="openDatePopup"
+    @focus="openDatePopup"
+    class="std-margin-bottom-32"
+  >
     <template v-slot:prepend>
       <q-icon name="event" class="cursor-pointer">
         <q-popup-proxy ref="datePopupRef" cover transition-show="scale" transition-hide="scale">
